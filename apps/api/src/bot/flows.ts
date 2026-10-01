@@ -50,9 +50,12 @@ import { answerCounterparty, continueDebt, debtPayloadFrom, isDebtPayload, reply
 import { afterFirstTransaction } from './onboarding';
 
 /** Parsed item waiting for the user, stored in pending_inputs.payload. */
+export type InputSource = 'text' | 'voice';
+
 interface PendingTxPayload {
   tx: ParsedTransaction;
   rawInput: string;
+  source?: InputSource;
   candidates: string[];
   categoryPending: boolean;
 }
@@ -76,7 +79,7 @@ async function saveAndShow(
   s: BotServices,
   tx: ParsedTransaction,
   rawInput: string,
-  opts: { categoryPending?: boolean; edit?: boolean },
+  opts: { categoryPending?: boolean; edit?: boolean; source?: InputSource },
 ): Promise<Transaction | null> {
   const user = ctx.user!;
   let saved: Transaction;
@@ -86,7 +89,7 @@ async function saveAndShow(
       userId: user.id,
       timeZone: user.timezone,
       tx,
-      source: 'text',
+      source: opts.source ?? 'text',
       rawInput,
       categoryPending: opts.categoryPending ?? false,
     });
@@ -108,17 +111,20 @@ async function saveAndShow(
 async function askCategory(ctx: BotContext, s: BotServices, pendingId: string, p: PendingTxPayload, edit: boolean) {
   const user = ctx.user!;
   const env = await envFor(s, user, ctx.walletId!);
-  const text = cardText(parsedFields(p.tx, env, true), env, t(user.language, 'pickCategory'));
+  const transcript = p.source === 'voice' ? p.rawInput : null;
+  const text = cardText(parsedFields(p.tx, env, true, transcript), env, t(user.language, 'pickCategory'));
   const reply_markup = categoryKeyboard(env, p.tx.type === 'income' ? 'income' : 'expense', `pc:${pendingId}`, { first: p.candidates });
   if (edit) await ctx.editMessageText(text, { reply_markup });
   else await ctx.reply(text, { reply_markup });
 }
 
-async function handleItem(ctx: BotContext, s: BotServices, item: PipelineItem, rawInput: string): Promise<boolean> {
+async function handleItem(ctx: BotContext, s: BotServices, item: PipelineItem, rawInput: string, source: InputSource): Promise<boolean> {
   const user = ctx.user!;
+  const transcript = source === 'voice' ? rawInput : null;
   const payload: PendingTxPayload = {
     tx: item.tx,
     rawInput,
+    source,
     candidates: item.categoryCandidates,
     categoryPending: item.categoryPending,
   };
@@ -127,11 +133,11 @@ async function handleItem(ctx: BotContext, s: BotServices, item: PipelineItem, r
 
   switch (item.decision) {
     case 'save':
-      return (await saveAndShow(ctx, s, item.tx, rawInput, { categoryPending: item.categoryPending })) !== null;
+      return (await saveAndShow(ctx, s, item.tx, rawInput, { categoryPending: item.categoryPending, source })) !== null;
     case 'confirm_amount': {
       const p = await pend('confirm_amount');
       const env = await envFor(s, user, ctx.walletId!);
-      await ctx.reply(cardText(parsedFields(item.tx, env), env, t(user.language, 'confirmAmountQ')), {
+      await ctx.reply(cardText(parsedFields(item.tx, env, false, transcript), env, t(user.language, 'confirmAmountQ')), {
         reply_markup: new InlineKeyboard()
           .text(`✅ ${formatMoney(item.tx.amount, item.tx.currency, user.language)}`, `pa:${p.id}`)
           .text(t(user.language, 'otherAmount'), `pe:${p.id}`),
@@ -155,11 +161,12 @@ async function handleItem(ctx: BotContext, s: BotServices, item: PipelineItem, r
     }
     case 'debt': {
       // Debt is never an expense (TZ rule 1): it goes to the debt engine.
-      const dp = debtPayloadFrom(item, rawInput, s.confidenceThreshold);
+      const dp = debtPayloadFrom(item, rawInput, s.confidenceThreshold, source);
       if (item.amountConfidence < s.confidenceThreshold) {
         const p = await createPending(s.db, { userId: user.id, walletId: ctx.walletId!, kind: 'confirm_amount', payload: dp, now: s.now() });
         const who = item.tx.counterparty ? ` — ${item.tx.counterparty}` : '';
-        await ctx.reply(`${formatMoney(item.tx.amount, item.tx.currency, user.language)}${who}\n${t(user.language, 'confirmAmountQ')}`, {
+        const heard = transcript ? `🎙 «${transcript}»\n\n` : '';
+        await ctx.reply(`${heard}${formatMoney(item.tx.amount, item.tx.currency, user.language)}${who}\n${t(user.language, 'confirmAmountQ')}`, {
           reply_markup: new InlineKeyboard()
             .text(`✅ ${formatMoney(item.tx.amount, item.tx.currency, user.language)}`, `pa:${p.id}`)
             .text(t(user.language, 'otherAmount'), `pe:${p.id}`),
@@ -179,7 +186,7 @@ function amountOnly(text: string, today: string): number | null {
   return amounts.length === 1 ? amounts[0]!.value : null;
 }
 
-async function processText(ctx: BotContext, s: BotServices, text: string): Promise<void> {
+export async function processText(ctx: BotContext, s: BotServices, text: string, source: InputSource = 'text'): Promise<void> {
   const user = ctx.user!;
   const today = localDate(s.now(), user.timezone);
 
@@ -241,13 +248,14 @@ async function processText(ctx: BotContext, s: BotServices, text: string): Promi
   if (result.kind === 'no_amount') {
     // Never guess (TZ §61: "bugun bozorga bordim" → ask amount).
     await createPending(s.db, { userId: user.id, walletId: ctx.walletId!, kind: 'ask_amount', payload: { text: result.maskedText }, now: s.now() });
-    await ctx.reply(t(user.language, 'askAmount'));
+    const heard = source === 'voice' ? `🎙 «${result.maskedText}»\n\n` : '';
+    await ctx.reply(`${heard}${t(user.language, 'askAmount')}`);
     return;
   }
 
   let savedAny = false;
   for (const item of result.items) {
-    if (await handleItem(ctx, s, item, result.maskedText)) savedAny = true;
+    if (await handleItem(ctx, s, item, result.maskedText, source)) savedAny = true;
   }
   if (savedAny) await afterFirstTransaction(ctx, s);
 }
@@ -275,6 +283,7 @@ async function continueAfterAmount(
   const saved = await saveAndShow(ctx, s, { ...p.tx, confidence: Math.max(p.tx.confidence, 0.8) }, p.rawInput, {
     categoryPending: p.categoryPending,
     edit,
+    source: p.source ?? 'text',
   });
   if (saved) await afterFirstTransaction(ctx, s);
 }
@@ -449,7 +458,7 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
     // The user's choice teaches the next parse (TZ §10).
     const pattern = patternFromText(p.tx.note);
     if (pattern) await learnRule(s.db, user.id, pending.walletId, pattern, cat.id);
-    const saved = await saveAndShow(ctx, s, { ...p.tx, category_id: cat.key, confidence: 1 }, p.rawInput, { edit: true });
+    const saved = await saveAndShow(ctx, s, { ...p.tx, category_id: cat.key, confidence: 1 }, p.rawInput, { edit: true, source: p.source ?? 'text' });
     if (saved) await afterFirstTransaction(ctx, s);
   });
 
@@ -464,6 +473,7 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
         debt: true,
         tx: { ...p.tx, type: 'debt_given', category_id: null },
         rawInput: p.rawInput,
+        source: p.source ?? 'text',
         returnDirection: null,
         typeUncertain: false,
       };

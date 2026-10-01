@@ -37,6 +37,8 @@ const categoryName = (env: CardEnv, key: string | null) =>
   key ? env.categories.find((c) => c.key === key || c.id === key)?.name ?? null : null;
 
 interface CardFields {
+  /** Voice input: what we heard, shown on the card (TZ §57). */
+  transcript?: string | null;
   amount: number;
   currency: 'UZS' | 'USD';
   amountUzs?: number;
@@ -52,7 +54,8 @@ export function cardText(f: CardFields, env: CardEnv, suffix?: string): string {
     f.currency === 'USD' && f.amountUzs
       ? `${formatMoney(f.amount, 'USD', env.lang)} · ${formatMoney(f.amountUzs, 'UZS', env.lang)}`
       : formatMoney(f.amount, f.currency, env.lang);
-  const lines = [f.type === 'income' ? `+${money}` : money];
+  const lines = f.transcript ? [`🎙 «${f.transcript}»`, ''] : [];
+  lines.push(f.type === 'income' ? `+${money}` : money);
   if (f.categoryPending || !f.categoryName) lines.push(t(env.lang, 'categoryPending'));
   else lines.push(f.type === 'income' ? `${t(env.lang, 'income')} · ${f.categoryName}` : f.categoryName);
   if (f.note) lines.push(f.note);
@@ -63,6 +66,7 @@ export function cardText(f: CardFields, env: CardEnv, suffix?: string): string {
 
 export function txFields(tx: Transaction, env: CardEnv, timeZone: string): CardFields {
   return {
+    transcript: tx.source === 'voice' ? tx.rawInput : null,
     amount: tx.amount,
     currency: tx.currency,
     amountUzs: tx.amountUzs,
@@ -74,8 +78,9 @@ export function txFields(tx: Transaction, env: CardEnv, timeZone: string): CardF
   };
 }
 
-export function parsedFields(tx: ParsedTransaction, env: CardEnv, categoryPending = false): CardFields {
+export function parsedFields(tx: ParsedTransaction, env: CardEnv, categoryPending = false, transcript: string | null = null): CardFields {
   return {
+    transcript,
     amount: tx.amount,
     currency: tx.currency,
     type: tx.type,

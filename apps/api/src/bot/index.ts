@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import type { BotContext, BotServices } from './context';
 import { registerDebtFlows } from './debts';
 import { registerTransactionFlows } from './flows';
+import { registerVoice } from './voice';
 import { registerOnboarding } from './onboarding';
 import { registerReports } from './reports';
 
@@ -89,6 +90,7 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
   });
 
   registerDebtFlows(bot, deps);
+  registerVoice(bot, deps);
   registerTransactionFlows(bot, deps);
 
   // Unknown commands → help.

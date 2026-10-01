@@ -32,6 +32,7 @@ export interface PendingDebtPayload {
   debt: true;
   tx: ParsedTransaction;
   rawInput: string;
+  source?: 'text' | 'voice';
   returnDirection: 'to_me' | 'by_me' | null;
   typeUncertain: boolean;
 }
@@ -82,7 +83,8 @@ export async function renderDebtCard(s: BotServices, user: User, tx: Transaction
   }
   if (tx.note) lines.splice(2, 0, tx.note);
   kb.text(t(lang, 'delete'), `ddel:${tx.id}`);
-  return { text: lines.filter(Boolean).join('\n'), reply_markup: kb };
+  const heard = tx.source === 'voice' && tx.rawInput ? `🎙 «${tx.rawInput}»\n\n` : '';
+  return { text: heard + lines.filter(Boolean).join('\n'), reply_markup: kb };
 }
 
 async function showCard(ctx: BotContext, s: BotServices, tx: Transaction, edit: boolean) {
@@ -134,7 +136,7 @@ export async function continueDebt(
         amount: p.tx.amount,
         currency: p.tx.currency,
         date: p.tx.date,
-        source: 'text',
+        source: p.source ?? 'text',
         rawInput: p.rawInput,
         confidence: p.tx.confidence,
       });
@@ -151,7 +153,7 @@ export async function continueDebt(
       amount: p.tx.amount,
       currency: p.tx.currency,
       date: p.tx.date,
-      source: 'text',
+      source: p.source ?? 'text',
       rawInput: p.rawInput,
     });
     switch (r.kind) {
@@ -192,11 +194,12 @@ export async function continueDebt(
 }
 
 /** Entry point from the text pipeline for `decision: 'debt'` items. */
-export function debtPayloadFrom(item: PipelineItem, rawInput: string, threshold: number): PendingDebtPayload {
+export function debtPayloadFrom(item: PipelineItem, rawInput: string, threshold: number, source: 'text' | 'voice' = 'text'): PendingDebtPayload {
   return {
     debt: true,
     tx: item.tx,
     rawInput,
+    source,
     returnDirection: item.returnDirection,
     typeUncertain: item.tx.type !== 'debt_return' && item.typeConfidence < threshold,
   };

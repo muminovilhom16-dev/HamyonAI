@@ -4,10 +4,12 @@ import type { Api, RawApi } from 'grammy';
 import type { Env } from '@hamyon/config';
 import type { AuthConfig } from '@hamyon/core';
 import type { DbHandle } from '@hamyon/db';
-import { createAIProvider, type AIProvider } from '@hamyon/ai';
+import { createAIProvider, createSpeechProvider, type AIProvider, type SpeechProvider } from '@hamyon/ai';
+import { loadPlanConfig } from '@hamyon/config';
 import { CbuRateProvider, type ExchangeRateProvider } from '@hamyon/core';
 import type { Bot } from 'grammy';
 import { createBot, type BotContext } from './bot';
+import { telegramFileDownloader } from './bot/voice';
 import { loggerOptions } from './logger';
 import { registerErrorHandling } from './plugins/errors';
 import { registerSecurity } from './plugins/security';
@@ -28,6 +30,8 @@ export interface BuildAppOptions {
   /** Overrides for tests; default providers come from env. */
   ai?: AIProvider | null;
   fx?: ExchangeRateProvider | null;
+  speech?: SpeechProvider | null;
+  downloadFile?: (filePath: string) => Promise<Uint8Array>;
   now?: () => Date;
   configureBotApi?: (api: Api<RawApi>) => void;
 }
@@ -65,6 +69,20 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
             ...(env.ANTHROPIC_API_KEY && { anthropicApiKey: env.ANTHROPIC_API_KEY }),
           }),
     fx: opts.fx !== undefined ? opts.fx : new CbuRateProvider(),
+    speech:
+      opts.speech !== undefined
+        ? opts.speech
+        : createSpeechProvider({
+            provider: env.STT_PROVIDER,
+            model: env.GOOGLE_STT_MODEL,
+            apiVersion: env.GOOGLE_STT_API_VERSION,
+            timeoutMs: env.STT_TIMEOUT_MS,
+            usdPerMinute: env.GOOGLE_STT_USD_PER_MINUTE,
+            ...(env.GOOGLE_STT_API_KEY && { googleApiKey: env.GOOGLE_STT_API_KEY }),
+          }),
+    downloadFile: opts.downloadFile ?? telegramFileDownloader(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_API_ROOT),
+    plans: loadPlanConfig(env.PLAN_LIMITS_JSON),
+    voiceMaxSeconds: env.VOICE_MAX_SECONDS,
     confidenceThreshold: env.AI_CONFIDENCE_THRESHOLD,
     now: opts.now ?? (() => new Date()),
     defaults: { currency: env.DEFAULT_CURRENCY, timezone: env.DEFAULT_TIMEZONE, reminderTime: env.DEFAULT_REMINDER_TIME },

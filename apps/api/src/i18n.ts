@@ -174,6 +174,33 @@ const messages = {
     ru: '⏰ Сегодня срок вернуть {name} {amount}.',
   },
 
+  // ─── Voice ───
+  voiceUnavailable: {
+    uz_latn: 'Ovozli xabarlar hozircha ishlamayapti. Matn bilan yozing, masalan: «taksi 25 ming».',
+    uz_cyrl: 'Овозли хабарлар ҳозирча ишламаяпти. Матн билан ёзинг, масалан: «такси 25 минг».',
+    ru: 'Голосовые сообщения пока недоступны. Напишите текстом, например: «такси 25 тысяч».',
+  },
+  voiceTooLong: {
+    uz_latn: "Ovozli xabar {max} soniyadan uzun. Qisqaroq ayting yoki matn bilan yozing.",
+    uz_cyrl: 'Овозли хабар {max} сониядан узун. Қисқароқ айтинг ёки матн билан ёзинг.',
+    ru: 'Голосовое длиннее {max} секунд. Скажите короче или напишите текстом.',
+  },
+  voiceLimitReached: {
+    uz_latn: "Bu oy uchun ovozli xabarlar limiti ({limit} ta) tugadi. Matn bilan yozishda davom eting — u cheklanmagan. Cheklovsiz ovoz Pro tarifda bo'ladi.",
+    uz_cyrl: 'Бу ой учун овозли хабарлар лимити ({limit} та) тугади. Матн билан ёзишда давом этинг — у чекланмаган. Чекловсиз овоз Pro тарифда бўлади.',
+    ru: 'Лимит голосовых сообщений на этот месяц ({limit}) исчерпан. Пишите текстом — он не ограничен. Безлимитный голос будет в тарифе Pro.',
+  },
+  voiceFailed: {
+    uz_latn: "Ovozni hozir qayta ishlab bo'lmadi. Birozdan so'ng qayta yuboring yoki matn bilan yozing.",
+    uz_cyrl: 'Овозни ҳозир қайта ишлаб бўлмади. Бироздан сўнг қайта юборинг ёки матн билан ёзинг.',
+    ru: 'Не удалось обработать голос. Отправьте ещё раз чуть позже или напишите текстом.',
+  },
+  voiceNotUnderstood: {
+    uz_latn: 'Ovozni aniq tushuna olmadim. Qaytadan ayting yoki matn bilan yozing.',
+    uz_cyrl: 'Овозни аниқ тушуна олмадим. Қайтадан айтинг ёки матн билан ёзинг.',
+    ru: 'Не удалось разобрать голос. Повторите или напишите текстом.',
+  },
+
   // ─── Errors / web ───
   genericError: {
     uz_latn: "Kechirasiz, xatolik yuz berdi. Birozdan so'ng qayta urinib ko'ring.",

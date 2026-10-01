@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { loadEnv } from '@hamyon/config';
-import type { AIProvider } from '@hamyon/ai';
+import { AIUnavailableError, type AIProvider, type SpeechProvider } from '@hamyon/ai';
 import type { ExchangeRateProvider } from '@hamyon/core';
 import { createDb, resetTestDatabase, testDatabaseUrl, type DbHandle } from '@hamyon/db';
 import { buildApp } from '../src/app';
@@ -27,8 +27,10 @@ export interface Harness {
   failChatIds: Set<number>;
   clock: { now: Date };
   ai: { current: AIProvider | null };
+  speech: { current: SpeechProvider | null };
   send(fromId: number, text: string, opts?: { lang?: string }): Promise<number>;
   tap(fromId: number, data: string): Promise<number>;
+  voice(fromId: number, duration?: number): Promise<number>;
   /** Text messages sent or edited since the last reset. */
   texts(): string[];
   /** Inline keyboard of the last sent/edited message. */
@@ -51,7 +53,14 @@ export async function createHarness(): Promise<Harness> {
     parseText: (i) => (ai.current ? ai.current.parseText(i) : Promise.reject(new Error('no ai'))),
     categorize: (i) => (ai.current ? ai.current.categorize(i) : Promise.reject(new Error('no ai'))),
   };
+  const speech: { current: SpeechProvider | null } = { current: null };
+  const speechProxy: SpeechProvider = {
+    name: 'proxy',
+    transcribe: (i) => (speech.current ? speech.current.transcribe(i) : Promise.reject(new AIUnavailableError('not_configured'))),
+  };
   const app = await buildApp({
+    speech: speechProxy,
+    downloadFile: async () => new Uint8Array([79, 103, 103, 83]),
     env,
     dbHandle: h,
     fx,
@@ -66,6 +75,7 @@ export async function createHarness(): Promise<Harness> {
       api.config.use(async (_prev, method, payload) => {
         const p = payload as Record<string, any>;
         calls.push({ method, payload: p });
+        if (method === 'getFile') return { ok: true, result: { file_id: 'f', file_unique_id: 'u', file_path: 'voice/file_1.oga' } } as never;
         if (failChatIds.has(p.chat_id)) throw new Error('telegram down: secret internal detail');
         return { ok: true, result: { message_id: calls.length, date: 0, chat: { id: p.chat_id, type: 'private' }, text: p.text } } as never;
       });
@@ -85,7 +95,7 @@ export async function createHarness(): Promise<Harness> {
   const from = (id: number, lang = 'uz') => ({ id, is_bot: false, first_name: 'Ali', language_code: lang });
 
   return {
-    app, h, calls, failChatIds, clock, ai,
+    app, h, calls, failChatIds, clock, ai, speech,
     send(fromId, text, opts = {}) {
       const cmd = text.startsWith('/') ? [{ type: 'bot_command', offset: 0, length: text.split(' ')[0]!.length }] : undefined;
       return post({
@@ -93,6 +103,15 @@ export async function createHarness(): Promise<Harness> {
         message: {
           message_id: 1, date: Math.floor(clock.now.getTime() / 1000), chat: { id: fromId, type: 'private' },
           from: from(fromId, opts.lang), text, ...(cmd && { entities: cmd }),
+        },
+      });
+    },
+    voice(fromId, duration = 4) {
+      return post({
+        update_id: updateId++,
+        message: {
+          message_id: 1, date: Math.floor(clock.now.getTime() / 1000), chat: { id: fromId, type: 'private' }, from: from(fromId),
+          voice: { file_id: 'f', file_unique_id: 'u', duration, mime_type: 'audio/ogg' },
         },
       });
     },

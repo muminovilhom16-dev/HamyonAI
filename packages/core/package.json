@@ -14,6 +14,7 @@
     "@hamyon/db": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "zod": "^4.6.5",
-    "@hamyon/ai": "workspace:*"
+    "@hamyon/ai": "workspace:*",
+    "@hamyon/config": "workspace:*"
   }
 }

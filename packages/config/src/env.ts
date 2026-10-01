@@ -57,6 +57,14 @@ export const envSchema = z.object({
   AI_CONFIDENCE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.8),
   AI_TIMEOUT_MS: z.coerce.number().int().min(500).default(8000),
 
+  STT_PROVIDER: z.enum(['google', 'none']).default('google'),
+  GOOGLE_STT_API_KEY: z.string().optional(),
+  GOOGLE_STT_MODEL: z.string().default('default'),
+  GOOGLE_STT_API_VERSION: z.enum(['v1', 'v1p1beta1']).default('v1p1beta1'),
+  GOOGLE_STT_USD_PER_MINUTE: z.coerce.number().min(0).default(0.024),
+  STT_TIMEOUT_MS: z.coerce.number().int().min(1000).default(10000),
+  VOICE_MAX_SECONDS: z.coerce.number().int().min(1).max(60).default(60),
+
   // JSON override for plan limits, see plans.ts. Prices are hypotheses (TZ §34).
   PLAN_LIMITS_JSON: z.string().optional(),
 });

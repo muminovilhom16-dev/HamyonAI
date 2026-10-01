@@ -93,6 +93,9 @@ importers:
       '@hamyon/ai':
         specifier: workspace:*
         version: link:../ai
+      '@hamyon/config':
+        specifier: workspace:*
+        version: link:../config
       '@hamyon/db':
         specifier: workspace:*
         version: link:../db

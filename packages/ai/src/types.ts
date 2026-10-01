@@ -62,3 +62,27 @@ export class AIUnavailableError extends Error {
     this.name = 'AIUnavailableError';
   }
 }
+
+// ─── Speech-to-text (TZ §44: replaceable SpeechProvider) ───
+
+export interface TranscribeInput {
+  audio: Uint8Array;
+  /** Telegram voice notes are OGG/Opus, 48 kHz. */
+  encoding: 'OGG_OPUS';
+  sampleRateHertz: number;
+  /** BCP-47, most likely first (e.g. ["uz-UZ", "ru-RU"]). */
+  languages: string[];
+}
+
+export interface TranscribeOutput {
+  text: string;
+  /** 0..1, provider's own confidence; 0 when not reported. */
+  confidence: number;
+  languageCode: string | null;
+  usage: AIUsage;
+}
+
+export interface SpeechProvider {
+  readonly name: string;
+  transcribe(input: TranscribeInput): Promise<TranscribeOutput>;
+}
