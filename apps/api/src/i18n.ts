@@ -215,6 +215,45 @@ const messages = {
     ru: '💡 Расходы на «{category}» на {pct}% ниже, чем в прошлом месяце.',
   },
 
+  // ─── Settings, export, account deletion (TZ §31, §40) ───
+  settingsTitle: { uz_latn: '⚙️ Sozlamalar', uz_cyrl: '⚙️ Созламалар', ru: '⚙️ Настройки' },
+  settingsLanguage: { uz_latn: 'Til', uz_cyrl: 'Тил', ru: 'Язык' },
+  settingsReminder: { uz_latn: 'Kunlik eslatma', uz_cyrl: 'Кунлик эслатма', ru: 'Ежедневное напоминание' },
+  settingsCurrency: { uz_latn: 'Valyuta', uz_cyrl: 'Валюта', ru: 'Валюта' },
+  off: { uz_latn: "o'chiq", uz_cyrl: 'ўчиқ', ru: 'выкл.' },
+  btnLanguage: { uz_latn: '🌐 Til', uz_cyrl: '🌐 Тил', ru: '🌐 Язык' },
+  btnReminder: { uz_latn: '⏰ Eslatma', uz_cyrl: '⏰ Эслатма', ru: '⏰ Напоминание' },
+  btnExport: { uz_latn: '📤 Eksport', uz_cyrl: '📤 Экспорт', ru: '📤 Экспорт' },
+  btnDeleteAccount: { uz_latn: "🗑 Akkauntni o'chirish", uz_cyrl: '🗑 Аккаунтни ўчириш', ru: '🗑 Удалить аккаунт' },
+  settingsSaved: { uz_latn: '✅ Saqlandi.', uz_cyrl: '✅ Сақланди.', ru: '✅ Сохранено.' },
+  exportPickRange: { uz_latn: 'Qaysi davr uchun?', uz_cyrl: 'Қайси давр учун?', ru: 'За какой период?' },
+  exportPickFormat: { uz_latn: 'Qaysi formatda?', uz_cyrl: 'Қайси форматда?', ru: 'В каком формате?' },
+  rangeThisMonth: { uz_latn: 'Bu oy', uz_cyrl: 'Бу ой', ru: 'Этот месяц' },
+  rangePrevMonth: { uz_latn: "O'tgan oy", uz_cyrl: 'Ўтган ой', ru: 'Прошлый месяц' },
+  rangeAll: { uz_latn: 'Hammasi', uz_cyrl: 'Ҳаммаси', ru: 'Всё время' },
+  exportEmpty: { uz_latn: "Bu davrda yozuv yo'q.", uz_cyrl: 'Бу даврда ёзув йўқ.', ru: 'За этот период записей нет.' },
+  exportCaption: { uz_latn: 'Hamyon AI eksport: {count} ta yozuv', uz_cyrl: 'Hamyon AI экспорт: {count} та ёзув', ru: 'Экспорт Hamyon AI: записей — {count}' },
+  deleteConfirm: {
+    uz_latn: "Akkauntni o'chirasizmi? Barcha yozuvlar, qarzlar va sozlamalar {days} kundan keyin butunlay o'chiriladi. Bu muddat ichida bekor qilish mumkin.\n\nAvval /eksport bilan nusxa olishingiz mumkin.",
+    uz_cyrl: 'Аккаунтни ўчирасизми? Барча ёзувлар, қарзлар ва созламалар {days} кундан кейин бутунлай ўчирилади. Бу муддат ичида бекор қилиш мумкин.\n\nАввал /eksport билан нусха олишингиз мумкин.',
+    ru: 'Удалить аккаунт? Все записи, долги и настройки будут удалены безвозвратно через {days} дн. До этого удаление можно отменить.\n\nСначала можно сохранить копию через /eksport.',
+  },
+  deleteYes: { uz_latn: "Ha, o'chirish", uz_cyrl: 'Ҳа, ўчириш', ru: 'Да, удалить' },
+  deleteNo: { uz_latn: "Yo'q", uz_cyrl: 'Йўқ', ru: 'Нет' },
+  deleteScheduled: {
+    uz_latn: "Akkaunt {date} kuni butunlay o'chiriladi. Web paneldan chiqarildingiz.",
+    uz_cyrl: 'Аккаунт {date} куни бутунлай ўчирилади. Веб панелдан чиқарилдингиз.',
+    ru: 'Аккаунт будет удалён безвозвратно {date}. Вы вышли из веб-панели.',
+  },
+  deletePending: {
+    uz_latn: "Akkauntingiz {date} kuni o'chirilishi rejalashtirilgan. Davom etish uchun o'chirishni bekor qiling.",
+    uz_cyrl: 'Аккаунтингиз {date} куни ўчирилиши режалаштирилган. Давом этиш учун ўчиришни бекор қилинг.',
+    ru: 'Удаление аккаунта запланировано на {date}. Чтобы продолжить, отмените удаление.',
+  },
+  deleteCancel: { uz_latn: 'Bekor qilish', uz_cyrl: 'Бекор қилиш', ru: 'Отменить удаление' },
+  deleteCancelled: { uz_latn: '✅ Akkaunt saqlab qolindi.', uz_cyrl: '✅ Аккаунт сақлаб қолинди.', ru: '✅ Аккаунт сохранён.' },
+  deleteAborted: { uz_latn: 'Bekor qilindi.', uz_cyrl: 'Бекор қилинди.', ru: 'Отменено.' },
+
   // ─── Voice ───
   voiceUnavailable: {
     uz_latn: 'Ovozli xabarlar hozircha ishlamayapti. Matn bilan yozing, masalan: «taksi 25 ming».',

@@ -77,6 +77,20 @@ const M = {
   },
   openBot: { uz_latn: 'Telegram botni ochish', uz_cyrl: 'Телеграм ботни очиш', ru: 'Открыть Telegram-бот' },
   tableView: { uz_latn: 'Jadval', uz_cyrl: 'Жадвал', ru: 'Таблица' },
+  prevMonth: { uz_latn: "O'tgan oy", uz_cyrl: 'Ўтган ой', ru: 'Прошлый месяц' },
+  exportTitle: { uz_latn: 'Eksport', uz_cyrl: 'Экспорт', ru: 'Экспорт' },
+  exportHint: { uz_latn: 'Davr va formatni tanlang', uz_cyrl: 'Давр ва форматни танланг', ru: 'Выберите период и формат' },
+  download: { uz_latn: 'Yuklab olish', uz_cyrl: 'Юклаб олиш', ru: 'Скачать' },
+  dangerTitle: { uz_latn: "Akkauntni o'chirish", uz_cyrl: 'Аккаунтни ўчириш', ru: 'Удаление аккаунта' },
+  dangerText: {
+    uz_latn: "Barcha yozuvlar, qarzlar va sozlamalar {days} kundan keyin butunlay o'chiriladi. Bu muddat ichida bekor qilish mumkin.",
+    uz_cyrl: 'Барча ёзувлар, қарзлар ва созламалар {days} кундан кейин бутунлай ўчирилади. Бу муддат ичида бекор қилиш мумкин.',
+    ru: 'Все записи, долги и настройки будут удалены безвозвратно через {days} дн. До этого удаление можно отменить.',
+  },
+  deleteAccount: { uz_latn: "Akkauntni o'chirish", uz_cyrl: 'Аккаунтни ўчириш', ru: 'Удалить аккаунт' },
+  confirmDelete: { uz_latn: "Ha, o'chirilsin", uz_cyrl: 'Ҳа, ўчирилсин', ru: 'Да, удалить' },
+  scheduledDeletion: { uz_latn: "Akkaunt o'chirilishi rejalashtirilgan:", uz_cyrl: 'Аккаунт ўчирилиши режалаштирилган:', ru: 'Удаление аккаунта запланировано:' },
+  cancelDeletion: { uz_latn: "O'chirishni bekor qilish", uz_cyrl: 'Ўчиришни бекор қилиш', ru: 'Отменить удаление' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;

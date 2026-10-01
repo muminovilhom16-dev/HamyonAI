@@ -64,7 +64,7 @@ export function registerOnboarding(bot: Bot<BotContext>, s: BotServices): void {
     await setUser(s, ctx, { language: lang, ...(done ? {} : { onboardingStep: 'currency' }) });
     await ctx.answerCallbackQuery();
     if (done) {
-      await ctx.editMessageText(t(lang, 'welcomeBack'));
+      await ctx.editMessageText(t(lang, 'settingsSaved'));
       return;
     }
     await ctx.editMessageText(t(lang, 'askCurrency'), {
@@ -93,6 +93,6 @@ export function registerOnboarding(bot: Bot<BotContext>, s: BotServices): void {
     });
     if (first) await s.db.insert(schema.analyticsEvents).values({ userId: ctx.user!.id, name: 'onboarding_completed' });
     await ctx.answerCallbackQuery();
-    await ctx.editMessageText(t(ctx.user!.language, 'onboardingDone'));
+    await ctx.editMessageText(t(ctx.user!.language, first ? 'onboardingDone' : 'settingsSaved'));
   });
 }

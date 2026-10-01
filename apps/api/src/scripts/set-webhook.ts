@@ -16,12 +16,12 @@ async function main(): Promise<void> {
   });
   // Command menu: Uzbek by default, Russian for Russian-language clients.
   const commands = (labels: string[]) =>
-    ['bugun', 'hafta', 'oy', 'oxirgi', 'web', 'yordam'].map((command, i) => ({ command, description: labels[i]! }));
+    ['bugun', 'hafta', 'oy', 'oxirgi', 'qarzlar', 'eksport', 'sozlamalar', 'web', 'yordam'].map((command, i) => ({ command, description: labels[i]! }));
   await bot.api.setMyCommands(
-    commands(['Bugungi hisobot', 'Haftalik hisobot', 'Oylik hisobot', 'Oxirgi yozuvlar', 'Web panel', 'Yordam']),
+    commands(['Bugungi hisobot', 'Haftalik hisobot', 'Oylik hisobot', 'Oxirgi yozuvlar', 'Qarzlar', 'Eksport (Excel/CSV)', 'Sozlamalar', 'Web panel', 'Yordam']),
   );
   await bot.api.setMyCommands(
-    commands(['Отчёт за сегодня', 'Отчёт за неделю', 'Отчёт за месяц', 'Последние записи', 'Веб-панель', 'Помощь']),
+    commands(['Отчёт за сегодня', 'Отчёт за неделю', 'Отчёт за месяц', 'Последние записи', 'Долги', 'Экспорт (Excel/CSV)', 'Настройки', 'Веб-панель', 'Помощь']),
     { language_code: 'ru' },
   );
   const info = await bot.api.getWebhookInfo();

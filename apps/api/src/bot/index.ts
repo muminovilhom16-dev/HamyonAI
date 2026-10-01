@@ -8,6 +8,7 @@ import { registerTransactionFlows } from './flows';
 import { registerVoice } from './voice';
 import { registerOnboarding } from './onboarding';
 import { registerReports } from './reports';
+import { pendingDeletionMessage, registerSettings } from './settings';
 
 export type { BotContext, BotServices } from './context';
 
@@ -68,10 +69,18 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
     ctx.user = user;
     ctx.walletId = personalWalletId;
     if (created) deps.log.info({ event: 'user_created' }, 'new user');
+    // Account scheduled for deletion: nothing else runs until it is cancelled.
+    if (user.deletionRequestedAt && ctx.callbackQuery?.data !== 'acc:cancel') {
+      if (ctx.callbackQuery) await ctx.answerCallbackQuery();
+      const m = pendingDeletionMessage(deps, user);
+      await ctx.reply(m.text, { reply_markup: m.reply_markup });
+      return;
+    }
     await next();
   });
 
   registerOnboarding(bot, deps);
+  registerSettings(bot, deps);
   registerReports(bot, deps);
 
   bot.command('web', async (ctx) => {

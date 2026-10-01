@@ -22,19 +22,25 @@ import {
   undoDelete,
   updateTransaction,
   updateUserSettings,
+  cancelAccountDeletion,
+  deletionDate,
+  exportTransactions,
+  requestAccountDeletion,
   type AuthConfig,
   type ExchangeRateProvider,
   type Transaction,
 } from '@hamyon/core';
 import { schema, type Database } from '@hamyon/db';
+import { renderCsv, renderXlsx } from '../export';
 import { t } from '../i18n';
-import { requireSession } from './auth';
+import { requireSession, SESSION_COOKIE } from './auth';
 
 export interface WebApiOptions {
   db: Database;
   auth: AuthConfig;
   fx: ExchangeRateProvider | null;
   now: () => Date;
+  deletionGraceDays: number;
 }
 
 /** Custom header a cross-site form cannot send: CSRF guard for mutations. */
@@ -102,7 +108,44 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
       timezone: user.timezone,
       reminderTime: user.reminderTime.slice(0, 5),
       remindersEnabled: user.remindersEnabled,
+      deletionGraceDays: opts.deletionGraceDays,
+      deletionScheduledFor: user.deletionRequestedAt
+        ? localDate(deletionDate(user.deletionRequestedAt, opts.deletionGraceDays), user.timezone)
+        : null,
     };
+  });
+
+  // TZ §31: export with a chosen date range.
+  app.get('/api/export', { preHandler: session }, async (request, reply) => {
+    const q = parse(z.object({ format: z.enum(['csv', 'xlsx']).default('xlsx'), start: date.optional(), end: date.optional() }), request.query);
+    const { user, walletId } = await context(opts.db, request);
+    const rows = await exportTransactions(opts.db, {
+      userId: user.id, walletId, timeZone: user.timezone, language: user.language,
+      ...(q.start && { startDate: q.start }), ...(q.end && { endDate: q.end }),
+    });
+    const body = q.format === 'csv' ? renderCsv(rows, user.language) : await renderXlsx(rows, user.language);
+    const name = `hamyon-${q.start ?? 'all'}${q.end ? `_${q.end}` : ''}.${q.format}`;
+    return reply
+      .header('content-type', q.format === 'csv' ? 'text/csv; charset=utf-8' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      .header('content-disposition', `attachment; filename="${name}"`)
+      .header('cache-control', 'no-store')
+      .send(body);
+  });
+
+  // TZ §40: delete account (grace period, then permanent removal).
+  app.post('/api/account/delete', { preHandler: session }, async (request, reply) => {
+    const body = parse(z.object({ confirm: z.literal(true) }).strict(), request.body);
+    void body;
+    const userId = request.auth!.userId;
+    await requestAccountDeletion(opts.db, userId, opts.now());
+    await opts.db.insert(schema.analyticsEvents).values({ userId, name: 'account_deletion_requested', props: { via: 'web' } });
+    reply.clearCookie(SESSION_COOKIE, { path: '/' });
+    return reply.status(202).send({ ok: true });
+  });
+
+  app.post('/api/account/cancel-deletion', { preHandler: session }, async (request) => {
+    await cancelAccountDeletion(opts.db, request.auth!.userId, opts.now());
+    return { ok: true };
   });
 
   app.patch('/api/settings', { preHandler: session }, async (request) => {

@@ -58,6 +58,8 @@ export const envSchema = z.object({
   MONTHLY_REPORT_TIME: hhmm.default('10:00'),
   /** Run queue workers / scheduler in this process (set false on API-only replicas). */
   RUN_WORKERS: bool.default(true),
+  /** Days between an account deletion request and permanent removal (TZ §40: ≤30 incl. backups). */
+  ACCOUNT_DELETION_GRACE_DAYS: z.coerce.number().int().min(0).max(23).default(7),
 
   AI_PROVIDER: z.enum(['anthropic', 'none']).default('anthropic'),
   AI_TEXT_MODEL: z.string().default('claude-opus-5-5'),

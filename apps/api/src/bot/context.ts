@@ -18,6 +18,7 @@ export interface BotServices {
   downloadFile: (filePath: string) => Promise<Uint8Array>;
   plans: PlanConfig;
   voiceMaxSeconds: number;
+  deletionGraceDays: number;
   /** When set (Redis configured), heavy updates are queued and acknowledged at once. */
   enqueueUpdate?: (update: import('grammy/types').Update) => Promise<void>;
   fx: ExchangeRateProvider | null;

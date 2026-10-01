@@ -39,6 +39,8 @@ export interface Settings {
   timezone: string;
   reminderTime: string;
   remindersEnabled: boolean;
+  deletionScheduledFor: string | null;
+  deletionGraceDays: number;
 }
 
 export interface Dashboard {

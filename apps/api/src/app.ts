@@ -104,6 +104,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     downloadFile: opts.downloadFile ?? telegramFileDownloader(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_API_ROOT),
     plans: loadPlanConfig(env.PLAN_LIMITS_JSON),
     voiceMaxSeconds: env.VOICE_MAX_SECONDS,
+    deletionGraceDays: env.ACCOUNT_DELETION_GRACE_DAYS,
     confidenceThreshold: env.AI_CONFIDENCE_THRESHOLD,
     now: opts.now ?? (() => new Date()),
     defaults: { currency: env.DEFAULT_CURRENCY, timezone: env.DEFAULT_TIMEZONE, reminderTime: env.DEFAULT_REMINDER_TIME },
@@ -135,7 +136,13 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
   // Unauthenticated, non-sensitive config for the web login screen.
   const botUsername = env.TELEGRAM_BOT_USERNAME ?? bot.botInfo.username;
   app.get('/api/public', async () => ({ botUsername }));
-  webApiRoutes(app, { db: dbHandle.db, auth, fx: opts.fx !== undefined ? opts.fx : new CbuRateProvider(), now: opts.now ?? (() => new Date()) });
+  webApiRoutes(app, {
+    db: dbHandle.db,
+    auth,
+    fx: opts.fx !== undefined ? opts.fx : new CbuRateProvider(),
+    now: opts.now ?? (() => new Date()),
+    deletionGraceDays: env.ACCOUNT_DELETION_GRACE_DAYS,
+  });
 
   return app;
 }

@@ -20,3 +20,4 @@ export * from './finance/limits';
 export * from './finance/dashboard';
 export * from './finance/settings';
 export * from './finance/proactive';
+export * from './finance/privacy';

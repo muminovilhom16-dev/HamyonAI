@@ -17,7 +17,7 @@ async function main(): Promise<void> {
 
   const dbHandle = createDb(env.DATABASE_URL, { max: env.DATABASE_POOL_MAX });
   const app = await buildApp({ env, dbHandle });
-  const stopMaintenance = scheduleMaintenance(dbHandle.db, app.log);
+  const stopMaintenance = scheduleMaintenance(dbHandle.db, app.log, env.ACCOUNT_DELETION_GRACE_DAYS);
   const notifyDeps = {
     db: dbHandle.db,
     api: app.bot.api,
