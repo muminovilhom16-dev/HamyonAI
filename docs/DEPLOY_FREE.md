@@ -22,7 +22,7 @@ Natijada bot ishlaydi va sayt manzili shunday bo'ladi:
 ## 2-qadam. Bepul ma'lumotlar bazasi — Neon (5 daqiqa)
 
 1. **https://neon.tech** ga kiring → **Sign up** → **Continue with Google**.
-2. Loyiha nomi: `hamyon` · Region: **Europe (Frankfurt)** → **Create project**.
+2. Loyiha nomi: `hamyon` · Region: **AWS US East 2 (Ohio)** (Render ham Ohio’da) → **Create project**.
 3. Ekranda **Connection string** chiqadi (`postgresql://...` bilan boshlanadi).
    Yonidagi **Copy** tugmasini bosing va uni ham saqlab qo'ying.
 

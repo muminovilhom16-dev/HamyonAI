@@ -6,7 +6,7 @@ services:
     name: hamyon-ai
     runtime: docker
     plan: free
-    region: frankfurt
+    region: ohio   # Neon bazasi bilan bir joyda (AWS US East 2)
     branch: claude/hamyon-ai-master-prompt-wx9kdh
     dockerfilePath: ./Dockerfile
     dockerContext: .
