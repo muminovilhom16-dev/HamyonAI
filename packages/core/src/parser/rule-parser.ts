@@ -8,6 +8,7 @@ import {
   DEBT_TAKE_WORDS,
   DEBT_WORDS,
   INCOME_SLUGS,
+  INCOME_STRONG_WORDS,
   INCOME_WORDS,
   PERSON_STEMS,
   RETURN_ANY_WORDS,
@@ -171,13 +172,28 @@ function segment(tokens: Token[], amounts: AmountMatch[]): Array<{ from: number;
 }
 
 /**
+ * In "tuxum 1 karobka 22 ming" or "benzin 92 ga 300 ming", the bare small
+ * number is a quantity/label, not a second price: when a separator-free
+ * segment already has an amount with an explicit scale or currency, drop
+ * bare small numbers that were only guessed as thousands.
+ */
+function dropQuantityNumbers(tokens: Token[], amounts: AmountMatch[]): AmountMatch[] {
+  const segOf = (idx: number) => tokens.slice(0, idx).filter((t) => t.kind === 'sep').length;
+  return amounts.filter((a) => {
+    if (!a.assumedThousands) return true;
+    const seg = segOf(a.startIdx);
+    return !amounts.some((b) => b !== a && segOf(b.startIdx) === seg && (b.hasScale || b.explicitCurrency || !b.assumedThousands));
+  });
+}
+
+/**
  * Deterministic parser. Works with no network/AI at all (TZ §45 fallback),
  * and also provides the trusted amount candidates that any AI output is
  * checked against.
  */
 export function parseRuleBased(text: string, ctx: { today: string }): RuleParseResult {
   const tokens = tokenize(text);
-  const amounts = extractAmounts(tokens);
+  const amounts = dropQuantityNumbers(tokens, extractAmounts(tokens));
   const { offset, indices: dateIdx } = detectDateOffset(tokens);
   const date = addDays(ctx.today, offset);
 
@@ -246,7 +262,14 @@ function buildItem(
     type = 'debt_return'; returnDirection = 'by_me'; typeConfidence = 0.9;
   } else if (hasWord(segTokens, RETURN_TO_ME_WORDS)) {
     type = 'debt_return'; returnDirection = 'to_me'; typeConfidence = 0.9;
-  } else if (amount.sign === '+' || hasWord(segTokens, INCOME_WORDS)) {
+  } else if (
+    amount.sign === '+' ||
+    hasWord(segTokens, INCOME_STRONG_WORDS) ||
+    // Weak words ("oylik" = salary, but also "monthly"): income only when the
+    // message names no expense category ("internet oylik 120 ming" is a bill).
+    ((hasWord(segTokens, INCOME_WORDS) || categorize(itemTokens, (s) => INCOME_SLUGS.has(s)).slug) &&
+      !categorize(itemTokens, (s) => !INCOME_SLUGS.has(s)).slug)
+  ) {
     type = 'income'; typeConfidence = 0.95;
   } else if (amount.sign === '-') {
     typeConfidence = 0.95;

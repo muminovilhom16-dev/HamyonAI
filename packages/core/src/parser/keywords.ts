@@ -34,7 +34,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   ]),
   housing: f(['ijara', 'kvartira', 'arenda', 'uy ijarasi', 'mebel', 'аренда', 'квартира', 'квартплата', 'мебель']),
   telecom: f([
-    'internet', 'ucell', 'beeline', 'uzmobile', 'mobiuz', 'humans', 'uztelecom', 'paynet', 'aloqa', 'tarif', 'svyaz',
+    'internet', 'inet', 'ucell', 'beeline', 'uzmobile', 'mobiuz', 'humans', 'uztelecom', 'paynet', 'aloqa', 'tarif', 'svyaz',
     'интернет', 'связь', 'тариф', 'пейнет',
   ]),
   tech_services: f([
@@ -59,7 +59,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     'детский', 'памперс', 'игрушки', 'игрушка', 'садик', 'подгузники',
   ]),
   celebrations: f([
-    "to'y", "to'yga", "tug'ilgan kun", 'sovga', "sovg'a", 'marosim', 'nikoh', 'gul', 'gullar', 'svadba',
+    "to'y", "to'yga", "to'yi", "tug'ilgan kun", 'sovga', "sovg'a", 'marosim', 'nikoh', 'gul', 'gullar', 'svadba',
     'свадьба', 'подарок', 'цветы', 'день рождения',
   ]),
   loans: f(['kredit', 'nasiya', 'rassrochka', 'ipoteka', 'muddatli', 'кредит', 'рассрочка', 'ипотека', 'насия']),
@@ -67,15 +67,18 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     'kino', 'teatr', 'konsert', 'playstation', 'netflix', 'spotify', 'bouling', 'kinoteatr', "ko'ngilochar", 'dam olish',
     'кино', 'театр', 'концерт', 'боулинг', 'развлечения',
   ]),
-  salary: f(['oylik', 'maosh', 'zarplata', 'avans', 'зарплата', 'аванс', 'оклад']),
+  salary: f(['oylik', 'oylig', 'maosh', 'zarplata', 'zarplat', 'avans', 'зарплата', 'зарплату', 'аванс', 'оклад']),
   other_income: f(['bonus', 'premiya', 'daromad', 'foyda', 'cashback', 'keshbek', 'премия', 'бонус', 'доход', 'кэшбэк']),
 };
 
 export const INCOME_SLUGS = new Set(['salary', 'other_income']);
 
+/** Strong income signals: money arrived ("tushdi", "keldi", "получил"). */
+export const INCOME_STRONG_WORDS = f(['tushdi', 'keldi', 'tushgan', 'kelgan', 'получил', 'получила', 'пришла', 'пришло', 'пришли', 'поступила', 'поступило']);
+
 /** Words that mark income when present ("oylik tushdi", "pul keldi"). */
 export const INCOME_WORDS = f(['tushdi', 'keldi', 'oldim oylik', 'daromad', 'maosh', 'oylik', 'zarplata', 'avans', 'premiya', 'bonus',
-  'получил', 'пришла', 'пришло', 'пришли', 'зарплата', 'доход', 'премия', 'аванс']);
+  'keshbek', 'cashback', 'получил', 'пришла', 'пришло', 'пришли', 'зарплата', 'зарплату', 'доход', 'премия', 'аванс', 'кэшбэк']);
 
 export const DEBT_WORDS = f(['qarz', 'qarzga', 'qarzim', 'qarzni', 'qarzdan', 'долг', 'долга', 'долгу', 'взаймы', 'одолжил', 'одолжила', 'занял', 'заняла']);
 export const DEBT_GIVE_WORDS = f(['berdim', 'berib', 'berdik', 'дал', 'дала', 'одолжил', 'одолжила']);
