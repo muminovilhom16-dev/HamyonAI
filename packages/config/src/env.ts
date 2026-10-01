@@ -103,6 +103,17 @@ const empty = (v: string | undefined) => v === undefined || v.trim() === '';
  */
 export function withPlatformDefaults(source: Record<string, string | undefined>): Record<string, string | undefined> {
   const out = { ...source };
+  // Values pasted into a dashboard often carry stray spaces/quotes, a leading
+  // "@" on the bot username, or the whole `psql '...'` snippet around the URL.
+  for (const key of ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_BOT_USERNAME', 'DATABASE_URL'] as const) {
+    const v = out[key];
+    if (v !== undefined) out[key] = v.trim().replace(/^["']|["']$/g, '').trim();
+  }
+  if (out.TELEGRAM_BOT_USERNAME) out.TELEGRAM_BOT_USERNAME = out.TELEGRAM_BOT_USERNAME.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
+  if (out.DATABASE_URL) {
+    const m = /postgres(?:ql)?:\/\/[^\s'"]+/.exec(out.DATABASE_URL);
+    if (m) out.DATABASE_URL = m[0];
+  }
   if (empty(out.PUBLIC_BASE_URL) && !empty(out.RENDER_EXTERNAL_URL)) out.PUBLIC_BASE_URL = out.RENDER_EXTERNAL_URL!.replace(/\/+$/, '');
   if (empty(out.WEB_BASE_URL) && !empty(out.PUBLIC_BASE_URL)) out.WEB_BASE_URL = `${out.PUBLIC_BASE_URL!.replace(/\/+$/, '')}/app`;
   if (empty(out.TELEGRAM_WEBHOOK_SECRET) && !empty(out.AUTH_TOKEN_SECRET)) {

@@ -78,4 +78,16 @@ describe('platform defaults (free PaaS deploy)', () => {
     expect(env.PUBLIC_BASE_URL).toBe('https://a.uz');
     expect(env.TELEGRAM_WEBHOOK_SECRET).toBe('x'.repeat(32));
   });
+
+  it('cleans values pasted from dashboards', () => {
+    const env = loadEnv({
+      ...min,
+      TELEGRAM_BOT_TOKEN: `  ${base.TELEGRAM_BOT_TOKEN}\n`,
+      TELEGRAM_BOT_USERNAME: ' @HamyonAIbot ',
+      DATABASE_URL: "psql 'postgresql://u:p@ep-x-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'",
+    });
+    expect(env.TELEGRAM_BOT_TOKEN).toBe(base.TELEGRAM_BOT_TOKEN);
+    expect(env.TELEGRAM_BOT_USERNAME).toBe('HamyonAIbot');
+    expect(env.DATABASE_URL).toBe('postgresql://u:p@ep-x-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require');
+  });
 });
