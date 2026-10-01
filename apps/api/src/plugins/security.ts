@@ -15,9 +15,11 @@ export async function registerSecurity(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
+        // telegram.org: official Login Widget (renders an oauth.telegram.org iframe).
+        scriptSrc: ["'self'", 'https://telegram.org'],
+        frameSrc: ['https://oauth.telegram.org'],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:'],
+        imgSrc: ["'self'", 'data:', 'https://telegram.org'],
         connectSrc: ["'self'"],
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],

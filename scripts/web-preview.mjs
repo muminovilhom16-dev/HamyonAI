@@ -31,7 +31,7 @@ const server = spawn('node', ['apps/api/dist/server.js'], {
     DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://hamyon:hamyon@localhost:5432/hamyon',
     TELEGRAM_BOT_TOKEN: '123456:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', TELEGRAM_WEBHOOK_SECRET: SECRET,
     TELEGRAM_API_ROOT: `http://127.0.0.1:${tg.address().port}`, AUTH_TOKEN_SECRET: 'a'.repeat(40),
-    PUBLIC_BASE_URL: base, WEB_BASE_URL: `${base}/`, WEB_STATIC_DIR: 'apps/web/dist', COOKIE_SECURE: 'false',
+    PUBLIC_BASE_URL: base, WEB_BASE_URL: `${base}/app`, WEB_STATIC_DIR: 'apps/web/dist', COOKIE_SECURE: 'false',
     AI_PROVIDER: 'none', STT_PROVIDER: 'none',
   },
   stdio: ['ignore', 'inherit', 'inherit'],
@@ -64,7 +64,7 @@ const errors = [];
 const shots = async (name, opts, link) => {
   const ctx = await browser.newContext(opts);
   const page = await ctx.newPage();
-  page.on('console', (m) => m.type() === 'error' && errors.push(`${name}: ${m.text()}`));
+  page.on('console', (m) => m.type() === 'error' && !/telegram\.org|ERR_TUNNEL|ERR_NAME/.test(m.text()) && errors.push(`${name}: ${m.text()}`));
   page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
   await page.goto(link);
   await page.waitForSelector('.kpi-value');
@@ -95,6 +95,32 @@ for (const [name, opts] of [
   ['desktop-light', { viewport: { width: 1280, height: 900 }, colorScheme: 'light' }],
 ]) {
   await shots(name, opts, await fresh()).catch((e) => errors.push(`${name}: ${e.message}`));
+}
+
+// Landing + auth pages (signed out)
+for (const [name, opts] of [
+  ['landing-phone', { viewport: { width: 360, height: 780 }, deviceScaleFactor: 2 }],
+  ['landing-desktop', { viewport: { width: 1280, height: 860 } }],
+]) {
+  const ctx = await browser.newContext(opts);
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
+  await page.goto(`${base}/`);
+  await page.waitForSelector('.lp-hero h1');
+  await page.screenshot({ path: `${OUT}/${name}-hero.png` });
+  await page.screenshot({ path: `${OUT}/${name}-full.png`, fullPage: true });
+  await page.click('.lp-header .lp-btn.outline');
+  await page.waitForSelector('.lp-auth-card');
+  await page.screenshot({ path: `${OUT}/${name}-signup.png` });
+  if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) errors.push(`${name}: horizontal overflow`);
+  await page.goto(`${base}/`);
+  await page.waitForSelector('.lp-hero h1');
+  const clipped = await page.evaluate(() =>
+    [...document.querySelectorAll('.lp-header *, .lp-hero-text *, .lp-btn, .lp-card')]
+      .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.right > window.innerWidth + 1 || r.left < -1); })
+      .map((el) => el.className || el.tagName));
+  if (clipped.length) errors.push(`${name}: clipped ${[...new Set(clipped)].slice(0, 5).join(', ')}`);
+  await ctx.close();
 }
 
 // Expired link page

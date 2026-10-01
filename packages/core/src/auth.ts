@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import { schema, type Database } from '@hamyon/db';
 
@@ -101,4 +101,47 @@ export async function resolveSession(
 
 export async function revokeSession(db: Database, sessionId: string, now: Date = new Date()): Promise<void> {
   await db.update(webSessions).set({ revokedAt: now }).where(eq(webSessions.id, sessionId));
+}
+
+// ─── Telegram Login Widget (web sign-up / login, TZ §26 optional) ───
+
+export interface TelegramLoginPayload {
+  id: number;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  auth_date: number;
+  hash: string;
+}
+
+/**
+ * Verifies a Telegram Login Widget payload:
+ * HMAC-SHA256(data_check_string, SHA256(bot_token)) == hash, and auth_date is
+ * recent (replay window). See https://core.telegram.org/widgets/login.
+ */
+export function verifyTelegramLogin(
+  botToken: string,
+  payload: Record<string, unknown>,
+  now: Date = new Date(),
+  maxAgeSeconds = 86_400,
+): TelegramLoginPayload | null {
+  const hash = payload.hash;
+  if (typeof hash !== 'string' || !/^[0-9a-f]{64}$/.test(hash)) return null;
+  const allowed = ['id', 'first_name', 'last_name', 'username', 'photo_url', 'auth_date'];
+  const entries = Object.entries(payload).filter(([k, v]) => k !== 'hash' && v !== undefined && v !== null);
+  if (entries.some(([k]) => !allowed.includes(k))) return null;
+  const dataCheckString = entries
+    .map(([k, v]) => `${k}=${String(v)}`)
+    .sort()
+    .join('\n');
+  const secret = createHash('sha256').update(botToken).digest();
+  const expected = createHmac('sha256', secret).update(dataCheckString).digest('hex');
+  if (!safeEqual(expected, hash)) return null;
+  const authDate = Number(payload.auth_date);
+  const id = Number(payload.id);
+  if (!Number.isSafeInteger(id) || id <= 0 || !Number.isFinite(authDate)) return null;
+  const age = now.getTime() / 1000 - authDate;
+  if (age > maxAgeSeconds || age < -300) return null;
+  return payload as unknown as TelegramLoginPayload;
 }

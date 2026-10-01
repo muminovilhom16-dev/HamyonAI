@@ -2,6 +2,8 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { eq } from 'drizzle-orm';
 import {
   AppError,
+  ensureUser,
+  verifyTelegramLogin,
   consumeLoginToken,
   createSession,
   resolveSession,
@@ -27,6 +29,9 @@ export interface AuthRouteOptions {
   /** Where to send the user after successful login. */
   webBaseUrl?: string;
   botUsername?: string;
+  /** Needed to verify Telegram Login Widget signatures. */
+  botToken: string;
+  userDefaults?: { currency?: 'UZS' | 'USD'; timezone?: string; reminderTime?: string };
 }
 
 const escapeHtml = (s: string) =>
@@ -72,6 +77,35 @@ export function authRoutes(app: FastifyInstance, opts: AuthRouteOptions): void {
       return reply.header('cache-control', 'no-store').redirect(opts.webBaseUrl ?? '/', 303);
     },
   );
+
+  // Telegram Login Widget: one-tap sign-up / login on the website.
+  // No phone or email is ever requested (TZ §14).
+  app.post('/auth/telegram', { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (request, reply) => {
+    if (request.headers['x-hamyon-csrf'] !== '1') throw new AppError('forbidden');
+    const body = (request.body ?? {}) as Record<string, unknown>;
+    const data = verifyTelegramLogin(opts.botToken, body);
+    if (!data) throw new AppError('unauthorized');
+    const { user, created } = await ensureUser(
+      opts.db,
+      {
+        telegramId: data.id,
+        displayName: [data.first_name, data.last_name].filter(Boolean).join(' ') || null,
+        languageCode: languageFromAcceptHeader(request.headers['accept-language']) === 'ru' ? 'ru' : 'uz',
+      },
+      opts.userDefaults,
+    );
+    if (created) await opts.db.insert(schema.analyticsEvents).values({ userId: user.id, name: 'start', props: { channel: 'web' } });
+    const session = await createSession(opts.db, opts.auth, user.id);
+    await opts.db.insert(schema.analyticsEvents).values({ userId: user.id, name: 'web_opened', props: { via: 'telegram_widget' } });
+    reply.setCookie(SESSION_COOKIE, session.token, {
+      httpOnly: true,
+      secure: opts.cookieSecure,
+      sameSite: 'lax',
+      path: '/',
+      expires: session.expiresAt,
+    });
+    return { ok: true, isNew: created };
+  });
 
   app.post('/auth/logout', async (request, reply) => {
     const session = await resolveSession(opts.db, opts.auth, request.cookies[SESSION_COOKIE]);

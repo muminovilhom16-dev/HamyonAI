@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, ApiError, type Lang, type Settings } from './api';
+import { navigate } from './router';
 import { tr, type Key } from './i18n';
 import { DashboardPage } from './pages/DashboardPage';
 import { DebtsPage } from './pages/DebtsPage';
@@ -13,26 +14,6 @@ const tabFromHash = (): Tab => {
   const h = window.location.hash.slice(1) as Tab;
   return TABS.includes(h) ? h : 'dashboard';
 };
-
-function Login({ lang }: { lang: Lang }) {
-  const [bot, setBot] = useState<string | null>(null);
-  useEffect(() => {
-    api.get<{ botUsername: string | null }>('/api/public').then((r) => setBot(r.botUsername)).catch(() => {});
-  }, []);
-  return (
-    <main className="center">
-      <div className="login">
-        <h1>{tr(lang, 'loginTitle')}</h1>
-        <p className="muted">{tr(lang, 'loginHint')}</p>
-        {bot && (
-          <a className="btn primary" href={`https://t.me/${bot}`}>
-            {tr(lang, 'openBot')}
-          </a>
-        )}
-      </div>
-    </main>
-  );
-}
 
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -52,9 +33,13 @@ export function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  useEffect(() => {
+    if (state === 'login') navigate('/login');
+  }, [state]);
+
   const browserLang: Lang = navigator.language.startsWith('ru') ? 'ru' : 'uz_latn';
   if (state === 'loading') return null;
-  if (state === 'login') return <Login lang={browserLang} />;
+  if (state === 'login') return null;
   if (state === 'error' || !settings) return <main className="center"><p className="error">{tr(browserLang, 'error')}</p></main>;
 
   const lang = settings.language;
@@ -67,7 +52,7 @@ export function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <span className="brand">Hamyon AI</span>
+        <a className="brand" href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} style={{ color: 'inherit', textDecoration: 'none' }}>Hamyon AI</a>
         <span className="muted small">{settings.displayName}</span>
       </header>
       <nav className="nav" aria-label="Hamyon AI">

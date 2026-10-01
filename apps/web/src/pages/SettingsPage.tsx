@@ -18,7 +18,7 @@ export function SettingsPage({ settings, onChange }: { settings: Settings; onCha
 
   const logout = async () => {
     await api.post('/auth/logout').catch(() => {});
-    window.location.reload();
+    window.location.assign('/');
   };
 
   return (

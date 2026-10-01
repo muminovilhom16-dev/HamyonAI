@@ -37,6 +37,15 @@ pnpm test        # needs TEST_DATABASE_URL (a database whose name contains "test
 pnpm build && pnpm smoke   # boots the built server against a fake Telegram API
 ```
 
+## Web: landing, sign up, panel
+
+- `/` landing, `/signup` and `/login`, `/app` panel (served by the API, same origin).
+- Accounts are Telegram accounts — no phone, email or password. Two ways in:
+  the Telegram Login Widget, or the bot (`/start` to sign up, `/web` for a
+  one-time login link).
+- The widget only works on the domain registered for the bot: in @BotFather
+  run `/setdomain` and enter the public domain.
+
 ## Production
 
 `Dockerfile` builds a minimal image; the container runs migrations, then the
