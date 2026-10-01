@@ -6,13 +6,20 @@ import type { AuthConfig } from '@hamyon/core';
 import type { DbHandle } from '@hamyon/db';
 import { createAIProvider, type AIProvider } from '@hamyon/ai';
 import { CbuRateProvider, type ExchangeRateProvider } from '@hamyon/core';
-import { createBot } from './bot';
+import type { Bot } from 'grammy';
+import { createBot, type BotContext } from './bot';
 import { loggerOptions } from './logger';
 import { registerErrorHandling } from './plugins/errors';
 import { registerSecurity } from './plugins/security';
 import { authRoutes } from './routes/auth';
 import { healthRoutes } from './routes/health';
 import { telegramWebhookRoute } from './routes/telegram';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    bot: Bot<BotContext>;
+  }
+}
 
 export interface BuildAppOptions {
   env: Env;
@@ -69,6 +76,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     ...(opts.configureBotApi && { configureApi: opts.configureBotApi }),
   });
   if (!opts.botInfo) await bot.init();
+  app.decorate('bot', bot);
 
   healthRoutes(app, dbHandle.pool);
   telegramWebhookRoute(app, { path: env.TELEGRAM_WEBHOOK_PATH, secret: env.TELEGRAM_WEBHOOK_SECRET, bot, db: dbHandle.db });

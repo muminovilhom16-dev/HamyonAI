@@ -177,6 +177,8 @@ export const debts = pgTable('debts', {
   closedAt: timestamp('closed_at', { withTimezone: true }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
+  /** Soft delete of a mistaken debt (undo window, then purge). */
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [
   check('debts_total_positive', sql`${t.total} > 0`),
   check('debts_remaining_range', sql`${t.remaining} >= 0 and ${t.remaining} <= ${t.total}`),
@@ -260,6 +262,8 @@ export const debtPayments = pgTable('debt_payments', {
   paidAt: timestamp('paid_at', { withTimezone: true }).notNull(),
   note: text('note'),
   createdAt: createdAt(),
+  /** Reversed (deleted) repayment; remaining was restored. */
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [
   check('debt_payments_amount_positive', sql`${t.amount} > 0`),
   index('debt_payments_debt_idx').on(t.debtId),
@@ -352,6 +356,8 @@ export const pendingKindEnum = pgEnum('pending_kind', [
   'ask_person_kind',
   'ask_amount',
   'edit_amount',
+  'ask_counterparty',
+  'ask_debt_direction',
 ]);
 
 /**

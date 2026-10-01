@@ -20,6 +20,8 @@ import {
   resolvePending,
   runPipeline,
   softDeleteTransaction,
+  deleteDebtEvent,
+  DEBT_TYPES,
   toCategoryOptions,
   tokenize,
   undoDelete,
@@ -44,6 +46,7 @@ import {
   type CardEnv,
 } from './cards';
 import type { BotContext, BotServices } from './context';
+import { answerCounterparty, continueDebt, debtPayloadFrom, isDebtPayload, replyDebtCard, renderDebtCard, type PendingDebtPayload } from './debts';
 import { afterFirstTransaction } from './onboarding';
 
 /** Parsed item waiting for the user, stored in pending_inputs.payload. */
@@ -150,10 +153,21 @@ async function handleItem(ctx: BotContext, s: BotServices, item: PipelineItem, r
       });
       return false;
     }
-    case 'debt':
-      // Debt is never an expense (TZ rule 1); the debt engine (Phase 3) records it.
-      await ctx.reply(t(user.language, 'debtComingSoon'));
-      return false;
+    case 'debt': {
+      // Debt is never an expense (TZ rule 1): it goes to the debt engine.
+      const dp = debtPayloadFrom(item, rawInput, s.confidenceThreshold);
+      if (item.amountConfidence < s.confidenceThreshold) {
+        const p = await createPending(s.db, { userId: user.id, walletId: ctx.walletId!, kind: 'confirm_amount', payload: dp, now: s.now() });
+        const who = item.tx.counterparty ? ` — ${item.tx.counterparty}` : '';
+        await ctx.reply(`${formatMoney(item.tx.amount, item.tx.currency, user.language)}${who}\n${t(user.language, 'confirmAmountQ')}`, {
+          reply_markup: new InlineKeyboard()
+            .text(`✅ ${formatMoney(item.tx.amount, item.tx.currency, user.language)}`, `pa:${p.id}`)
+            .text(t(user.language, 'otherAmount'), `pe:${p.id}`),
+        });
+        return false;
+      }
+      return continueDebt(ctx, s, dp, { edit: false });
+    }
   }
 }
 
@@ -188,11 +202,19 @@ async function processText(ctx: BotContext, s: BotServices, text: string): Promi
           await ctx.reply(t(user.language, 'expired'));
           return;
         }
-        const p = pending.payload as PendingTxPayload;
-        p.tx = { ...p.tx, amount };
-        await continueAfterAmount(ctx, s, pending.id, p, false);
+        const p = pending.payload as PendingTxPayload | PendingDebtPayload;
+        await continueAfterAmount(ctx, s, pending.id, { ...p, tx: { ...p.tx, amount } }, false);
         return;
       }
+    }
+    if (
+      awaiting.kind === 'ask_counterparty' &&
+      parseRuleBased(text, { today }).items.length === 0 &&
+      text.trim().split(/\s+/).length <= 4 &&
+      isDebtPayload(awaiting.payload)
+    ) {
+      if (await answerCounterparty(ctx, s, awaiting.id, awaiting.payload, text)) await afterFirstTransaction(ctx, s);
+      return;
     }
     if (awaiting.kind === 'ask_amount' && amount !== null) {
       await resolvePending(s.db, awaiting.id, s.now());
@@ -231,7 +253,18 @@ async function processText(ctx: BotContext, s: BotServices, text: string): Promi
 }
 
 /** After the amount is settled: save, or ask for the category if still unknown. */
-async function continueAfterAmount(ctx: BotContext, s: BotServices, pendingId: string, p: PendingTxPayload, edit: boolean) {
+async function continueAfterAmount(
+  ctx: BotContext,
+  s: BotServices,
+  pendingId: string,
+  p: PendingTxPayload | PendingDebtPayload,
+  edit: boolean,
+) {
+  if (isDebtPayload(p)) {
+    const amountSettled = { ...p, tx: { ...p.tx, confidence: Math.max(p.tx.confidence, 0.8) } };
+    if (await continueDebt(ctx, s, amountSettled, { edit, consumedPendingId: pendingId })) await afterFirstTransaction(ctx, s);
+    return;
+  }
   const needsCategory = p.tx.category_id === null && !p.categoryPending;
   if (needsCategory) {
     await updatePendingPayload(s.db, pendingId, p);
@@ -267,13 +300,36 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
     const tx = await getTransactionForUser(s.db, user.id, ctx.match[1]!);
     await ctx.answerCallbackQuery();
     if (tx.deletedAt) return;
+    if (DEBT_TYPES.has(tx.type)) {
+      await replyDebtCard(ctx, s, tx.id);
+      return;
+    }
     const env = await envFor(s, user, tx.walletId);
     await ctx.reply(cardText(txFields(tx, env, user.timezone), env), { reply_markup: txKeyboard(tx, env, user.timezone) });
   });
 
   bot.callbackQuery(new RegExp(`^ldel:(${UUID})$`), async (ctx) => {
     const user = ctx.user!;
-    const tx = await softDeleteTransaction(fin(s), user.id, ctx.match[1]!);
+    const target = await getTransactionForUser(s.db, user.id, ctx.match[1]!);
+    if (DEBT_TYPES.has(target.type)) {
+      let deleted: Transaction;
+      try {
+        deleted = await deleteDebtEvent(fin(s), user.id, target.id);
+      } catch (err) {
+        if (err instanceof AppError && err.code === 'validation') {
+          await ctx.answerCallbackQuery({ text: t(user.language, 'debtHasPayments'), show_alert: true });
+          return;
+        }
+        throw err;
+      }
+      await ctx.answerCallbackQuery();
+      const card = await renderDebtCard(s, user, deleted);
+      await ctx.reply(`${t(user.language, 'deleted')}\n${card.text}`, {
+        reply_markup: new InlineKeyboard().text(t(user.language, 'undo'), `dundo:${deleted.id}`),
+      });
+      return;
+    }
+    const tx = await softDeleteTransaction(fin(s), user.id, target.id);
     const env = await envFor(s, user, tx.walletId);
     await ctx.answerCallbackQuery();
     await ctx.reply(`${t(user.language, 'deleted')}\n${cardText(txFields(tx, env, user.timezone), env)}`, {
@@ -367,7 +423,7 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
     const pending = await withPending(ctx, ctx.match[1]!);
     if (!pending) return;
     await ctx.answerCallbackQuery();
-    await continueAfterAmount(ctx, s, pending.id, pending.payload as PendingTxPayload, true);
+    await continueAfterAmount(ctx, s, pending.id, pending.payload as PendingTxPayload | PendingDebtPayload, true);
   });
 
   bot.callbackQuery(new RegExp(`^pe:(${UUID})$`), async (ctx) => {
@@ -404,8 +460,14 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
     await ctx.answerCallbackQuery();
     const p = pending.payload as PendingTxPayload;
     if (ctx.match[2] === 'd') {
-      await resolvePending(s.db, pending.id, s.now());
-      await ctx.editMessageText(t(user.language, 'debtComingSoon'));
+      const dp: PendingDebtPayload = {
+        debt: true,
+        tx: { ...p.tx, type: 'debt_given', category_id: null },
+        rawInput: p.rawInput,
+        returnDirection: null,
+        typeUncertain: false,
+      };
+      if (await continueDebt(ctx, s, dp, { edit: true, consumedPendingId: pending.id })) await afterFirstTransaction(ctx, s);
       return;
     }
     await askCategory(ctx, s, pending.id, { ...p, tx: { ...p.tx, type: 'expense' } }, true);

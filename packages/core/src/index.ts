@@ -14,3 +14,5 @@ export * from './finance/fx';
 export * from './finance/categories';
 export * from './finance/transactions';
 export * from './finance/pending';
+export * from './finance/debts';
+export * from './finance/reminders';

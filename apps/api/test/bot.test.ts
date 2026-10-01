@@ -114,8 +114,9 @@ describe('TZ §61 acceptance through the bot', () => {
   it('Murod akaga 300 ming qarz berdim → debt, NOT expense', async () => {
     const id = await newUser();
     await H.send(id, 'Murod akaga 300 ming qarz berdim');
-    expect(H.texts()[0]).toContain('qarz');
-    expect(await txsOf(id)).toHaveLength(0);
+    expect(H.texts()[0]).toBe("🤝 Qarz berdim\nMurod aka\n300 000 so'm\nBugun");
+    const rows = await txsOf(id);
+    expect(rows.map((r) => [r.type, r.categoryId])).toEqual([['debt_given', null]]);
   });
 
   it('Murod akaga 300 ming → asks debt or expense; "Xarajat" → pick category → saved', async () => {
@@ -233,9 +234,10 @@ describe('reports and lists', () => {
 
     H.reset();
     await H.send(id, '/oxirgi');
-    expect(H.texts()[0]).toContain('1. +6 000 000 so\'m');
-    expect(buttons().filter((b) => b.text.startsWith('✏️'))).toHaveLength(4);
-    expect(buttons().filter((b) => b.text.startsWith('🗑'))).toHaveLength(4);
+    expect(H.texts()[0]).toContain('+6 000 000 so\'m');
+    expect(buttons().filter((b) => b.text.startsWith('✏️'))).toHaveLength(5);
+    expect(buttons().filter((b) => b.text.startsWith('🗑'))).toHaveLength(5);
+    expect(H.texts()[0]).toContain('Qarz · Murod aka');
   });
 
   it('/hafta with no records says so', async () => {

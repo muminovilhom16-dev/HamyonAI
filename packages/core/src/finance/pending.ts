@@ -44,7 +44,7 @@ export async function latestAwaitingReply(db: Database, userId: string, now: Dat
     .where(
       and(
         eq(pendingInputs.userId, userId),
-        inArray(pendingInputs.kind, ['ask_amount', 'edit_amount']),
+        inArray(pendingInputs.kind, ['ask_amount', 'edit_amount', 'ask_counterparty']),
         isNull(pendingInputs.resolvedAt),
         gt(pendingInputs.expiresAt, now),
       ),
@@ -69,7 +69,7 @@ export async function cancelAwaitingReplies(db: Database, userId: string, now: D
   await db
     .update(pendingInputs)
     .set({ resolvedAt: now })
-    .where(and(eq(pendingInputs.userId, userId), inArray(pendingInputs.kind, ['ask_amount', 'edit_amount']), isNull(pendingInputs.resolvedAt)));
+    .where(and(eq(pendingInputs.userId, userId), inArray(pendingInputs.kind, ['ask_amount', 'edit_amount', 'ask_counterparty']), isNull(pendingInputs.resolvedAt)));
 }
 
 export async function purgePending(db: Database, now: Date = new Date()): Promise<number> {

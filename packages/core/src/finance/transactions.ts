@@ -36,7 +36,7 @@ async function resolveCategoryId(db: Database, walletId: string, key: string | n
   return row.id;
 }
 
-async function amountInUzs(deps: FinanceDeps, amount: number, currency: 'UZS' | 'USD', date: string) {
+export async function amountInUzs(deps: FinanceDeps, amount: number, currency: 'UZS' | 'USD', date: string) {
   if (currency === 'UZS') return { amountUzs: amount, fxRateUzs: null };
   const rate = await getRate(deps.db, deps.fx, currency, date);
   return { amountUzs: convertToUzs(amount, rate), fxRateUzs: rate };
@@ -117,6 +117,8 @@ export async function updateTransaction(
 ): Promise<Transaction> {
   const current = await getTransactionForUser(deps.db, userId, id);
   if (current.deletedAt) throw new AppError('not_found');
+  // Debt amounts change only through the debt engine (keeps `remaining` consistent).
+  if (DEBT_TYPES.has(current.type) && patch.amount !== undefined) throw new AppError('validation', 'debt amount is immutable');
   const set: Partial<typeof transactions.$inferInsert> = { updatedAt: nowOf(deps) };
 
   if (patch.amount !== undefined) {
@@ -158,6 +160,7 @@ export async function updateTransaction(
 
 export async function softDeleteTransaction(deps: FinanceDeps, userId: string, id: string): Promise<Transaction> {
   const current = await getTransactionForUser(deps.db, userId, id);
+  if (DEBT_TYPES.has(current.type)) throw new AppError('validation', 'use deleteDebtEvent');
   if (current.deletedAt) return current;
   const [row] = await deps.db.update(transactions).set({ deletedAt: nowOf(deps) }).where(eq(transactions.id, id)).returning();
   return row!;
@@ -166,6 +169,7 @@ export async function softDeleteTransaction(deps: FinanceDeps, userId: string, i
 /** Restores a deleted transaction within the undo window. */
 export async function undoDelete(deps: FinanceDeps, userId: string, id: string): Promise<{ ok: boolean; tx: Transaction }> {
   const current = await getTransactionForUser(deps.db, userId, id);
+  if (DEBT_TYPES.has(current.type)) throw new AppError('validation', 'use undoDebtEvent');
   if (!current.deletedAt) return { ok: true, tx: current };
   if (nowOf(deps).getTime() - current.deletedAt.getTime() > UNDO_WINDOW_MS) return { ok: false, tx: current };
   const [row] = await deps.db.update(transactions).set({ deletedAt: null }).where(eq(transactions.id, id)).returning();
@@ -179,6 +183,8 @@ export async function purgeDeletedTransactions(db: Database, now: Date = new Dat
     .delete(transactions)
     .where(and(isNotNull(transactions.deletedAt), lt(transactions.deletedAt, cutoff)))
     .returning({ id: transactions.id });
+  await db.delete(schema.debts).where(and(isNotNull(schema.debts.deletedAt), lt(schema.debts.deletedAt, cutoff)));
+  await db.delete(schema.debtPayments).where(and(isNotNull(schema.debtPayments.deletedAt), lt(schema.debtPayments.deletedAt, cutoff)));
   return rows.length;
 }
 

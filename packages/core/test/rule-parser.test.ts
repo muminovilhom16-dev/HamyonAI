@@ -144,3 +144,19 @@ describe('categories', () => {
     expect(it.categoryConfidence).toBe(0);
   });
 });
+
+describe('debt counterparty fallback', () => {
+  it.each([
+    ['Саша вернул 50к', 'Саша', 'debt_return'],
+    ['Aziz 100 ming qaytardi', 'Aziz', 'debt_return'],
+    ['дал в долг Мурод ака 300к', 'Мурод ака', 'debt_given'],
+    ['Мурод ака вернул 100к', 'Мурод ака', 'debt_return'],
+  ])('%s → %s', (input, name, type) => {
+    const r = parseRuleBased(input, { today: '2026-10-01' });
+    expect(r.items[0]!.tx).toMatchObject({ counterparty: name, type });
+  });
+
+  it('expenses do not invent a counterparty from a capitalized shop name', () => {
+    expect(parseRuleBased('Korzinka 50 ming', { today: '2026-10-01' }).items[0]!.tx.counterparty).toBeNull();
+  });
+});

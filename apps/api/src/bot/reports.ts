@@ -51,7 +51,10 @@ export function registerReports(bot: Bot<BotContext>, s: BotServices): void {
     const cats = await listWalletCategories(s.db, ctx.walletId!, lang);
     const year = localDate(s.now(), user.timezone).slice(0, 4);
     const lines = rows.map((r, i) => {
-      const cat = cats.find((c) => c.id === r.categoryId)?.name ?? t(lang, 'uncategorized');
+      const isDebt = r.type === 'debt_given' || r.type === 'debt_taken' || r.type === 'debt_return';
+      const cat = isDebt
+        ? `${t(lang, 'debtLabel')}${r.counterparty ? ` · ${r.counterparty}` : ''}`
+        : cats.find((c) => c.id === r.categoryId)?.name ?? t(lang, 'uncategorized');
       const money = `${r.type === 'income' ? '+' : ''}${formatMoney(r.amount, r.currency, lang)}`;
       const note = r.note ? ` · ${r.note}` : '';
       return `${i + 1}. ${money} · ${cat}${note} · ${formatDay(localDate(r.occurredAt, user.timezone), lang, year)}`;

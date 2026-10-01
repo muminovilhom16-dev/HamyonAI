@@ -30,6 +30,8 @@ export interface PipelineItem {
   returnDirection: RuleItem['flags']['returnDirection'];
   categoryCandidates: string[];
   contentTokens: string[];
+  amountConfidence: number;
+  typeConfidence: number;
 }
 
 export type PipelineResult =
@@ -181,6 +183,8 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       returnDirection: w.rule.flags.returnDirection,
       categoryCandidates: w.rule.flags.categoryCandidates.filter((k) => keys.has(k)),
       contentTokens: w.rule.contentTokens,
+      amountConfidence: w.rule.amountConfidence,
+      typeConfidence: w.typeConfidence,
     };
   });
 

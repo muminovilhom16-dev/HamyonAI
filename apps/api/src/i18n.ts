@@ -75,11 +75,6 @@ const messages = {
     uz_cyrl: 'Бу сўров эскирган. Қайтадан ёзинг.',
     ru: 'Запрос устарел. Напишите заново.',
   },
-  debtComingSoon: {
-    uz_latn: "Bu qarz sifatida tanildi va xarajatga yozilmadi. Qarzlar moduli keyingi bosqichda ulanadi.",
-    uz_cyrl: 'Бу қарз сифатида танилди ва харажатга ёзилмади. Қарзлар модули кейинги босқичда уланади.',
-    ru: 'Это распознано как долг и не записано в расходы. Модуль долгов подключается на следующем этапе.',
-  },
   rateUnavailable: {
     uz_latn: "Dollar kursini hozir olib bo'lmadi. Birozdan so'ng qayta yuboring.",
     uz_cyrl: 'Доллар курсини ҳозир олиб бўлмади. Бироздан сўнг қайта юборинг.',
@@ -102,11 +97,81 @@ const messages = {
   uncategorized: { uz_latn: 'Kategoriyasiz', uz_cyrl: 'Категориясиз', ru: 'Без категории' },
   help: {
     uz_latn:
-      "Xarajatni oddiy yozing: «taksi 25 ming», «non 5 ming, sut 12 ming», «50$ kurtka».\nDaromad: «oylik tushdi 6 mln», «+500 ming».\n\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/web — web panel\n/yordam — yordam",
+      "Xarajatni oddiy yozing: «taksi 25 ming», «non 5 ming, sut 12 ming», «50$ kurtka».\nDaromad: «oylik tushdi 6 mln», «+500 ming».\nQarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi».\n\n/qarzlar — qarzlar\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/web — web panel\n/yordam — yordam",
     uz_cyrl:
-      'Харажатни оддий ёзинг: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка».\nДаромад: «ойлик тушди 6 млн», «+500 минг».\n\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/web — веб панел\n/yordam — ёрдам',
+      'Харажатни оддий ёзинг: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка».\nДаромад: «ойлик тушди 6 млн», «+500 минг».\nҚарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди».\n\n/qarzlar — қарзлар\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/web — веб панел\n/yordam — ёрдам',
     ru:
-      'Просто пишите расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка».\nДоход: «зарплата 6 млн», «+500 тысяч».\n\n/bugun — отчёт за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/web — веб-панель\n/yordam — помощь',
+      'Просто пишите расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка».\nДоход: «зарплата 6 млн», «+500 тысяч».\nДолг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к».\n\n/qarzlar — долги\n/bugun — отчёт за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/web — веб-панель\n/yordam — помощь',
+  },
+
+  // ─── Debts ───
+  debtGivenTitle: { uz_latn: '🤝 Qarz berdim', uz_cyrl: '🤝 Қарз бердим', ru: '🤝 Дал в долг' },
+  debtTakenTitle: { uz_latn: '🤝 Qarz oldim', uz_cyrl: '🤝 Қарз олдим', ru: '🤝 Взял в долг' },
+  debtReturnTitle: { uz_latn: '↩️ Qarz qaytarildi', uz_cyrl: '↩️ Қарз қайтарилди', ru: '↩️ Возврат долга' },
+  remainingLabel: { uz_latn: 'Qoldiq', uz_cyrl: 'Қолдиқ', ru: 'Остаток' },
+  debtClosed: { uz_latn: "✅ Qarz to'liq yopildi", uz_cyrl: '✅ Қарз тўлиқ ёпилди', ru: '✅ Долг полностью погашен' },
+  dueLabel: { uz_latn: 'Muddat', uz_cyrl: 'Муддат', ru: 'Срок' },
+  setDue: { uz_latn: '📅 Muddat', uz_cyrl: '📅 Муддат', ru: '📅 Срок' },
+  dueWeek: { uz_latn: '1 hafta', uz_cyrl: '1 ҳафта', ru: '1 неделя' },
+  due2Weeks: { uz_latn: '2 hafta', uz_cyrl: '2 ҳафта', ru: '2 недели' },
+  dueMonth: { uz_latn: '1 oy', uz_cyrl: '1 ой', ru: '1 месяц' },
+  dueNone: { uz_latn: 'Muddatsiz', uz_cyrl: 'Муддатсиз', ru: 'Без срока' },
+  pickDue: { uz_latn: 'Qaytarish muddatini tanlang:', uz_cyrl: 'Қайтариш муддатини танланг:', ru: 'Выберите срок возврата:' },
+  askCounterparty: {
+    uz_latn: 'Kim bilan? Ismini yozing, masalan: «Murod aka».',
+    uz_cyrl: 'Ким билан? Исмини ёзинг, масалан: «Мурод ака».',
+    ru: 'С кем? Напишите имя, например: «Мурод ака».',
+  },
+  askDebtDirection: { uz_latn: 'Qarz berdingizmi yoki oldingizmi?', uz_cyrl: 'Қарз бердингизми ёки олдингизми?', ru: 'Вы дали в долг или взяли?' },
+  debtTaken: { uz_latn: 'Qarz oldim', uz_cyrl: 'Қарз олдим', ru: 'Взял в долг' },
+  askReturnDirection: { uz_latn: 'Kim qaytardi?', uz_cyrl: 'Ким қайтарди?', ru: 'Кто вернул?' },
+  returnToMe: { uz_latn: 'Menga qaytarildi', uz_cyrl: 'Менга қайтарилди', ru: 'Мне вернули' },
+  returnByMe: { uz_latn: 'Men qaytardim', uz_cyrl: 'Мен қайтардим', ru: 'Я вернул' },
+  noDebtFound: { uz_latn: '{name} bilan ochiq qarz topilmadi.', uz_cyrl: '{name} билан очиқ қарз топилмади.', ru: 'Открытых долгов с «{name}» нет.' },
+  ambiguousPerson: {
+    uz_latn: "Bir nechta odam topildi: {names}. To'liq ismini yozib qayta yuboring.",
+    uz_cyrl: 'Бир нечта одам топилди: {names}. Тўлиқ исмини ёзиб қайта юборинг.',
+    ru: 'Найдено несколько человек: {names}. Напишите полное имя и отправьте снова.',
+  },
+  debtCurrencyMismatch: {
+    uz_latn: 'Bu qarz {currency} da. Summani shu valyutada yozing.',
+    uz_cyrl: 'Бу қарз {currency} да. Суммани шу валютада ёзинг.',
+    ru: 'Этот долг в {currency}. Укажите сумму в этой валюте.',
+  },
+  overpayment: {
+    uz_latn: "Qoldiq {remaining}, siz {amount} yozdingiz. Tekshirib qayta yuboring.",
+    uz_cyrl: 'Қолдиқ {remaining}, сиз {amount} ёздингиз. Текшириб қайта юборинг.',
+    ru: 'Остаток {remaining}, а вы указали {amount}. Проверьте и отправьте снова.',
+  },
+  debtHasPayments: {
+    uz_latn: "Bu qarz bo'yicha to'lovlar bor, uni o'chirib bo'lmaydi.",
+    uz_cyrl: 'Бу қарз бўйича тўловлар бор, уни ўчириб бўлмайди.',
+    ru: 'По этому долгу уже есть платежи, удалить нельзя.',
+  },
+  debtsTitle: { uz_latn: '🤝 Qarzlar', uz_cyrl: '🤝 Қарзлар', ru: '🤝 Долги' },
+  owedToMe: { uz_latn: 'Sizga qarzdor:', uz_cyrl: 'Сизга қарздор:', ru: 'Вам должны:' },
+  iOwe: { uz_latn: 'Siz qarzdorsiz:', uz_cyrl: 'Сиз қарздорсиз:', ru: 'Вы должны:' },
+  noDebts: { uz_latn: "Ochiq qarzlar yo'q.", uz_cyrl: 'Очиқ қарзлар йўқ.', ru: 'Открытых долгов нет.' },
+  debtLabel: { uz_latn: 'Qarz', uz_cyrl: 'Қарз', ru: 'Долг' },
+  reminderDueSoonGiven: {
+    uz_latn: '⏰ Eslatma: {name} {amount} qarzni {date} gacha qaytarishi kerak.',
+    uz_cyrl: '⏰ Эслатма: {name} {amount} қарзни {date} гача қайтариши керак.',
+    ru: '⏰ Напоминание: {name} должен вернуть {amount} до {date}.',
+  },
+  reminderDueSoonTaken: {
+    uz_latn: '⏰ Eslatma: {name}ga {amount} qarzni {date} gacha qaytarishingiz kerak.',
+    uz_cyrl: '⏰ Эслатма: {name}га {amount} қарзни {date} гача қайтаришингиз керак.',
+    ru: '⏰ Напоминание: вернуть {name} {amount} до {date}.',
+  },
+  reminderDueTodayGiven: {
+    uz_latn: '⏰ Bugun {name} {amount} qarzni qaytarish muddati.',
+    uz_cyrl: '⏰ Бугун {name} {amount} қарзни қайтариш муддати.',
+    ru: '⏰ Сегодня {name} должен вернуть {amount}.',
+  },
+  reminderDueTodayTaken: {
+    uz_latn: '⏰ Bugun {name}ga {amount} qarzni qaytarish muddati.',
+    uz_cyrl: '⏰ Бугун {name}га {amount} қарзни қайтариш муддати.',
+    ru: '⏰ Сегодня срок вернуть {name} {amount}.',
   },
 
   // ─── Errors / web ───
@@ -130,6 +195,11 @@ const messages = {
 export type MessageKey = keyof typeof messages;
 
 export const t = (lang: Language, key: MessageKey): string => messages[key][lang];
+
+/** Message with `{param}` placeholders filled in. */
+export function tf(lang: Language, key: MessageKey, params: Record<string, string>): string {
+  return t(lang, key).replace(/\{(\w+)\}/g, (_, k: string) => params[k] ?? '');
+}
 
 export function languageFromAcceptHeader(header: string | undefined): Language {
   return header?.toLowerCase().startsWith('ru') ? 'ru' : 'uz_latn';

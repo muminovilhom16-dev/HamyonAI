@@ -85,6 +85,9 @@ export const RETURN_TO_ME_WORDS = f(['qaytardi', 'qaytarib berdi', 'вернул
 /** I returned to them. */
 export const RETURN_BY_ME_WORDS = f(['qaytardim', 'qaytarib berdim', 'qaytardik', 'вернул ему', 'отдал долг']);
 
+/** Returned, direction not stated ("qarz qaytarildi", "возврат долга"). */
+export const RETURN_ANY_WORDS = f(['qaytarildi', 'qaytarishdi', 'возврат', 'вернулся']);
+
 /** Honorifics/relations that mark a person: "Murod akaga", "opamga". */
 export const PERSON_STEMS = f(['aka', 'opa', 'uka', 'singil', 'singlim', 'ota', 'ona', 'dada', 'oyi', 'buvi', 'bobo', 'xola', 'amaki', "tog'a", 'brat', 'sestra']);
 

@@ -10,6 +10,7 @@ import {
   INCOME_SLUGS,
   INCOME_WORDS,
   PERSON_STEMS,
+  RETURN_ANY_WORDS,
   RETURN_BY_ME_WORDS,
   RETURN_TO_ME_WORDS,
   STOP_WORDS,
@@ -232,6 +233,8 @@ function buildItem(
       type = 'debt_return'; returnDirection = 'by_me'; typeConfidence = 0.95;
     } else if (hasWord(segTokens, RETURN_TO_ME_WORDS)) {
       type = 'debt_return'; returnDirection = 'to_me'; typeConfidence = 0.95;
+    } else if (hasWord(segTokens, RETURN_ANY_WORDS)) {
+      type = 'debt_return'; returnDirection = null; typeConfidence = 0.9;
     } else if (hasWord(segTokens, DEBT_GIVE_WORDS)) {
       type = 'debt_given'; typeConfidence = 0.97;
     } else if (hasWord(segTokens, DEBT_TAKE_WORDS)) {
@@ -262,6 +265,14 @@ function buildItem(
     } else {
       counterparty = nameWithCase(t);
     }
+  }
+
+  // Debts need a person: fall back to a capitalized word that is not a
+  // known keyword ("Саша вернул 50к", "Aziz 100 ming qaytardi").
+  if (!counterparty && DEBT_TYPES.has(type)) {
+    const debtWords = new Set([...DEBT_WORDS, ...DEBT_GIVE_WORDS, ...DEBT_TAKE_WORDS, ...RETURN_TO_ME_WORDS, ...RETURN_BY_ME_WORDS, ...RETURN_ANY_WORDS]);
+    const name = words.find(([t]) => /^\p{Lu}/u.test(t.raw) && !debtWords.has(t.fold) && !STOP_WORDS.has(t.fold) && !isKnownWord(t.fold));
+    if (name) counterparty = name[0].raw;
   }
 
   // Category
