@@ -109,7 +109,11 @@ export function withPlatformDefaults(source: Record<string, string | undefined>)
     const v = out[key];
     if (v !== undefined) out[key] = v.trim().replace(/^["']|["']$/g, '').trim();
   }
-  if (out.TELEGRAM_BOT_USERNAME) out.TELEGRAM_BOT_USERNAME = out.TELEGRAM_BOT_USERNAME.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '');
+  if (out.TELEGRAM_BOT_USERNAME) {
+    const name = out.TELEGRAM_BOT_USERNAME.replace(/^https?:\/\/t\.me\//, '').replace(/^@/, '');
+    // Optional: the bot's real username comes from getMe, so a bad value is dropped, not fatal.
+    out.TELEGRAM_BOT_USERNAME = /^[A-Za-z0-9_]{5,32}$/.test(name) ? name : undefined;
+  }
   if (out.DATABASE_URL) {
     const m = /postgres(?:ql)?:\/\/[^\s'"]+/.exec(out.DATABASE_URL);
     if (m) out.DATABASE_URL = m[0];

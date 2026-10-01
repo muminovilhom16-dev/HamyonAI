@@ -89,5 +89,10 @@ describe('platform defaults (free PaaS deploy)', () => {
     expect(env.TELEGRAM_BOT_TOKEN).toBe(base.TELEGRAM_BOT_TOKEN);
     expect(env.TELEGRAM_BOT_USERNAME).toBe('HamyonAIbot');
     expect(env.DATABASE_URL).toBe('postgresql://u:p@ep-x-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require');
+    expect(loadEnv({ ...min, TELEGRAM_BOT_USERNAME: 'https://t.me/HamyonAIbot' }).TELEGRAM_BOT_USERNAME).toBe('HamyonAIbot');
+  });
+
+  it('drops an invalid optional bot username instead of failing (getMe supplies it)', () => {
+    expect(loadEnv({ ...min, TELEGRAM_BOT_USERNAME: 'Hamyon AI' }).TELEGRAM_BOT_USERNAME).toBeUndefined();
   });
 });
