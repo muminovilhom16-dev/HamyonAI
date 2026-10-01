@@ -6,7 +6,7 @@ import { createDb, resetTestDatabase, testDatabaseUrl, type DbHandle } from '@ha
 import { buildApp } from '../src/app';
 
 export const SECRET = 'w'.repeat(40);
-export const env = loadEnv({
+const BASE_ENV = {
   NODE_ENV: 'test',
   LOG_LEVEL: 'silent',
   DATABASE_URL: testDatabaseUrl(),
@@ -16,7 +16,8 @@ export const env = loadEnv({
   AUTH_TOKEN_SECRET: 'a'.repeat(40),
   PUBLIC_BASE_URL: 'https://api.hamyon.test',
   WEB_BASE_URL: 'https://app.hamyon.test',
-});
+};
+export const env = loadEnv(BASE_ENV);
 
 export interface ApiCall { method: string; payload: Record<string, any> }
 
@@ -41,7 +42,8 @@ export interface Harness {
 
 const fx: ExchangeRateProvider = { name: 'fake', async fetchRate() { return '12800.00'; } };
 
-export async function createHarness(): Promise<Harness> {
+export async function createHarness(envOverrides: Record<string, string> = {}): Promise<Harness> {
+  const appEnv = loadEnv({ ...BASE_ENV, ...envOverrides });
   await resetTestDatabase(testDatabaseUrl());
   const h = createDb(testDatabaseUrl());
   const calls: ApiCall[] = [];
@@ -59,9 +61,9 @@ export async function createHarness(): Promise<Harness> {
     transcribe: (i) => (speech.current ? speech.current.transcribe(i) : Promise.reject(new AIUnavailableError('not_configured'))),
   };
   const app = await buildApp({
+    env: appEnv,
     speech: speechProxy,
     downloadFile: async () => new Uint8Array([79, 103, 103, 83]),
-    env,
     dbHandle: h,
     fx,
     ai: aiProxy,

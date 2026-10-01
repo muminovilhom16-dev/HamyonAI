@@ -5,6 +5,7 @@ import { schema } from '@hamyon/db';
 import { t, tf } from '../i18n';
 import type { BotContext, BotServices } from './context';
 import { processText } from './flows';
+import { isDeferred } from '../queue';
 
 /** Below this provider confidence the transcript is not trusted (never guess). */
 export const MIN_STT_CONFIDENCE = 0.5;
@@ -35,6 +36,13 @@ export function registerVoice(bot: Bot<BotContext>, s: BotServices): void {
     if (!limit.allowed) {
       await s.db.insert(schema.analyticsEvents).values({ userId: user.id, name: 'limit_reached', props: { feature: 'voice', limit: limit.limit } });
       await ctx.reply(tf(lang, 'voiceLimitReached', { limit: String(limit.limit) }));
+      return;
+    }
+
+    // TZ §43: answer at once, transcribe in the background worker.
+    if (s.enqueueUpdate && !isDeferred(ctx.update)) {
+      await s.enqueueUpdate(ctx.update);
+      await ctx.reply(t(lang, 'voiceReceived'));
       return;
     }
 

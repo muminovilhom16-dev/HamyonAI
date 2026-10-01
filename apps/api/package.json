@@ -23,9 +23,11 @@
     "@hamyon/config": "workspace:*",
     "@hamyon/core": "workspace:*",
     "@hamyon/db": "workspace:*",
+    "bullmq": "^6.3.11",
     "drizzle-orm": "^0.45.3",
     "fastify": "^5.12.5",
     "grammy": "^1.46.0",
+    "ioredis": "^6.0.0",
     "pg": "^8.23.1",
     "pino": "^10.3.1",
     "zod": "^4.6.5"

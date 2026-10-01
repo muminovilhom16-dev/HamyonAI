@@ -2,7 +2,8 @@ import { EnvValidationError, loadEnv } from '@hamyon/config';
 import { createDb } from '@hamyon/db';
 import { buildApp } from './app';
 import { scheduleMaintenance } from './maintenance';
-import { scheduleReminders } from './reminders';
+import { runProactiveTick, scheduleNotifications } from './notifications';
+import { startWorkers } from './queue';
 
 async function main(): Promise<void> {
   let env;
@@ -17,18 +18,29 @@ async function main(): Promise<void> {
   const dbHandle = createDb(env.DATABASE_URL, { max: env.DATABASE_POOL_MAX });
   const app = await buildApp({ env, dbHandle });
   const stopMaintenance = scheduleMaintenance(dbHandle.db, app.log);
-  const stopReminders = scheduleReminders({
+  const notifyDeps = {
     db: dbHandle.db,
     api: app.bot.api,
     log: app.log,
     maxPerDay: env.MAX_PROACTIVE_MESSAGES_PER_DAY,
-  });
+    weeklyReportTime: env.WEEKLY_REPORT_TIME,
+    monthlyReportTime: env.MONTHLY_REPORT_TIME,
+  };
+  let stopReminders: () => void | Promise<void> = () => {};
+  if (env.RUN_WORKERS && app.queues) {
+    // Redis: workers + a single cluster-wide scheduler.
+    const workers = await startWorkers({ queues: app.queues, bot: app.bot, log: app.log, tick: () => runProactiveTick(notifyDeps) });
+    stopReminders = () => workers.close();
+  } else if (env.RUN_WORKERS) {
+    // No Redis: in-process scheduler (single instance only).
+    stopReminders = scheduleNotifications(notifyDeps);
+  }
 
   const shutdown = async (signal: string) => {
     app.log.info({ signal }, 'shutting down');
     try {
       stopMaintenance();
-      stopReminders();
+      await stopReminders();
       await app.close();
       await dbHandle.close();
     } finally {

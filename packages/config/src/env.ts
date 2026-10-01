@@ -21,7 +21,9 @@ export const envSchema = z.object({
 
   DATABASE_URL: z.string().url(),
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
+  /** Enables the BullMQ queue (voice jobs, scheduler). Without it work runs in-process. */
   REDIS_URL: z.string().url().optional(),
+  QUEUE_PREFIX: z.string().regex(/^[a-z0-9_-]{1,32}$/).default('hamyon'),
 
   TELEGRAM_BOT_TOKEN: z.string().regex(/^\d+:[A-Za-z0-9_-]{30,}$/, 'invalid bot token format'),
   TELEGRAM_BOT_USERNAME: z.string().regex(/^[A-Za-z0-9_]{5,32}$/).optional(),
@@ -52,6 +54,10 @@ export const envSchema = z.object({
   DEFAULT_TIMEZONE: z.string().default('Asia/Tashkent'),
   DEFAULT_REMINDER_TIME: hhmm.default('21:00'),
   MAX_PROACTIVE_MESSAGES_PER_DAY: z.coerce.number().int().min(0).max(10).default(2),
+  WEEKLY_REPORT_TIME: hhmm.default('20:00'),
+  MONTHLY_REPORT_TIME: hhmm.default('10:00'),
+  /** Run queue workers / scheduler in this process (set false on API-only replicas). */
+  RUN_WORKERS: bool.default(true),
 
   AI_PROVIDER: z.enum(['anthropic', 'none']).default('anthropic'),
   AI_TEXT_MODEL: z.string().default('claude-opus-5-5'),

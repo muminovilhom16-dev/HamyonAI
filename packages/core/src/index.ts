@@ -19,3 +19,4 @@ export * from './finance/reminders';
 export * from './finance/limits';
 export * from './finance/dashboard';
 export * from './finance/settings';
+export * from './finance/proactive';

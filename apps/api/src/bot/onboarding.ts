@@ -1,7 +1,7 @@
 import { InlineKeyboard, type Bot } from 'grammy';
 import { eq } from 'drizzle-orm';
 import { schema } from '@hamyon/db';
-import type { Language } from '@hamyon/core';
+import { markNoSpendingToday, type Language } from '@hamyon/core';
 import { t } from '../i18n';
 import type { BotContext, BotServices } from './context';
 
@@ -37,6 +37,14 @@ export async function afterFirstTransaction(ctx: BotContext, s: BotServices): Pr
 }
 
 export function registerOnboarding(bot: Bot<BotContext>, s: BotServices): void {
+  // Daily reminder answer: "no spending today" counts as activity (TZ §32).
+  bot.callbackQuery(/^ns:([0-9a-f-]{36})$/, async (ctx) => {
+    const ok = await markNoSpendingToday(s.db, ctx.user!.id, ctx.match[1]!, s.now());
+    await ctx.answerCallbackQuery();
+    if (ok) await ctx.editMessageText(t(ctx.user!.language, 'noSpendDone'));
+    else await ctx.editMessageReplyMarkup({ reply_markup: new InlineKeyboard() }).catch(() => {});
+  });
+
   bot.command('start', async (ctx) => {
     const user = ctx.user!;
     await s.db.insert(schema.analyticsEvents).values({ userId: user.id, name: 'start' });

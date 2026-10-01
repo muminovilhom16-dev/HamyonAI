@@ -10,6 +10,7 @@ import { CbuRateProvider, type ExchangeRateProvider } from '@hamyon/core';
 import type { Bot } from 'grammy';
 import { createBot, type BotContext } from './bot';
 import { telegramFileDownloader } from './bot/voice';
+import { createQueues, type Queues } from './queue';
 import { loggerOptions } from './logger';
 import { registerErrorHandling } from './plugins/errors';
 import { registerSecurity } from './plugins/security';
@@ -24,6 +25,7 @@ import path from 'node:path';
 declare module 'fastify' {
   interface FastifyInstance {
     bot: Bot<BotContext>;
+    queues: Queues | null;
   }
 }
 
@@ -70,7 +72,10 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
   }
 
   const auth = authConfigFromEnv(env);
+  const queues = env.REDIS_URL ? createQueues(env.REDIS_URL, env.QUEUE_PREFIX) : null;
+  app.addHook('onClose', async () => queues?.close());
   const bot = createBot({
+    ...(queues && { enqueueUpdate: queues.enqueueUpdate }),
     token: env.TELEGRAM_BOT_TOKEN,
     db: dbHandle.db,
     auth,
@@ -111,6 +116,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
   });
   if (!opts.botInfo) await bot.init();
   app.decorate('bot', bot);
+  app.decorate('queues', queues);
 
   healthRoutes(app, dbHandle.pool);
   telegramWebhookRoute(app, { path: env.TELEGRAM_WEBHOOK_PATH, secret: env.TELEGRAM_WEBHOOK_SECRET, bot, db: dbHandle.db });

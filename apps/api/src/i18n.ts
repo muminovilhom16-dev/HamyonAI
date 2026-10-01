@@ -174,12 +174,54 @@ const messages = {
     ru: '⏰ Сегодня срок вернуть {name} {amount}.',
   },
 
+  // ─── Proactive (TZ §32-33: short, never shaming) ───
+  dailyReminder: {
+    uz_latn: "Bugun hali yozuv yo'q. Xarajat bo'lgan bo'lsa, bitta xabar bilan yozing: «taksi 25 ming».",
+    uz_cyrl: 'Бугун ҳали ёзув йўқ. Харажат бўлган бўлса, битта хабар билан ёзинг: «такси 25 минг».',
+    ru: 'Сегодня записей пока нет. Если были расходы, напишите одним сообщением: «такси 25 тысяч».',
+  },
+  noSpendButton: { uz_latn: "Bugun xarajat yo'q", uz_cyrl: 'Бугун харажат йўқ', ru: 'Сегодня расходов нет' },
+  noSpendDone: { uz_latn: '✅ Belgilandi. Ertaga ko‘rishamiz!', uz_cyrl: '✅ Белгиланди. Эртага кўришамиз!', ru: '✅ Отмечено. До завтра!' },
+  reactivation3: {
+    uz_latn: "Salom! Bir necha kundan beri yozuv yo'q. Qachon qulay bo'lsa, «non 5 ming» kabi yozing — qolganini o'zim hisoblayman.",
+    uz_cyrl: 'Салом! Бир неча кундан бери ёзув йўқ. Қачон қулай бўлса, «нон 5 минг» каби ёзинг — қолганини ўзим ҳисоблайман.',
+    ru: 'Привет! Несколько дней не было записей. Когда будет удобно, напишите что-нибудь вроде «хлеб 5к» — остальное посчитаю сам.',
+  },
+  reactivation7: {
+    uz_latn: "Hamyon AI shu yerda 🙂 Xohlagan paytda «taksi 25 ming» deb yozing — davom etamiz.",
+    uz_cyrl: 'Hamyon AI шу ерда 🙂 Хоҳлаган пайтда «такси 25 минг» деб ёзинг — давом этамиз.',
+    ru: 'Hamyon AI на месте 🙂 Напишите «такси 25к» в любой момент — продолжим.',
+  },
+  weeklyTitle: { uz_latn: '📊 Haftalik hisobot', uz_cyrl: '📊 Ҳафталик ҳисобот', ru: '📊 Отчёт за неделю' },
+  monthlyTitle: { uz_latn: '📊 Oylik hisobot', uz_cyrl: '📊 Ойлик ҳисобот', ru: '📊 Отчёт за месяц' },
+  compareUpWeek: {
+    uz_latn: "💡 {category} xarajati o'tgan haftaga nisbatan {pct}% yuqori.",
+    uz_cyrl: '💡 {category} харажати ўтган ҳафтага нисбатан {pct}% юқори.',
+    ru: '💡 Расходы на «{category}» на {pct}% выше, чем на прошлой неделе.',
+  },
+  compareDownWeek: {
+    uz_latn: "💡 {category} xarajati o'tgan haftaga nisbatan {pct}% past.",
+    uz_cyrl: '💡 {category} харажати ўтган ҳафтага нисбатан {pct}% паст.',
+    ru: '💡 Расходы на «{category}» на {pct}% ниже, чем на прошлой неделе.',
+  },
+  compareUpMonth: {
+    uz_latn: "💡 {category} xarajati o'tgan oyga nisbatan {pct}% yuqori.",
+    uz_cyrl: '💡 {category} харажати ўтган ойга нисбатан {pct}% юқори.',
+    ru: '💡 Расходы на «{category}» на {pct}% выше, чем в прошлом месяце.',
+  },
+  compareDownMonth: {
+    uz_latn: "💡 {category} xarajati o'tgan oyga nisbatan {pct}% past.",
+    uz_cyrl: '💡 {category} харажати ўтган ойга нисбатан {pct}% паст.',
+    ru: '💡 Расходы на «{category}» на {pct}% ниже, чем в прошлом месяце.',
+  },
+
   // ─── Voice ───
   voiceUnavailable: {
     uz_latn: 'Ovozli xabarlar hozircha ishlamayapti. Matn bilan yozing, masalan: «taksi 25 ming».',
     uz_cyrl: 'Овозли хабарлар ҳозирча ишламаяпти. Матн билан ёзинг, масалан: «такси 25 минг».',
     ru: 'Голосовые сообщения пока недоступны. Напишите текстом, например: «такси 25 тысяч».',
   },
+  voiceReceived: { uz_latn: '🎙 Qabul qilindi, eshityapman…', uz_cyrl: '🎙 Қабул қилинди, эшитяпман…', ru: '🎙 Принято, слушаю…' },
   voiceTooLong: {
     uz_latn: "Ovozli xabar {max} soniyadan uzun. Qisqaroq ayting yoki matn bilan yozing.",
     uz_cyrl: 'Овозли хабар {max} сониядан узун. Қисқароқ айтинг ёки матн билан ёзинг.',
