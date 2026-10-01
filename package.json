@@ -1,0 +1,26 @@
+{
+  "name": "hamyon-ai",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r run build",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r --workspace-concurrency=1 run test",
+    "db:generate": "pnpm --filter @hamyon/db run generate",
+    "db:migrate": "pnpm --filter @hamyon/db run migrate",
+    "dev": "pnpm --filter @hamyon/api run dev",
+    "start": "pnpm --filter @hamyon/api run start",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.3"
+  }
+}

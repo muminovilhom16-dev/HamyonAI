@@ -1,0 +1,17 @@
+{
+  "name": "@hamyon/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hamyon/db": "workspace:*",
+    "drizzle-orm": "^0.45.3"
+  }
+}
