@@ -7,7 +7,7 @@ async function main(): Promise<void> {
   if (!env.PUBLIC_BASE_URL?.startsWith('https://')) {
     throw new Error('PUBLIC_BASE_URL must be an https URL to register a Telegram webhook');
   }
-  const bot = new Bot(env.TELEGRAM_BOT_TOKEN);
+  const bot = new Bot(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_API_ROOT ? { client: { apiRoot: env.TELEGRAM_API_ROOT } } : {});
   const url = `${env.PUBLIC_BASE_URL}${env.TELEGRAM_WEBHOOK_PATH}`;
   await bot.api.setWebhook(url, {
     secret_token: env.TELEGRAM_WEBHOOK_SECRET,

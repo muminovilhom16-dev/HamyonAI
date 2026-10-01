@@ -48,6 +48,9 @@ pnpm build && pnpm smoke   # boots the built server against a fake Telegram API
 
 ## Production
 
+Step-by-step (Uzbek): [docs/DEPLOY.md](docs/DEPLOY.md) — `cd deploy && ./deploy.sh`.
+
+
 `Dockerfile` builds a minimal image; the container runs migrations, then the
 server. Required env: see `.env.example` (`PUBLIC_BASE_URL` and `WEB_BASE_URL`
 must be https). Secrets come only from environment variables.

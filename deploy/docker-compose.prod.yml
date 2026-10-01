@@ -1,0 +1,112 @@
+# Hamyon AI — production stack (single VPS).
+#   caddy  : HTTPS (automatic Let's Encrypt) → app
+#   app    : API + Telegram webhook + web panel + workers (runs migrations on start)
+#   db     : PostgreSQL 16 (data on a named volume; put the VPS disk on encrypted storage)
+#   redis  : BullMQ queue + scheduler (AOF persistence)
+#   backup : daily pg_dump, 7-day retention (TZ §39), optional encryption
+# Usage: see docs/DEPLOY.md  (cd deploy && ./deploy.sh)
+
+name: hamyon
+
+services:
+  db:
+    image: ${REGISTRY_MIRROR:-}postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hamyon
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: hamyon
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hamyon -d hamyon"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [internal]
+
+  redis:
+    image: ${REGISTRY_MIRROR:-}redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+    networks: [internal]
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: hamyon-app:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgres://hamyon:${POSTGRES_PASSWORD}@db:5432/hamyon
+      REDIS_URL: redis://redis:6379
+      PUBLIC_BASE_URL: https://${DOMAIN:?set in .env}
+      WEB_BASE_URL: https://${DOMAIN}/app
+      WEB_STATIC_DIR: /app/web
+      TRUST_PROXY: "true"
+      COOKIE_SECURE: "true"
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks: [internal]
+
+  caddy:
+    image: ${REGISTRY_MIRROR:-}caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      app: { condition: service_healthy }
+    networks: [internal]
+
+  backup:
+    # Debian image: ships openssl (encrypted dumps) with no runtime installs.
+    image: ${REGISTRY_MIRROR:-}postgres:16
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: hamyon
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: hamyon
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-}
+      BACKUP_HOUR_UTC: ${BACKUP_HOUR_UTC:-21}
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - ${BACKUP_DIR:-./backups}:/backups
+    entrypoint: ["/bin/sh", "/backup.sh", "loop"]
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [internal]
+
+volumes:
+  pgdata:
+  redisdata:
+  caddydata:
+  caddyconfig:
+
+networks:
+  internal:

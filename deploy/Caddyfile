@@ -1,0 +1,25 @@
+# Automatic HTTPS for {$DOMAIN} (Let's Encrypt). Telegram webhooks require HTTPS.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+	# Security headers come from the app (helmet); HSTS is added at the edge.
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	log {
+		output stdout
+		# Never log one-time login tokens (they are in the query string).
+		format filter {
+			wrap json
+			fields {
+				request>uri query {
+					delete token
+				}
+				request>headers>Cookie delete
+				request>headers>X-Telegram-Bot-Api-Secret-Token delete
+			}
+		}
+	}
+}
