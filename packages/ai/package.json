@@ -1,5 +1,5 @@
 {
-  "name": "@hamyon/core",
+  "name": "@hamyon/ai",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@hamyon/db": "workspace:*",
-    "drizzle-orm": "^0.45.3",
-    "zod": "^4.6.5",
-    "@hamyon/ai": "workspace:*"
+    "@anthropic-ai/sdk": "^0.131.0"
   }
 }

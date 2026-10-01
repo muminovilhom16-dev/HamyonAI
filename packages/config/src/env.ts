@@ -52,7 +52,7 @@ export const envSchema = z.object({
   MAX_PROACTIVE_MESSAGES_PER_DAY: z.coerce.number().int().min(0).max(10).default(2),
 
   AI_PROVIDER: z.enum(['anthropic', 'none']).default('anthropic'),
-  AI_TEXT_MODEL: z.string().default('claude-haiku-4-5-20251001'),
+  AI_TEXT_MODEL: z.string().default('claude-opus-5-5'),
   ANTHROPIC_API_KEY: z.string().optional(),
   AI_CONFIDENCE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.8),
   AI_TIMEOUT_MS: z.coerce.number().int().min(500).default(8000),
