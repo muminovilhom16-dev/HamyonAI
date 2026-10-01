@@ -31,6 +31,8 @@ export const envSchema = z.object({
   TELEGRAM_API_ROOT: z.string().url().optional(),
 
   PUBLIC_BASE_URL: z.string().url().optional(),
+  /** Built web panel (apps/web/dist). Served same-origin when set. */
+  WEB_STATIC_DIR: z.string().optional(),
   WEB_BASE_URL: z.string().url().optional(),
   CORS_ORIGINS: z
     .string()

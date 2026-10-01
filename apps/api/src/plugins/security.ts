@@ -11,8 +11,20 @@ export async function registerSecurity(
 ): Promise<void> {
   await app.register(helmet, {
     // API + server-rendered status pages only; strict defaults.
+    // Same-origin web panel: own scripts/styles only, no third parties.
     contentSecurityPolicy: {
-      directives: { defaultSrc: ["'none'"], styleSrc: ["'unsafe-inline'"], imgSrc: ["'self'", 'data:'], frameAncestors: ["'none'"] },
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:'],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+      },
     },
     referrerPolicy: { policy: 'no-referrer' },
   });

@@ -16,6 +16,10 @@ import { registerSecurity } from './plugins/security';
 import { authRoutes } from './routes/auth';
 import { healthRoutes } from './routes/health';
 import { telegramWebhookRoute } from './routes/telegram';
+import { webApiRoutes } from './routes/web-api';
+import fastifyStatic from '@fastify/static';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -50,8 +54,20 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     bodyLimit: 1_048_576,
   });
 
-  registerErrorHandling(app);
+  const staticDir = env.WEB_STATIC_DIR ? path.resolve(env.WEB_STATIC_DIR) : null;
+  const serveWeb = !!staticDir && existsSync(path.join(staticDir, 'index.html'));
+  registerErrorHandling(app, { spaFallback: serveWeb });
   await registerSecurity(app, env);
+  if (serveWeb) {
+    await app.register(fastifyStatic, {
+      root: staticDir!,
+      wildcard: false,
+      setHeaders(res, filePath) {
+        // Vite assets are content-hashed: cache forever; HTML never.
+        res.header('cache-control', filePath.includes(`${path.sep}assets${path.sep}`) ? 'public, max-age=31536000, immutable' : 'no-cache');
+      },
+    });
+  }
 
   const auth = authConfigFromEnv(env);
   const bot = createBot({
@@ -107,6 +123,11 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
       botUsername: env.TELEGRAM_BOT_USERNAME ?? bot.botInfo.username,
     }),
   });
+
+  // Unauthenticated, non-sensitive config for the web login screen.
+  const botUsername = env.TELEGRAM_BOT_USERNAME ?? bot.botInfo.username;
+  app.get('/api/public', async () => ({ botUsername }));
+  webApiRoutes(app, { db: dbHandle.db, auth, fx: opts.fx !== undefined ? opts.fx : new CbuRateProvider(), now: opts.now ?? (() => new Date()) });
 
   return app;
 }

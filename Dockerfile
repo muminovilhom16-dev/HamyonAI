@@ -10,11 +10,13 @@ COPY apps/api/package.json apps/api/
 COPY packages/config/package.json packages/config/
 COPY packages/core/package.json packages/core/
 COPY packages/db/package.json packages/db/
+COPY packages/ai/package.json packages/ai/
+COPY apps/web/package.json apps/web/
 
 FROM base AS build
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm --filter @hamyon/api build
+RUN pnpm --filter @hamyon/api build && pnpm --filter @hamyon/web build
 
 FROM base AS prod-deps
 RUN pnpm install --prod --frozen-lockfile --filter @hamyon/api --config.node-linker=hoisted
@@ -25,6 +27,8 @@ WORKDIR /app
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/apps/api/package.json ./package.json
 COPY --from=build /app/apps/api/dist ./dist
+COPY --from=build /app/apps/web/dist ./web
+ENV WEB_STATIC_DIR=/app/web
 USER node
 EXPOSE 3000
 # Migrations run before the server starts; both are idempotent.

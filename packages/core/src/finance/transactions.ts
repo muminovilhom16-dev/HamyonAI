@@ -104,6 +104,7 @@ export async function getTransactionForUser(db: Database, userId: string, id: st
 
 export interface TransactionPatch {
   amount?: number;
+  note?: string | null;
   categoryKey?: string;
   date?: string;
 }
@@ -126,6 +127,9 @@ export async function updateTransaction(
     set.amount = patch.amount;
     // Keep the rate frozen at creation (TZ §38): history never moves with the market.
     set.amountUzs = current.currency === 'UZS' ? patch.amount : convertToUzs(patch.amount, current.fxRateUzs!);
+  }
+  if (patch.note !== undefined) {
+    set.note = patch.note === null ? null : patch.note.trim().slice(0, 200) || null;
   }
   if (patch.date !== undefined) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(patch.date)) throw new AppError('validation', 'invalid date');

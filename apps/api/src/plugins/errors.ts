@@ -5,7 +5,7 @@ import { AppError } from '@hamyon/core';
  * Centralized error handling. Clients get a stable `{ error: code }` body;
  * stack traces, SQL and provider messages stay in logs only (TZ §63).
  */
-export function registerErrorHandling(app: FastifyInstance): void {
+export function registerErrorHandling(app: FastifyInstance, opts: { spaFallback?: boolean } = {}): void {
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof AppError) {
       if (error.statusCode >= 500) request.log.error({ err: error }, 'app error');
@@ -21,5 +21,12 @@ export function registerErrorHandling(app: FastifyInstance): void {
     return reply.status(500).send({ error: 'internal' });
   });
 
-  app.setNotFoundHandler((_request, reply) => reply.status(404).send({ error: 'not_found' }));
+  app.setNotFoundHandler((request, reply) => {
+    // Web panel client-side routes get index.html; API paths stay JSON.
+    const isApi = /^\/(api|auth|telegram|health|ready)(\/|$|\?)/.test(request.url);
+    if (opts.spaFallback && request.method === 'GET' && !isApi) {
+      return reply.header('cache-control', 'no-cache').sendFile('index.html');
+    }
+    return reply.status(404).send({ error: 'not_found' });
+  });
 }
