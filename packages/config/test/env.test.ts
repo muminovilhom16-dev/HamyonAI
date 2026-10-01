@@ -60,3 +60,22 @@ describe('plan config', () => {
     expect(cfg.pro).toEqual(defaultPlanConfig.pro);
   });
 });
+
+describe('platform defaults (free PaaS deploy)', () => {
+  const min = { DATABASE_URL: base.DATABASE_URL, TELEGRAM_BOT_TOKEN: base.TELEGRAM_BOT_TOKEN, AUTH_TOKEN_SECRET: 'Zm9vYmFy+/=' + 'x'.repeat(40) };
+
+  it('derives public/web URLs from RENDER_EXTERNAL_URL and a valid webhook secret', () => {
+    const env = loadEnv({ ...min, NODE_ENV: 'production', RENDER_EXTERNAL_URL: 'https://hamyon-ai.onrender.com' });
+    expect(env.PUBLIC_BASE_URL).toBe('https://hamyon-ai.onrender.com');
+    expect(env.WEB_BASE_URL).toBe('https://hamyon-ai.onrender.com/app');
+    expect(env.TELEGRAM_WEBHOOK_SECRET).toMatch(/^[0-9a-f]{64}$/);
+    // stable across restarts
+    expect(loadEnv({ ...min, NODE_ENV: 'production', RENDER_EXTERNAL_URL: 'https://hamyon-ai.onrender.com' }).TELEGRAM_WEBHOOK_SECRET).toBe(env.TELEGRAM_WEBHOOK_SECRET);
+  });
+
+  it('explicit values win', () => {
+    const env = loadEnv({ ...base, PUBLIC_BASE_URL: 'https://a.uz', RENDER_EXTERNAL_URL: 'https://b.onrender.com' });
+    expect(env.PUBLIC_BASE_URL).toBe('https://a.uz');
+    expect(env.TELEGRAM_WEBHOOK_SECRET).toBe('x'.repeat(32));
+  });
+});

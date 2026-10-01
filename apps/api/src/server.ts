@@ -4,6 +4,7 @@ import { buildApp } from './app';
 import { scheduleMaintenance } from './maintenance';
 import { runProactiveTick, scheduleNotifications } from './notifications';
 import { startWorkers } from './queue';
+import { setupTelegram } from './telegram-setup';
 
 async function main(): Promise<void> {
   let env;
@@ -51,6 +52,13 @@ async function main(): Promise<void> {
   process.once('SIGINT', () => void shutdown('SIGINT'));
 
   await app.listen({ host: env.HOST, port: env.PORT });
+
+  // PaaS without a shell (e.g. Render free): register the webhook ourselves.
+  if (env.AUTO_SET_WEBHOOK) {
+    setupTelegram(app.bot.api, env)
+      .then((url) => app.log.info({ url }, 'telegram webhook registered'))
+      .catch((err: unknown) => app.log.error({ err: err instanceof Error ? err.message : 'failed' }, 'telegram webhook registration failed'));
+  }
 }
 
 main().catch((err: unknown) => {

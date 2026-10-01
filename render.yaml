@@ -1,0 +1,42 @@
+# Render Blueprint — free deploy (render.com → New → Blueprint → this repo).
+# Database: free PostgreSQL from neon.tech (paste its connection string as DATABASE_URL).
+# Step-by-step (Uzbek): docs/DEPLOY_FREE.md
+services:
+  - type: web
+    name: hamyon-ai
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: claude/hamyon-ai-master-prompt-wx9kdh
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # ── You paste these three when Render asks ──
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      # ── Generated / fixed: nothing to do ──
+      - key: AUTH_TOKEN_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: AUTO_SET_WEBHOOK
+        value: "true"
+      - key: TRUST_PROXY
+        value: "true"
+      - key: DATABASE_POOL_MAX
+        value: "5"
+      # AI and voice are optional; leave empty to start for free.
+      - key: AI_PROVIDER
+        value: anthropic
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: STT_PROVIDER
+        value: google
+      - key: GOOGLE_STT_API_KEY
+        sync: false

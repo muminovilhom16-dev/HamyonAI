@@ -2,6 +2,10 @@
 // Telegram Bot API, sends a webhook update, and checks the reply was sent.
 import { spawn } from 'node:child_process';
 import http from 'node:http';
+import { createHash } from 'node:crypto';
+
+// SMOKE_MODE=paas: Render-like env (RENDER_EXTERNAL_URL, generated secret, auto webhook).
+const PAAS = process.env.SMOKE_MODE === 'paas';
 
 const sent = [];
 const tg = http.createServer((req, res) => {
@@ -21,7 +25,8 @@ await new Promise((r) => tg.listen(0, r));
 const tgPort = tg.address().port;
 
 const PORT = 3999;
-const SECRET = 's'.repeat(40);
+const AUTH = 'Zm9vYmFy+/=' + 'a'.repeat(40);
+const SECRET = PAAS ? createHash('sha256').update(`${AUTH}:telegram-webhook`).digest('hex') : 's'.repeat(40);
 const server = spawn('node', ['apps/api/dist/server.js'], {
   env: {
     ...process.env,
@@ -30,11 +35,10 @@ const server = spawn('node', ['apps/api/dist/server.js'], {
     LOG_LEVEL: 'info',
     DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://hamyon:hamyon@localhost:5432/hamyon',
     TELEGRAM_BOT_TOKEN: '123456:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-    TELEGRAM_WEBHOOK_SECRET: SECRET,
     TELEGRAM_API_ROOT: `http://127.0.0.1:${tgPort}`,
-    AUTH_TOKEN_SECRET: 'a'.repeat(40),
-    PUBLIC_BASE_URL: 'https://api.example.uz',
-    WEB_BASE_URL: 'https://app.example.uz',
+    ...(PAAS
+      ? { AUTH_TOKEN_SECRET: AUTH, RENDER_EXTERNAL_URL: 'https://hamyon-ai.onrender.com', AUTO_SET_WEBHOOK: 'true', TRUST_PROXY: 'true' }
+      : { TELEGRAM_WEBHOOK_SECRET: SECRET, AUTH_TOKEN_SECRET: 'a'.repeat(40), PUBLIC_BASE_URL: 'https://api.example.uz', WEB_BASE_URL: 'https://app.example.uz' }),
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
@@ -87,7 +91,15 @@ if (logs.includes('SMOKE_TOKEN_SHOULD_NOT_BE_LOGGED')) fail('login token leaked 
 
 if (logs.includes(SECRET) || logs.includes('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')) fail('secret leaked into logs');
 
+if (PAAS) {
+  const hook = sent.find((x) => x.method === 'setWebhook');
+  if (!hook) fail('webhook was not auto-registered');
+  if (hook.body.url !== 'https://hamyon-ai.onrender.com/telegram/webhook') fail(`wrong webhook url ${hook.body.url}`);
+  if (hook.body.secret_token !== SECRET) fail('webhook secret mismatch');
+  if (!sent.some((x) => x.method === 'setMyCommands')) fail('command menu not set');
+}
+
 server.kill('SIGTERM');
 await new Promise((r) => server.on('exit', r));
 tg.close();
-console.log('SMOKE OK: server started, /ready ok, webhook processed /start, expired /web page ok, secrets and tokens not logged, graceful shutdown');
+console.log(`SMOKE OK${PAAS ? ' (paas)' : ''}: server started, /ready ok, webhook processed /start, expired /web page ok, secrets and tokens not logged, graceful shutdown`);

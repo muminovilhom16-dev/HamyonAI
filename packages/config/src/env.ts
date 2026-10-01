@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
 const bool = z
@@ -56,6 +57,8 @@ export const envSchema = z.object({
   MAX_PROACTIVE_MESSAGES_PER_DAY: z.coerce.number().int().min(0).max(10).default(2),
   WEEKLY_REPORT_TIME: hhmm.default('20:00'),
   MONTHLY_REPORT_TIME: hhmm.default('10:00'),
+  /** Register the Telegram webhook + command menu on startup (PaaS without a shell). */
+  AUTO_SET_WEBHOOK: bool.default(false),
   /** Run queue workers / scheduler in this process (set false on API-only replicas). */
   RUN_WORKERS: bool.default(true),
   /** Days between an account deletion request and permanent removal (TZ §40: ≤30 incl. backups). */
@@ -88,12 +91,32 @@ export class EnvValidationError extends Error {
   }
 }
 
+const empty = (v: string | undefined) => v === undefined || v.trim() === '';
+
+/**
+ * Fills values a hosting platform already knows, so a PaaS deploy needs as
+ * few manual settings as possible:
+ * - PUBLIC_BASE_URL from RENDER_EXTERNAL_URL (Render sets it automatically);
+ * - WEB_BASE_URL = PUBLIC_BASE_URL + "/app" (same-origin panel);
+ * - TELEGRAM_WEBHOOK_SECRET derived from AUTH_TOKEN_SECRET (platform-generated
+ *   secrets may contain characters Telegram does not accept).
+ */
+export function withPlatformDefaults(source: Record<string, string | undefined>): Record<string, string | undefined> {
+  const out = { ...source };
+  if (empty(out.PUBLIC_BASE_URL) && !empty(out.RENDER_EXTERNAL_URL)) out.PUBLIC_BASE_URL = out.RENDER_EXTERNAL_URL!.replace(/\/+$/, '');
+  if (empty(out.WEB_BASE_URL) && !empty(out.PUBLIC_BASE_URL)) out.WEB_BASE_URL = `${out.PUBLIC_BASE_URL!.replace(/\/+$/, '')}/app`;
+  if (empty(out.TELEGRAM_WEBHOOK_SECRET) && !empty(out.AUTH_TOKEN_SECRET)) {
+    out.TELEGRAM_WEBHOOK_SECRET = createHash('sha256').update(`${out.AUTH_TOKEN_SECRET}:telegram-webhook`).digest('hex');
+  }
+  return out;
+}
+
 /**
  * Validates process environment. Never echoes values back, only key names,
  * so secrets cannot leak into logs on misconfiguration.
  */
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
-  const result = envSchema.safeParse(source);
+  const result = envSchema.safeParse(withPlatformDefaults(source));
   if (!result.success) {
     const issues = result.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`);
     throw new EnvValidationError(issues);
