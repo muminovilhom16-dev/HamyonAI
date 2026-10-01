@@ -1,0 +1,90 @@
+import { InlineKeyboard, type Bot } from 'grammy';
+import { eq } from 'drizzle-orm';
+import { schema } from '@hamyon/db';
+import type { Language } from '@hamyon/core';
+import { t } from '../i18n';
+import type { BotContext, BotServices } from './context';
+
+/**
+ * TZ §14: /start → language → currency → example → first transaction →
+ * reminder time → completed. No phone/email. Every step is one tap.
+ */
+const LANGS: Array<[Language, string]> = [
+  ['uz_latn', "O'zbekcha"],
+  ['uz_cyrl', 'Ўзбекча'],
+  ['ru', 'Русский'],
+];
+const REMINDER_TIMES = ['20:00', '21:00', '22:00'];
+
+async function setUser(s: BotServices, ctx: BotContext, patch: Partial<typeof schema.users.$inferInsert>) {
+  const [u] = await s.db
+    .update(schema.users)
+    .set({ ...patch, updatedAt: s.now() })
+    .where(eq(schema.users.id, ctx.user!.id))
+    .returning();
+  ctx.user = u!;
+}
+
+/** Called after a transaction is saved: moves onboarding to the reminder step. */
+export async function afterFirstTransaction(ctx: BotContext, s: BotServices): Promise<void> {
+  if (ctx.user?.onboardingStep !== 'first_tx') return;
+  await setUser(s, ctx, { onboardingStep: 'reminder' });
+  const lang = ctx.user.language;
+  const kb = new InlineKeyboard();
+  for (const time of REMINDER_TIMES) kb.text(time, `ob:r:${time.replace(':', '')}`);
+  kb.row().text(t(lang, 'reminderOff'), 'ob:r:off');
+  await ctx.reply(t(lang, 'askReminder'), { reply_markup: kb });
+}
+
+export function registerOnboarding(bot: Bot<BotContext>, s: BotServices): void {
+  bot.command('start', async (ctx) => {
+    const user = ctx.user!;
+    await s.db.insert(schema.analyticsEvents).values({ userId: user.id, name: 'start' });
+    if (user.onboardingCompletedAt) {
+      await ctx.reply(t(user.language, 'welcomeBack'));
+      return;
+    }
+    await setUser(s, ctx, { onboardingStep: 'language' });
+    const kb = new InlineKeyboard();
+    for (const [code, label] of LANGS) kb.text(label, `ob:l:${code}`);
+    await ctx.reply(t(user.language, 'welcome'), { reply_markup: kb });
+  });
+
+  bot.callbackQuery(/^ob:l:(uz_latn|uz_cyrl|ru)$/, async (ctx) => {
+    const lang = ctx.match[1] as Language;
+    const done = !!ctx.user!.onboardingCompletedAt;
+    await setUser(s, ctx, { language: lang, ...(done ? {} : { onboardingStep: 'currency' }) });
+    await ctx.answerCallbackQuery();
+    if (done) {
+      await ctx.editMessageText(t(lang, 'welcomeBack'));
+      return;
+    }
+    await ctx.editMessageText(t(lang, 'askCurrency'), {
+      reply_markup: new InlineKeyboard().text(t(lang, 'currencyUzs'), 'ob:c:UZS').text(t(lang, 'currencyUsd'), 'ob:c:USD'),
+    });
+  });
+
+  bot.callbackQuery(/^ob:c:(UZS|USD)$/, async (ctx) => {
+    await setUser(s, ctx, {
+      currency: ctx.match[1] as 'UZS' | 'USD',
+      ...(ctx.user!.onboardingCompletedAt ? {} : { onboardingStep: 'first_tx' }),
+    });
+    await ctx.answerCallbackQuery();
+    await ctx.editMessageText(t(ctx.user!.language, 'askFirstTx'));
+  });
+
+  bot.callbackQuery(/^ob:r:(2000|2100|2200|off)$/, async (ctx) => {
+    const choice = ctx.match[1]!;
+    const first = !ctx.user!.onboardingCompletedAt;
+    await setUser(s, ctx, {
+      ...(choice === 'off'
+        ? { remindersEnabled: false }
+        : { remindersEnabled: true, reminderTime: `${choice.slice(0, 2)}:${choice.slice(2)}` }),
+      onboardingStep: null,
+      onboardingCompletedAt: ctx.user!.onboardingCompletedAt ?? s.now(),
+    });
+    if (first) await s.db.insert(schema.analyticsEvents).values({ userId: ctx.user!.id, name: 'onboarding_completed' });
+    await ctx.answerCallbackQuery();
+    await ctx.editMessageText(t(ctx.user!.language, 'onboardingDone'));
+  });
+}

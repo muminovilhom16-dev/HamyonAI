@@ -1,0 +1,130 @@
+import { InlineKeyboard } from 'grammy';
+import {
+  addDays,
+  localDate,
+  type Language,
+  type ParsedTransaction,
+  type Transaction,
+  type WalletCategory,
+} from '@hamyon/core';
+import { formatDateLabel, formatMoney, groupDigits } from '../format';
+import { t } from '../i18n';
+
+export interface CardEnv {
+  lang: Language;
+  today: string;
+  yesterday: string;
+  categories: WalletCategory[];
+}
+
+export function cardEnv(lang: Language, timeZone: string, now: Date, categories: WalletCategory[]): CardEnv {
+  const today = localDate(now, timeZone);
+  return { lang, today, yesterday: addDays(today, -1), categories };
+}
+
+/** Short category reference for callback data (64-byte limit). */
+export const catRef = (c: WalletCategory) => (c.key === c.id ? `c${c.id.slice(0, 8)}` : c.key);
+
+export function resolveCatRef(categories: WalletCategory[], ref: string): WalletCategory | null {
+  return (
+    categories.find((c) => c.key !== c.id && c.key === ref) ??
+    categories.find((c) => c.key === c.id && ref === `c${c.id.slice(0, 8)}`) ??
+    null
+  );
+}
+
+const categoryName = (env: CardEnv, key: string | null) =>
+  key ? env.categories.find((c) => c.key === key || c.id === key)?.name ?? null : null;
+
+interface CardFields {
+  amount: number;
+  currency: 'UZS' | 'USD';
+  amountUzs?: number;
+  type: ParsedTransaction['type'];
+  categoryName: string | null;
+  categoryPending: boolean;
+  note: string | null;
+  date: string;
+}
+
+export function cardText(f: CardFields, env: CardEnv, suffix?: string): string {
+  const money =
+    f.currency === 'USD' && f.amountUzs
+      ? `${formatMoney(f.amount, 'USD', env.lang)} · ${formatMoney(f.amountUzs, 'UZS', env.lang)}`
+      : formatMoney(f.amount, f.currency, env.lang);
+  const lines = [f.type === 'income' ? `+${money}` : money];
+  if (f.categoryPending || !f.categoryName) lines.push(t(env.lang, 'categoryPending'));
+  else lines.push(f.type === 'income' ? `${t(env.lang, 'income')} · ${f.categoryName}` : f.categoryName);
+  if (f.note) lines.push(f.note);
+  lines.push(formatDateLabel(f.date, env.today, env.yesterday, env.lang));
+  if (suffix) lines.push('', suffix);
+  return lines.join('\n');
+}
+
+export function txFields(tx: Transaction, env: CardEnv, timeZone: string): CardFields {
+  return {
+    amount: tx.amount,
+    currency: tx.currency,
+    amountUzs: tx.amountUzs,
+    type: tx.type,
+    categoryName: categoryName(env, tx.categoryId),
+    categoryPending: tx.categoryStatus === 'pending',
+    note: tx.note,
+    date: localDate(tx.occurredAt, timeZone),
+  };
+}
+
+export function parsedFields(tx: ParsedTransaction, env: CardEnv, categoryPending = false): CardFields {
+  return {
+    amount: tx.amount,
+    currency: tx.currency,
+    type: tx.type,
+    categoryName: categoryName(env, tx.category_id),
+    categoryPending,
+    note: tx.note,
+    date: tx.date,
+  };
+}
+
+/** [Transport] [25 000] [Bugun] / [🗑 O'chirish] — no Save button: the record is already saved (TZ §16). */
+export function txKeyboard(tx: Transaction, env: CardEnv, timeZone: string): InlineKeyboard {
+  const f = txFields(tx, env, timeZone);
+  const catLabel = f.categoryPending || !f.categoryName ? '❓' : f.categoryName;
+  return new InlineKeyboard()
+    .text(catLabel, `cat:${tx.id}`)
+    .text(groupDigits(tx.amount), `amt:${tx.id}`)
+    .text(formatDateLabel(f.date, env.today, env.yesterday, env.lang), `dt:${tx.id}`)
+    .row()
+    .text(t(env.lang, 'delete'), `del:${tx.id}`);
+}
+
+/** Category grid; `prefix` decides what a tap does (e.g. `sc:<txId>` or `pc:<pendingId>`). */
+export function categoryKeyboard(
+  env: CardEnv,
+  kind: 'expense' | 'income',
+  prefix: string,
+  opts: { first?: string[]; back?: string } = {},
+): InlineKeyboard {
+  const visible = env.categories.filter((c) => !c.isHidden && c.kind === kind);
+  const first = opts.first ?? [];
+  const ordered = [
+    ...first.map((k) => visible.find((c) => c.key === k)).filter((c): c is WalletCategory => !!c),
+    ...visible.filter((c) => !first.includes(c.key)),
+  ];
+  const kb = new InlineKeyboard();
+  ordered.forEach((c, i) => {
+    kb.text(`${c.icon ?? ''} ${c.name}`.trim(), `${prefix}:${catRef(c)}`);
+    if (i % 2 === 1) kb.row();
+  });
+  if (opts.back) kb.row().text(t(env.lang, 'back'), opts.back);
+  return kb;
+}
+
+export function dateKeyboard(env: CardEnv, txId: string): InlineKeyboard {
+  return new InlineKeyboard()
+    .text(formatDateLabel(env.today, env.today, env.yesterday, env.lang), `sd:${txId}:0`)
+    .text(formatDateLabel(env.yesterday, env.today, env.yesterday, env.lang), `sd:${txId}:1`)
+    .text(t(env.lang, 'dayBefore'), `sd:${txId}:2`)
+    .row()
+    .text(t(env.lang, 'back'), `card:${txId}`);
+}

@@ -1,23 +1,16 @@
-import { Bot, Context, InlineKeyboard, type Api, type RawApi } from 'grammy';
+import { Bot, InlineKeyboard, type Api, type RawApi } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
-import type { FastifyBaseLogger } from 'fastify';
-import type { Database } from '@hamyon/db';
-import { schema } from '@hamyon/db';
-import { ensureUser, issueLoginToken, type AuthConfig, type User } from '@hamyon/core';
+import { ensureUser, issueLoginToken, AppError } from '@hamyon/core';
 import { t } from '../i18n';
+import type { BotContext, BotServices } from './context';
+import { registerTransactionFlows } from './flows';
+import { registerOnboarding } from './onboarding';
+import { registerReports } from './reports';
 
-export interface BotContext extends Context {
-  user?: User;
-  walletId?: string;
-}
+export type { BotContext, BotServices } from './context';
 
-export interface BotDeps {
+export interface BotDeps extends BotServices {
   token: string;
-  db: Database;
-  auth: AuthConfig;
-  log: FastifyBaseLogger;
-  /** Builds the public one-time login URL; undefined when web is not configured. */
-  webLoginUrl?: (token: string) => string;
   defaults?: { currency?: 'UZS' | 'USD'; timezone?: string; reminderTime?: string };
   apiRoot?: string;
   /** Pre-fetched bot info (tests, or to skip getMe on startup). */
@@ -42,9 +35,15 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
       // User provisioning failed (DB unavailable): let the webhook return 5xx
       // so Telegram re-delivers the update instead of losing the message.
       if (!ctx.user) throw error;
+      const lang = ctx.user.language;
+      if (error instanceof AppError && (error.code === 'not_found' || error.code === 'forbidden')) {
+        if (ctx.callbackQuery) await ctx.answerCallbackQuery({ text: t(lang, 'expired') }).catch(() => {});
+        return;
+      }
       deps.log.error({ err: error, updateId: ctx.update.update_id }, 'bot handler failed');
       try {
-        await ctx.reply(t(ctx.user?.language ?? 'uz_latn', 'genericError'));
+        if (ctx.callbackQuery) await ctx.answerCallbackQuery().catch(() => {});
+        await ctx.reply(t(lang, 'genericError'));
       } catch {
         // Delivery failure must not mask the original error.
       }
@@ -70,11 +69,8 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
     await next();
   });
 
-  bot.command('start', async (ctx) => {
-    const user = ctx.user!;
-    await deps.db.insert(schema.analyticsEvents).values({ userId: user.id, name: 'start' });
-    await ctx.reply(t(user.language, 'welcome'));
-  });
+  registerOnboarding(bot, deps);
+  registerReports(bot, deps);
 
   bot.command('web', async (ctx) => {
     const user = ctx.user!;
@@ -84,14 +80,17 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
     }
     const { token } = await issueLoginToken(deps.db, deps.auth, user.id);
     const url = deps.webLoginUrl(token);
-    const keyboard = url.startsWith('https://')
-      ? new InlineKeyboard().url(t(user.language, 'webLinkButton'), url)
-      : undefined;
+    const keyboard = url.startsWith('https://') ? new InlineKeyboard().url(t(user.language, 'webLinkButton'), url) : undefined;
     await ctx.reply(`${t(user.language, 'webLink')}\n${url}`, {
       ...(keyboard && { reply_markup: keyboard }),
       link_preview_options: { is_disabled: true },
     });
   });
+
+  registerTransactionFlows(bot, deps);
+
+  // Unknown commands → help.
+  bot.on('message:text', (ctx) => ctx.reply(t(ctx.user!.language, 'help')));
 
   return bot;
 }

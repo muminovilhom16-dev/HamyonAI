@@ -343,3 +343,33 @@ export const processedUpdates = pgTable('processed_updates', {
   updateId: bigint('update_id', { mode: 'number' }).primaryKey(),
   receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ─── Pending inputs ─────────────────────────────────────────────────────────
+
+export const pendingKindEnum = pgEnum('pending_kind', [
+  'confirm_amount',
+  'confirm_category',
+  'ask_person_kind',
+  'ask_amount',
+  'edit_amount',
+]);
+
+/**
+ * Parsed input waiting for the user (amount/category/type clarification).
+ * Nothing here is a transaction yet: unconfirmed data never reaches
+ * `transactions` (TZ §7). Expired rows are purged.
+ */
+export const pendingInputs = pgTable('pending_inputs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  walletId: uuid('wallet_id')
+    .notNull()
+    .references(() => wallets.id, { onDelete: 'cascade' }),
+  kind: pendingKindEnum('kind').notNull(),
+  payload: jsonb('payload').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  createdAt: createdAt(),
+}, (t) => [index('pending_inputs_user_open_idx').on(t.userId, t.createdAt).where(sql`${t.resolvedAt} is null`)]);

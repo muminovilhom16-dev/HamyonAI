@@ -3,7 +3,7 @@
 import { build } from 'esbuild';
 import { cp, readFile, rm } from 'node:fs/promises';
 
-const pkgs = ['apps/api', 'packages/config', 'packages/core', 'packages/db'];
+const pkgs = ['apps/api', 'packages/ai', 'packages/config', 'packages/core', 'packages/db'];
 const external = new Set();
 for (const p of pkgs) {
   const json = JSON.parse(await readFile(new URL(`../../${p}/package.json`, import.meta.url), 'utf8'));

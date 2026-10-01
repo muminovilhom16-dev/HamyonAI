@@ -1,6 +1,7 @@
 import { EnvValidationError, loadEnv } from '@hamyon/config';
 import { createDb } from '@hamyon/db';
 import { buildApp } from './app';
+import { scheduleMaintenance } from './maintenance';
 
 async function main(): Promise<void> {
   let env;
@@ -14,10 +15,12 @@ async function main(): Promise<void> {
 
   const dbHandle = createDb(env.DATABASE_URL, { max: env.DATABASE_POOL_MAX });
   const app = await buildApp({ env, dbHandle });
+  const stopMaintenance = scheduleMaintenance(dbHandle.db, app.log);
 
   const shutdown = async (signal: string) => {
     app.log.info({ signal }, 'shutting down');
     try {
+      stopMaintenance();
       await app.close();
       await dbHandle.close();
     } finally {

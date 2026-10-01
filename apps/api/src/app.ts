@@ -4,6 +4,8 @@ import type { Api, RawApi } from 'grammy';
 import type { Env } from '@hamyon/config';
 import type { AuthConfig } from '@hamyon/core';
 import type { DbHandle } from '@hamyon/db';
+import { createAIProvider, type AIProvider } from '@hamyon/ai';
+import { CbuRateProvider, type ExchangeRateProvider } from '@hamyon/core';
 import { createBot } from './bot';
 import { loggerOptions } from './logger';
 import { registerErrorHandling } from './plugins/errors';
@@ -16,6 +18,10 @@ export interface BuildAppOptions {
   env: Env;
   dbHandle: DbHandle;
   botInfo?: UserFromGetMe;
+  /** Overrides for tests; default providers come from env. */
+  ai?: AIProvider | null;
+  fx?: ExchangeRateProvider | null;
+  now?: () => Date;
   configureBotApi?: (api: Api<RawApi>) => void;
 }
 
@@ -42,6 +48,18 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     db: dbHandle.db,
     auth,
     log: app.log,
+    ai:
+      opts.ai !== undefined
+        ? opts.ai
+        : createAIProvider({
+            provider: env.AI_PROVIDER,
+            model: env.AI_TEXT_MODEL,
+            timeoutMs: env.AI_TIMEOUT_MS,
+            ...(env.ANTHROPIC_API_KEY && { anthropicApiKey: env.ANTHROPIC_API_KEY }),
+          }),
+    fx: opts.fx !== undefined ? opts.fx : new CbuRateProvider(),
+    confidenceThreshold: env.AI_CONFIDENCE_THRESHOLD,
+    now: opts.now ?? (() => new Date()),
     defaults: { currency: env.DEFAULT_CURRENCY, timezone: env.DEFAULT_TIMEZONE, reminderTime: env.DEFAULT_REMINDER_TIME },
     ...(env.PUBLIC_BASE_URL && {
       webLoginUrl: (token: string) => `${env.PUBLIC_BASE_URL}/auth/web?token=${encodeURIComponent(token)}`,

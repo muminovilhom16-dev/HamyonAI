@@ -1,61 +1,22 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { eq } from 'drizzle-orm';
-import { loadEnv } from '@hamyon/config';
-import { createDb, resetTestDatabase, schema, testDatabaseUrl, type DbHandle } from '@hamyon/db';
-import { buildApp } from '../src/app';
+import { schema, type DbHandle } from '@hamyon/db';
+import { createHarness, env, SECRET, type Harness } from './harness';
 
-const SECRET = 'w'.repeat(40);
-const env = loadEnv({
-  NODE_ENV: 'test',
-  LOG_LEVEL: 'silent',
-  DATABASE_URL: testDatabaseUrl(),
-  TELEGRAM_BOT_TOKEN: '123456:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-  TELEGRAM_WEBHOOK_SECRET: SECRET,
-  TELEGRAM_BOT_USERNAME: 'HamyonAIBot',
-  AUTH_TOKEN_SECRET: 'a'.repeat(40),
-  PUBLIC_BASE_URL: 'https://api.hamyon.test',
-  WEB_BASE_URL: 'https://app.hamyon.test',
-});
-
-interface ApiCall { method: string; payload: Record<string, unknown> }
-let calls: ApiCall[] = [];
-let failChatIds = new Set<number>();
+let harness: Harness;
 let app: FastifyInstance;
 let h: DbHandle;
-let nextUpdateId = 1;
+let calls: Harness['calls'];
+let failChatIds: Set<number>;
+let nextUpdateId = 100_000;
 
 beforeAll(async () => {
-  await resetTestDatabase(testDatabaseUrl());
-  h = createDb(testDatabaseUrl());
-  app = await buildApp({
-    env,
-    dbHandle: h,
-    botInfo: {
-      id: 123456, is_bot: true, first_name: 'Hamyon AI', username: 'HamyonAIBot',
-      can_join_groups: false, can_read_all_group_messages: false, supports_inline_queries: false,
-      can_connect_to_business: false, has_main_web_app: false, has_topics_enabled: false,
-    } as never,
-    configureBotApi: (api) => {
-      api.config.use(async (_prev, method, payload) => {
-        const p = payload as Record<string, unknown>;
-        calls.push({ method, payload: p });
-        if (failChatIds.has(p.chat_id as number)) throw new Error('telegram down: secret internal detail');
-        return { ok: true, result: { message_id: calls.length, date: 0, chat: { id: p.chat_id, type: 'private' } } } as never;
-      });
-    },
-  });
+  harness = await createHarness();
+  ({ app, h, calls, failChatIds } = harness);
 });
-
-afterAll(async () => {
-  await app?.close();
-  await h?.close();
-});
-
-beforeEach(() => {
-  calls = [];
-  failChatIds = new Set();
-});
+afterAll(async () => harness?.close());
+beforeEach(() => harness.reset());
 
 function messageUpdate(fromId: number, text: string, opts: { updateId?: number; lang?: string } = {}) {
   const entities = text.startsWith('/') ? [{ type: 'bot_command', offset: 0, length: text.split(' ')[0]!.length }] : undefined;
@@ -110,7 +71,7 @@ describe('telegram webhook', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]!.method).toBe('sendMessage');
     expect(calls[0]!.payload.text).toContain('Hamyon AI');
-    expect(calls[0]!.payload.text).toContain('такси');
+    expect(calls[0]!.payload.text).toContain('Выберите язык');
     const events = await h.db.select().from(schema.analyticsEvents).where(eq(schema.analyticsEvents.userId, user!.id));
     expect(events.map((e) => e.name)).toEqual(['start']);
   });

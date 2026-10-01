@@ -6,8 +6,9 @@ Monorepo (pnpm, TypeScript strict). Biznes logika faqat backendda.
 
 ```
 apps/api          Fastify API + grammY Telegram webhook (bundled with esbuild)
+packages/ai       Provider-neutral AIProvider + Anthropic adapter (replaceable)
 packages/config   Env validation (Zod), plan limits (configurable)
-packages/core     Domain services: users/wallets, auth tokens, access control, PII masking
+packages/core     Domain: parser + validation pipeline, transactions, FX, auth, access control
 packages/db       Drizzle schema + SQL migrations (PostgreSQL 16)
 ```
 
@@ -43,6 +44,18 @@ server. Required env: see `.env.example` (`PUBLIC_BASE_URL` and `WEB_BASE_URL`
 must be https). Secrets come only from environment variables.
 
 Database migrations: edit `packages/db/src/schema.ts`, then `pnpm db:generate`.
+
+## How a message becomes a transaction
+
+```
+text → mask card numbers → rule parser (amounts, type, category, date)
+     → user category rules → AI only if still uncertain → schema + business
+     validation (AI amounts must match parsed amounts) → decision:
+     save | confirm amount | pick category | debt or expense? | ask amount
+```
+
+Without `ANTHROPIC_API_KEY` (or during an outage) the rule parser alone is
+used; transactions with a certain amount are saved with a pending category.
 
 ## Money & data rules
 

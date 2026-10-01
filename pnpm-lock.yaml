@@ -26,6 +26,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.131.0
+        version: 0.131.0(zod@4.6.5)
       '@fastify/cookie':
         specifier: ^11.1.2
         version: 11.1.2
@@ -38,6 +41,9 @@ importers:
       '@fastify/rate-limit':
         specifier: ^11.2.0
         version: 11.2.0
+      '@hamyon/ai':
+        specifier: workspace:^
+        version: link:../../packages/ai
       '@hamyon/config':
         specifier: workspace:*
         version: link:../../packages/config

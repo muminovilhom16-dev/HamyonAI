@@ -14,6 +14,16 @@ async function main(): Promise<void> {
     allowed_updates: ['message', 'edited_message', 'callback_query'],
     max_connections: 40,
   });
+  // Command menu: Uzbek by default, Russian for Russian-language clients.
+  const commands = (labels: string[]) =>
+    ['bugun', 'hafta', 'oy', 'oxirgi', 'web', 'yordam'].map((command, i) => ({ command, description: labels[i]! }));
+  await bot.api.setMyCommands(
+    commands(['Bugungi hisobot', 'Haftalik hisobot', 'Oylik hisobot', 'Oxirgi yozuvlar', 'Web panel', 'Yordam']),
+  );
+  await bot.api.setMyCommands(
+    commands(['Отчёт за сегодня', 'Отчёт за неделю', 'Отчёт за месяц', 'Последние записи', 'Веб-панель', 'Помощь']),
+    { language_code: 'ru' },
+  );
   const info = await bot.api.getWebhookInfo();
   console.log(`Webhook set: ${info.url} (pending updates: ${info.pending_update_count})`);
 }
