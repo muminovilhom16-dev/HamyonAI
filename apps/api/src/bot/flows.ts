@@ -4,6 +4,8 @@ import {
   RateUnavailableError,
   addDays,
   cancelAwaitingReplies,
+  checkAiBudget,
+  getRate,
   createPending,
   createTransaction,
   extractAmounts,
@@ -179,6 +181,26 @@ async function handleItem(ctx: BotContext, s: BotServices, item: PipelineItem, r
   }
 }
 
+/** If no CBU rate is stored yet, budget math uses this conservative rate. */
+const FALLBACK_USD_UZS = 13_000;
+
+/** AI spend caps (per user per month, all users per day). Over a cap → rule parser only. */
+async function aiWithinBudget(s: BotServices, user: User): Promise<boolean> {
+  const today = localDate(s.now(), user.timezone);
+  const usdToUzs = await getRate(s.db, s.fx, 'USD', today).then(Number).catch(() => FALLBACK_USD_UZS);
+  const check = await checkAiBudget(s.db, {
+    userId: user.id,
+    plan: user.plan,
+    timeZone: user.timezone,
+    now: s.now(),
+    plans: s.plans,
+    usdToUzs,
+    dailyBudgetUsd: s.aiDailyBudgetUsd,
+  });
+  if (!check.allowed) s.log.warn({ aiBudget: check.reason }, 'AI budget reached, using rule parser');
+  return check.allowed;
+}
+
 /** A short reply that is only an amount ("50 ming"): no content words. */
 function amountOnly(text: string, today: string): number | null {
   const parsed = parseRuleBased(text, { today });
@@ -234,13 +256,14 @@ export async function processText(ctx: BotContext, s: BotServices, text: string,
   }
 
   const categories = await listWalletCategories(s.db, ctx.walletId!, user.language);
+  const ai = s.ai && (await aiWithinBudget(s, user)) ? s.ai : null;
   const result = await runPipeline({
     text,
     today,
     language: user.language,
     categories: toCategoryOptions(categories),
     userRules: await listUserRules(s.db, user.id, ctx.walletId!),
-    ai: s.ai,
+    ai,
     confidenceThreshold: s.confidenceThreshold,
     onAIError: (err) => s.log.warn({ aiError: err.reason }, 'AI unavailable, using rule parser'),
   });

@@ -1,9 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import type { DbHandle } from '@hamyon/db';
 
-export function healthRoutes(app: FastifyInstance, pool: DbHandle['pool']): void {
-  // Liveness: process is up.
-  app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }));
+export function healthRoutes(app: FastifyInstance, pool: DbHandle['pool'], features: { ai: boolean } = { ai: false }): void {
+  // Liveness: process is up. `ai` says only whether an AI provider is configured (no secrets).
+  app.get('/health', { config: { rateLimit: false } }, async () => ({ status: 'ok', ai: features.ai ? 'on' : 'off' }));
 
   // Readiness: dependencies reachable. No internal details in the response.
   app.get('/ready', { config: { rateLimit: false } }, async (request, reply) => {

@@ -82,3 +82,15 @@ Bepul Render 15 daqiqa jim qolsa uxlaydi; uxlaganda eslatmalar ham ketmaydi.
 
 Render → `hamyon-ai` → **Logs** bo'limidagi oxirgi qizil qatorlarni
 nusxalab menga yuboring (token yoki parol bo'lsa — o'chirib yuboring).
+
+## 7-qadam (ixtiyoriy). Sun'iy intellektni (AI) ulash
+
+AI faqat qiyin xabarlarda ishlatiladi (oddiy «taksi 25 ming» uni chaqirmaydi).
+Xarajat chegaralangan: foydalanuvchi boshiga oyiga ~1000 so'm (tarif), butun bot
+uchun kuniga $1 (`AI_DAILY_BUDGET_USD`). Chegaraga yetganda bot AI'siz ishlashda davom etadi.
+
+1. **https://console.anthropic.com** → ro'yxatdan o'ting.
+2. **Billing** → karta qo'shing → $5 kredit oling. **Limits** bo'limida oylik limitni ($5) qo'ying.
+3. **API Keys** → **Create Key** → nomi `hamyon-render` → kalitdan nusxa oling (hech kimga yubormang).
+4. Render → **hamyon-ai** → **Environment** → `ANTHROPIC_API_KEY` ga qo'ying → **Save, rebuild, and deploy**.
+5. `https://SIZNING-MANZIL.onrender.com/health` → `"ai":"on"` chiqsa, ulandi.

@@ -74,21 +74,22 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
   const auth = authConfigFromEnv(env);
   const queues = env.REDIS_URL ? createQueues(env.REDIS_URL, env.QUEUE_PREFIX) : null;
   app.addHook('onClose', async () => queues?.close());
+  const ai =
+    opts.ai !== undefined
+      ? opts.ai
+      : createAIProvider({
+          provider: env.AI_PROVIDER,
+          model: env.AI_TEXT_MODEL,
+          timeoutMs: env.AI_TIMEOUT_MS,
+          ...(env.ANTHROPIC_API_KEY && { anthropicApiKey: env.ANTHROPIC_API_KEY }),
+        });
   const bot = createBot({
     ...(queues && { enqueueUpdate: queues.enqueueUpdate }),
     token: env.TELEGRAM_BOT_TOKEN,
     db: dbHandle.db,
     auth,
     log: app.log,
-    ai:
-      opts.ai !== undefined
-        ? opts.ai
-        : createAIProvider({
-            provider: env.AI_PROVIDER,
-            model: env.AI_TEXT_MODEL,
-            timeoutMs: env.AI_TIMEOUT_MS,
-            ...(env.ANTHROPIC_API_KEY && { anthropicApiKey: env.ANTHROPIC_API_KEY }),
-          }),
+    ai,
     fx: opts.fx !== undefined ? opts.fx : new CbuRateProvider(),
     speech:
       opts.speech !== undefined
@@ -106,6 +107,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     voiceMaxSeconds: env.VOICE_MAX_SECONDS,
     deletionGraceDays: env.ACCOUNT_DELETION_GRACE_DAYS,
     confidenceThreshold: env.AI_CONFIDENCE_THRESHOLD,
+    aiDailyBudgetUsd: env.AI_DAILY_BUDGET_USD,
     now: opts.now ?? (() => new Date()),
     defaults: { currency: env.DEFAULT_CURRENCY, timezone: env.DEFAULT_TIMEZONE, reminderTime: env.DEFAULT_REMINDER_TIME },
     ...(env.PUBLIC_BASE_URL && {
@@ -119,7 +121,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
   app.decorate('bot', bot);
   app.decorate('queues', queues);
 
-  healthRoutes(app, dbHandle.pool);
+  healthRoutes(app, dbHandle.pool, { ai: ai !== null });
   telegramWebhookRoute(app, { path: env.TELEGRAM_WEBHOOK_PATH, secret: env.TELEGRAM_WEBHOOK_SECRET, bot, db: dbHandle.db });
   authRoutes(app, {
     db: dbHandle.db,

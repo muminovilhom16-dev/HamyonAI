@@ -6,6 +6,8 @@ import { consumeLoginToken, createSession, issueLoginToken, resolveSession, revo
 import { SYSTEM_CATEGORIES } from '../src/categories';
 import { AppError } from '../src/errors';
 import { ensureUser } from '../src/users';
+import { checkAiBudget } from '../src/finance/limits';
+import { loadPlanConfig } from '@hamyon/config';
 
 let h: DbHandle;
 const cfg = { secret: 's'.repeat(32), loginTokenTtlMinutes: 15, sessionTtlDays: 30 };
@@ -97,5 +99,34 @@ describe('web auth', () => {
     expect(await resolveSession(h.db, cfg, token, new Date(t0.getTime() + 30 * 86_400_000 + 1))).toBeNull();
     await revokeSession(h.db, s!.sessionId);
     expect(await resolveSession(h.db, cfg, token, t0)).toBeNull();
+  });
+});
+
+describe('checkAiBudget', () => {
+  const plans = loadPlanConfig();
+  const at = new Date('2026-10-15T09:00:00Z');
+  const base = { plan: 'free', timeZone: 'Asia/Tashkent', now: at, plans, usdToUzs: 12_800, dailyBudgetUsd: 1 };
+  const log = (userId: string | null, micros: number, createdAt: Date, feature = 'parse_text') =>
+    h.db.insert(schema.aiUsageLog).values({ userId, feature, provider: 'anthropic', model: 'm', costUsdMicros: micros, createdAt });
+
+  it('per-user monthly cap in so\'m; STT and last month do not count', async () => {
+    const { user } = await ensureUser(h.db, { telegramId: 9001 });
+    await log(user.id, 50_000, new Date('2026-10-02T00:00:00Z')); // 640 so'm
+    await log(user.id, 900_000, new Date('2026-09-30T18:00:00Z')); // Sept 30 23:00 Tashkent → last month
+    await log(user.id, 900_000, new Date('2026-10-03T00:00:00Z'), 'stt');
+    expect(await checkAiBudget(h.db, { ...base, userId: user.id })).toEqual({ allowed: true, reason: null });
+    await log(user.id, 40_000, new Date('2026-10-05T00:00:00Z')); // total 1 152 so'm ≥ 1 000
+    expect(await checkAiBudget(h.db, { ...base, userId: user.id })).toEqual({ allowed: false, reason: 'user_month' });
+    // A higher plan limit lets the same user through.
+    expect((await checkAiBudget(h.db, { ...base, plan: 'pro', userId: user.id })).allowed).toBe(true);
+  });
+
+  it('global daily cap in USD covers all users', async () => {
+    const { user } = await ensureUser(h.db, { telegramId: 9002 });
+    await log(null, 999_999, new Date('2026-10-15T01:00:00Z'));
+    expect((await checkAiBudget(h.db, { ...base, userId: user.id })).allowed).toBe(true);
+    await log(null, 1, new Date('2026-10-15T02:00:00Z'));
+    expect(await checkAiBudget(h.db, { ...base, userId: user.id })).toEqual({ allowed: false, reason: 'global_day' });
+    expect((await checkAiBudget(h.db, { ...base, userId: user.id, now: new Date('2026-10-16T00:30:00Z') })).allowed).toBe(true);
   });
 });

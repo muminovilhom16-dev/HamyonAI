@@ -43,7 +43,7 @@ const postUpdate = (body: unknown, secret: string | null = SECRET) =>
 
 describe('health', () => {
   it('liveness and readiness', async () => {
-    expect((await app.inject('/health')).json()).toEqual({ status: 'ok' });
+    expect((await app.inject('/health')).json()).toEqual({ status: 'ok', ai: 'on' }); // harness wires an AI provider
     expect((await app.inject('/ready')).json()).toEqual({ status: 'ready' });
   });
 

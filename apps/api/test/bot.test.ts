@@ -173,6 +173,54 @@ describe('TZ §61 acceptance through the bot', () => {
   });
 });
 
+describe('AI budget (TZ §35)', () => {
+  const counting = () => {
+    const calls = { n: 0 };
+    H.ai.current = {
+      name: 'counting',
+      parseText: () => { calls.n++; return Promise.reject(new AIUnavailableError('timeout')); },
+      categorize: () => { calls.n++; return Promise.reject(new AIUnavailableError('timeout')); },
+    };
+    return calls;
+  };
+  const spend = async (tgId: number | null, micros: number) => {
+    const userId = tgId === null ? null : (await H.h.db.select().from(schema.users).where(eq(schema.users.telegramId, tgId)))[0]!.id;
+    const [row] = await H.h.db
+      .insert(schema.aiUsageLog)
+      .values({ userId, feature: 'parse_text', provider: 'anthropic', model: 'm', costUsdMicros: micros, createdAt: H.clock.now })
+      .returning();
+    return row!.id;
+  };
+
+  it('a user over the monthly AI budget gets the rule parser only, nothing is lost', async () => {
+    const id = await newUser();
+    const calls = counting();
+    await H.send(id, 'xyz 40 ming');
+    expect(calls.n).toBeGreaterThan(0); // under budget: AI is consulted
+
+    await spend(id, 200_000); // $0.20 ≈ 2 560 so'm > free plan 1 000 so'm
+    calls.n = 0;
+    H.reset();
+    await H.send(id, 'xyz 50 ming');
+    expect(calls.n).toBe(0);
+    expect((await txsOf(id)).map((r) => r.amount).sort()).toEqual([40_000, 50_000]);
+    expect(H.texts()[0]).toContain('Kategoriya: aniqlanmagan');
+  });
+
+  it('the global daily cap stops AI for everyone', async () => {
+    const id = await newUser();
+    const calls = counting();
+    const rowId = await spend(null, 1_000_000); // default AI_DAILY_BUDGET_USD = 1
+    try {
+      await H.send(id, 'xyz 60 ming');
+      expect(calls.n).toBe(0);
+      expect(await txsOf(id)).toHaveLength(1);
+    } finally {
+      await H.h.db.delete(schema.aiUsageLog).where(eq(schema.aiUsageLog.id, rowId));
+    }
+  });
+});
+
 describe('card editing, delete, undo', () => {
   it('category correction becomes a rule for the next message', async () => {
     const id = await newUser();

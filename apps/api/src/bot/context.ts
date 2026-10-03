@@ -25,6 +25,8 @@ export interface BotServices {
   auth: AuthConfig;
   log: FastifyBaseLogger;
   confidenceThreshold: number;
+  /** Global AI text spend cap per UTC day, USD. */
+  aiDailyBudgetUsd: number;
   now: () => Date;
   webLoginUrl?: (token: string) => string;
 }

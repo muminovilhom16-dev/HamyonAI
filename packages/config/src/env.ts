@@ -69,6 +69,8 @@ export const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   AI_CONFIDENCE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.8),
   AI_TIMEOUT_MS: z.coerce.number().int().min(500).default(8000),
+  /** Ceiling on AI text spend across all users per UTC day, in USD (protects the prepaid balance). */
+  AI_DAILY_BUDGET_USD: z.coerce.number().min(0).default(1),
 
   STT_PROVIDER: z.enum(['google', 'none']).default('google'),
   GOOGLE_STT_API_KEY: z.string().optional(),

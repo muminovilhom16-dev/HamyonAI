@@ -36,6 +36,9 @@ services:
         value: anthropic
       - key: ANTHROPIC_API_KEY
         sync: false
+      # Max AI spend for all users per day, USD (bot falls back to rules above it).
+      - key: AI_DAILY_BUDGET_USD
+        value: "1"
       - key: STT_PROVIDER
         value: google
       - key: GOOGLE_STT_API_KEY
