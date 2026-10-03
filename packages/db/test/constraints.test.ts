@@ -123,3 +123,11 @@ describe('accounts', () => {
     await rejectsWith(h.db.insert(s.accounts).values({ walletId, name: 'B', kind: 'card', isDefault: true }), 'accounts_wallet_default_uq');
   });
 });
+
+describe('debt counterparty username', () => {
+  it('only valid lowercase usernames', async () => {
+    const base = { walletId, createdByUserId: userId, counterparty: 'A', counterpartyKey: 'a', direction: 'given' as const, total: 10, remaining: 10, currency: 'UZS' as const };
+    await h.db.insert(s.debts).values({ ...base, counterpartyUsername: 'murod_aka' });
+    await rejectsWith(h.db.insert(s.debts).values({ ...base, counterpartyUsername: 'Murod' }), 'debts_counterparty_username_format');
+  });
+});

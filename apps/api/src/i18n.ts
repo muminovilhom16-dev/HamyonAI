@@ -299,6 +299,19 @@ const messages = {
   accountCard: { uz_latn: 'Karta', uz_cyrl: 'Карта', ru: 'Карта' },
   accountTooMany: { uz_latn: 'Hisoblar soni chegaraga yetdi (10).', uz_cyrl: 'Ҳисоблар сони чегарага етди (10).', ru: 'Достигнут предел счетов (10).' },
 
+  reminderDebtorDueToday: {
+    uz_latn: '⏰ Eslatma: bugun {name}ga <b>{amount}</b> qarzni qaytarish muddati.',
+    uz_cyrl: '⏰ Эслатма: бугун {name}га <b>{amount}</b> қарзни қайтариш муддати.',
+    ru: '⏰ Напоминание: сегодня срок вернуть {name} <b>{amount}</b>.',
+  },
+  reminderDebtorAlsoSent: { uz_latn: '📨 @{username} ga ham eslatma yuborildi.', uz_cyrl: '📨 @{username} га ҳам эслатма юборилди.', ru: '📨 @{username} тоже получил напоминание.' },
+  debtorOptOut: { uz_latn: '🔕 Bunday eslatmalar kerak emas', uz_cyrl: '🔕 Бундай эслатмалар керак эмас', ru: '🔕 Не присылать такие напоминания' },
+  debtorOptedOut: {
+    uz_latn: "🔕 Boshqalar nomidan qarz eslatmalari endi kelmaydi.",
+    uz_cyrl: '🔕 Бошқалар номидан қарз эслатмалари энди келмайди.',
+    ru: '🔕 Напоминания о долгах от других пользователей больше не придут.',
+  },
+
   // ─── Proactive (TZ §32-33: short, never shaming) ───
   dailyReminder: {
     uz_latn: "Bugun hali yozuv yo'q. Xarajat bo'lgan bo'lsa, bitta xabar bilan yozing: «taksi 25 ming».",

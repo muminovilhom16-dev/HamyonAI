@@ -108,6 +108,10 @@ const shots = async (name, opts, link) => {
   await page.click('nav button:nth-of-type(3)');
   await page.waitForSelector('.debt');
   await page.screenshot({ path: `${OUT}/${name}-debts.png`, fullPage: true });
+  await page.click('.fab');
+  await page.waitForSelector('.sheet #duser');
+  await page.screenshot({ path: `${OUT}/${name}-debt-add.png` });
+  await page.click('.sheet .icon-btn');
   await page.click('nav button:nth-of-type(4)');
   await page.waitForSelector('.group');
   await page.screenshot({ path: `${OUT}/${name}-settings.png`, fullPage: true });

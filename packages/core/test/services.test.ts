@@ -5,7 +5,7 @@ import { assertWalletAccess } from '../src/access';
 import { consumeLoginToken, createSession, issueLoginToken, resolveSession, revokeSession } from '../src/auth';
 import { SYSTEM_CATEGORIES } from '../src/categories';
 import { AppError } from '../src/errors';
-import { ensureUser } from '../src/users';
+import { ensureUser, normalizeTgUsername } from '../src/users';
 import { checkAiBudget } from '../src/finance/limits';
 import { loadPlanConfig } from '@hamyon/config';
 
@@ -128,5 +128,22 @@ describe('checkAiBudget', () => {
     await log(null, 1, new Date('2026-10-15T02:00:00Z'));
     expect(await checkAiBudget(h.db, { ...base, userId: user.id })).toEqual({ allowed: false, reason: 'global_day' });
     expect((await checkAiBudget(h.db, { ...base, userId: user.id, now: new Date('2026-10-16T00:30:00Z') })).allowed).toBe(true);
+  });
+});
+
+describe('normalizeTgUsername', () => {
+  it.each([
+    ['@Murod_A1', 'murod_a1'],
+    ['https://t.me/murod_aka', 'murod_aka'],
+    ['  user12345 ', 'user12345'],
+    ['ab', null],
+    ['bad name', null],
+    ['', null],
+  ])('%s → %s', (raw, out) => expect(normalizeTgUsername(raw)).toBe(out));
+
+  it('ensureUser keeps the username current', async () => {
+    await ensureUser(h.db, { telegramId: 4242, username: 'Old_Name' });
+    const { user } = await ensureUser(h.db, { telegramId: 4242, username: 'New_Name' });
+    expect(user.username).toBe('new_name');
   });
 });

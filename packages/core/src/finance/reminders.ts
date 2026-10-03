@@ -1,4 +1,5 @@
-import { and, eq, gte, isNotNull, isNull, lt, sql } from 'drizzle-orm';
+import { and, eq, gte, isNotNull, isNull, lt, ne, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { schema, type Database } from '@hamyon/db';
 import { addDays, localDate, zonedInstant } from './time';
 
@@ -105,4 +106,74 @@ export async function dueDebtReminders(db: Database, now: Date): Promise<DueDebt
     });
   }
   return out;
+}
+
+export interface DueDebtorReminder {
+  debtId: string;
+  dueDate: string;
+  /** The debtor: a Hamyon user whose @username the lender attached to the debt. */
+  debtorUserId: string;
+  debtorTelegramId: number;
+  debtorLanguage: 'uz_latn' | 'uz_cyrl' | 'ru';
+  debtorTimeZone: string;
+  debtorUsername: string;
+  lenderUserId: string;
+  lenderName: string;
+  remaining: number;
+  currency: 'UZS' | 'USD';
+}
+
+/**
+ * Due-today reminders for the debtor (only debts the lender gave, with the
+ * debtor's @username, when that person uses the bot and has not opted out),
+ * from 10:00 in the debtor's time zone.
+ */
+export async function dueDebtorReminders(db: Database, now: Date): Promise<DueDebtorReminder[]> {
+  const debtor = alias(users, 'debtor');
+  const from = new Date(now.getTime() - 2 * 86_400_000).toISOString().slice(0, 10);
+  const to = new Date(now.getTime() + 2 * 86_400_000).toISOString().slice(0, 10);
+  const rows = await db
+    .select({ debt: debts, lender: users, debtor })
+    .from(debts)
+    .innerJoin(users, eq(users.id, debts.createdByUserId))
+    .innerJoin(debtor, eq(debtor.username, debts.counterpartyUsername))
+    .where(
+      and(
+        eq(debts.status, 'open'),
+        eq(debts.direction, 'given'),
+        isNull(debts.deletedAt),
+        isNotNull(debts.dueDate),
+        gte(debts.dueDate, from),
+        lt(debts.dueDate, to),
+        isNull(users.deletionRequestedAt),
+        isNull(debtor.deletionRequestedAt),
+        isNotNull(debtor.onboardingCompletedAt),
+        eq(debtor.debtRemindersFromOthers, true),
+        ne(debtor.id, users.id),
+      ),
+    );
+  const out: DueDebtorReminder[] = [];
+  for (const { debt, lender, debtor: d } of rows) {
+    const today = localDate(now, d.timezone);
+    if (debt.dueDate !== today || now < zonedInstant(today, d.timezone, DEBT_REMINDER_HOUR, 0)) continue;
+    out.push({
+      debtId: debt.id,
+      dueDate: debt.dueDate,
+      debtorUserId: d.id,
+      debtorTelegramId: d.telegramId,
+      debtorLanguage: d.language,
+      debtorTimeZone: d.timezone,
+      debtorUsername: d.username!,
+      lenderUserId: lender.id,
+      lenderName: lender.displayName?.trim() || (lender.username ? `@${lender.username}` : 'Hamyon AI'),
+      remaining: debt.remaining,
+      currency: debt.currency,
+    });
+  }
+  return out;
+}
+
+/** Debtor's "don't send me these" button. */
+export async function optOutOfDebtorReminders(db: Database, userId: string): Promise<void> {
+  await db.update(users).set({ debtRemindersFromOthers: false, updatedAt: new Date() }).where(eq(users.id, userId));
 }

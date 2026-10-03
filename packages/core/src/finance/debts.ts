@@ -3,6 +3,7 @@ import { schema, type Database } from '@hamyon/db';
 import { assertWalletAccess } from '../access';
 import { AppError } from '../errors';
 import { foldWord } from '../parser/normalize';
+import { normalizeTgUsername } from '../users';
 import { amountInUzs, UNDO_WINDOW_MS, type FinanceDeps, type Transaction, type TransactionSource } from './transactions';
 import { occurredAtFor } from './time';
 
@@ -64,10 +65,22 @@ export interface CreateDebtInput {
   source: TransactionSource;
   rawInput: string | null;
   confidence?: number | null;
+  /** Debtor's Telegram @username (any form); invalid → validation error. */
+  counterpartyUsername?: string | null;
+}
+
+/** Empty → null; anything else must be a valid Telegram username. */
+function usernameOrThrow(raw: string | null | undefined): string | null {
+  if (raw === undefined || raw === null || raw.trim() === '') return null;
+  const u = normalizeTgUsername(raw);
+  if (!u) throw new AppError('validation', 'invalid username');
+  return u;
 }
 
 export async function createDebt(deps: FinanceDeps, input: CreateDebtInput): Promise<{ debt: Debt; tx: Transaction }> {
   if (!Number.isSafeInteger(input.amount) || input.amount <= 0) throw new AppError('validation', 'invalid amount');
+  const counterpartyUsername = usernameOrThrow(input.counterpartyUsername);
+  if (input.dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(input.dueDate)) throw new AppError('validation', 'invalid date');
   const counterparty = cleanCounterparty(input.counterparty);
   const key = counterpartyKey(counterparty);
   if (!key) throw new AppError('validation', 'counterparty required');
@@ -83,6 +96,7 @@ export async function createDebt(deps: FinanceDeps, input: CreateDebtInput): Pro
         createdByUserId: input.userId,
         counterparty,
         counterpartyKey: key,
+        counterpartyUsername,
         direction: input.direction,
         total: input.amount,
         remaining: input.amount,
@@ -260,6 +274,10 @@ export interface DebtSummaryRow {
   total: number;
   nearestDue: string | null;
   debtIds: string[];
+  /** Latest debtor @username set on any debt in the group. */
+  username: string | null;
+  /** True when a Hamyon user with that username exists (reminders can reach them). */
+  onBot: boolean;
 }
 
 /** Open debts grouped per person, direction and currency (for /qarzlar and web). */
@@ -275,13 +293,23 @@ export async function listOpenDebts(db: Database, userId: string, walletId: stri
     const k = `${d.direction}|${d.counterpartyKey}|${d.currency}`;
     const g = groups.get(k) ?? {
       counterparty: d.counterparty, counterpartyKey: d.counterpartyKey, direction: d.direction, currency: d.currency,
-      remaining: 0, total: 0, nearestDue: null, debtIds: [],
+      remaining: 0, total: 0, nearestDue: null, debtIds: [], username: null, onBot: false,
     };
     g.remaining += d.remaining;
     g.total += d.total;
     g.debtIds.push(d.id);
     if (d.dueDate && (!g.nearestDue || d.dueDate < g.nearestDue)) g.nearestDue = d.dueDate;
+    if (d.counterpartyUsername) g.username = d.counterpartyUsername; // rows are oldest first → latest wins
     groups.set(k, g);
+  }
+  const usernames = [...new Set([...groups.values()].map((g) => g.username).filter((u): u is string => !!u))];
+  if (usernames.length) {
+    const found = await db
+      .select({ username: schema.users.username })
+      .from(schema.users)
+      .where(and(inArray(schema.users.username, usernames), isNull(schema.users.deletionRequestedAt)));
+    const onBot = new Set(found.map((f) => f.username));
+    for (const g of groups.values()) g.onBot = !!g.username && onBot.has(g.username);
   }
   return [...groups.values()].sort((a, b) => b.remaining - a.remaining);
 }
@@ -303,11 +331,26 @@ export async function debtPaymentsOf(db: Database, userId: string, debtId: strin
     .orderBy(desc(debtPayments.paidAt));
 }
 
-export async function setDebtDueDate(deps: FinanceDeps, userId: string, debtId: string, dueDate: string | null): Promise<Debt> {
+/** Changes the due date and/or the debtor's @username; omitted fields stay as they are. */
+export async function updateDebtMeta(
+  deps: FinanceDeps,
+  userId: string,
+  debtId: string,
+  patch: { dueDate?: string | null; counterpartyUsername?: string | null },
+): Promise<Debt> {
   await getDebtForUser(deps.db, userId, debtId);
-  if (dueDate !== null && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) throw new AppError('validation', 'invalid date');
-  const [d] = await deps.db.update(debts).set({ dueDate, updatedAt: deps.now ? deps.now() : new Date() }).where(eq(debts.id, debtId)).returning();
+  const set: Partial<typeof debts.$inferInsert> = { updatedAt: deps.now ? deps.now() : new Date() };
+  if (patch.dueDate !== undefined) {
+    if (patch.dueDate !== null && !/^\d{4}-\d{2}-\d{2}$/.test(patch.dueDate)) throw new AppError('validation', 'invalid date');
+    set.dueDate = patch.dueDate;
+  }
+  if (patch.counterpartyUsername !== undefined) set.counterpartyUsername = usernameOrThrow(patch.counterpartyUsername);
+  const [d] = await deps.db.update(debts).set(set).where(eq(debts.id, debtId)).returning();
   return d!;
+}
+
+export function setDebtDueDate(deps: FinanceDeps, userId: string, debtId: string, dueDate: string | null): Promise<Debt> {
+  return updateDebtMeta(deps, userId, debtId, { dueDate });
 }
 
 /**

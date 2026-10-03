@@ -164,6 +164,22 @@ const M = {
   makeMain: { uz_latn: 'Asosiy qilish', uz_cyrl: 'Асосий қилиш', ru: 'Сделать основным' },
   accountField: { uz_latn: 'Hisob', uz_cyrl: 'Ҳисоб', ru: 'Счёт' },
   noAccount: { uz_latn: 'Hisobsiz', uz_cyrl: 'Ҳисобсиз', ru: 'Без счёта' },
+  addDebt: { uz_latn: "Qarz qo'shish", uz_cyrl: 'Қарз қўшиш', ru: 'Добавить долг' },
+  debtWhoGiven: { uz_latn: 'Kimga berdingiz?', uz_cyrl: 'Кимга бердингиз?', ru: 'Кому дали?' },
+  debtWhoTaken: { uz_latn: 'Kimdan oldingiz?', uz_cyrl: 'Кимдан олдингиз?', ru: 'У кого взяли?' },
+  debtNameRequired: { uz_latn: 'Ismini yozing', uz_cyrl: 'Исмини ёзинг', ru: 'Укажите имя' },
+  dueOptional: { uz_latn: 'Qaytarish muddati', uz_cyrl: 'Қайтариш муддати', ru: 'Срок возврата' },
+  dueBeforeDate: { uz_latn: 'Muddat qarz sanasidan oldin bo‘lmasin', uz_cyrl: 'Муддат қарз санасидан олдин бўлмасин', ru: 'Срок не может быть раньше даты долга' },
+  tgUsername: { uz_latn: 'Qarzdorning Telegram @username (ixtiyoriy)', uz_cyrl: 'Қарздорнинг Телеграм @username (ихтиёрий)', ru: 'Telegram @username должника (необязательно)' },
+  tgUsernameShort: { uz_latn: 'telegram username', uz_cyrl: 'телеграм username', ru: 'telegram username' },
+  tgUsernameHint: {
+    uz_latn: 'Muddat kuni unga ham eslatma boradi — faqat u Hamyon AI botidan foydalansa.',
+    uz_cyrl: 'Муддат куни унга ҳам эслатма боради — фақат у Hamyon AI ботидан фойдаланса.',
+    ru: 'В день срока напоминание придёт и ему — только если он пользуется ботом Hamyon AI.',
+  },
+  tgUsernameInvalid: { uz_latn: "Username noto'g'ri (5–32 ta lotin harf, raqam yoki _)", uz_cyrl: 'Username нотўғри (5–32 та лотин ҳарф, рақам ёки _)', ru: 'Неверный username (5–32 латинских букв, цифр или _)' },
+  debtorOnBot: { uz_latn: 'Botda bor — muddat kuni unga ham eslatma boradi', uz_cyrl: 'Ботда бор — муддат куни унга ҳам эслатма боради', ru: 'Есть в боте — в день срока ему тоже придёт напоминание' },
+  debtorNotOnBot: { uz_latn: "Botda yo'q — eslatma faqat sizga keladi", uz_cyrl: 'Ботда йўқ — эслатма фақат сизга келади', ru: 'Нет в боте — напоминание придёт только вам' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;

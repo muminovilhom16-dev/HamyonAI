@@ -1,7 +1,7 @@
 import { InlineKeyboard, type Bot } from 'grammy';
 import { eq } from 'drizzle-orm';
 import { schema } from '@hamyon/db';
-import { markNoSpendingToday, type Language } from '@hamyon/core';
+import { markNoSpendingToday, optOutOfDebtorReminders, type Language } from '@hamyon/core';
 import { t } from '../i18n';
 import type { BotContext, BotServices } from './context';
 
@@ -43,6 +43,14 @@ export function registerOnboarding(bot: Bot<BotContext>, s: BotServices): void {
     await ctx.answerCallbackQuery();
     if (ok) await ctx.editMessageText(t(ctx.user!.language, 'noSpendDone'));
     else await ctx.editMessageReplyMarkup({ reply_markup: new InlineKeyboard() }).catch(() => {});
+  });
+
+  // Debtor turned off reminders sent on behalf of other users' debts.
+  bot.callbackQuery('dro:off', async (ctx) => {
+    await optOutOfDebtorReminders(s.db, ctx.user!.id);
+    await ctx.answerCallbackQuery();
+    await ctx.editMessageReplyMarkup({ reply_markup: new InlineKeyboard() }).catch(() => {});
+    await ctx.reply(t(ctx.user!.language, 'debtorOptedOut'));
   });
 
   bot.command('start', async (ctx) => {

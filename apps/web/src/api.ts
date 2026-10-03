@@ -82,7 +82,14 @@ export interface DebtGroup {
   remaining: number;
   total: number;
   nearestDue: string | null;
-  debts: Array<{ id: string; total: number; remaining: number; dueDate: string | null; createdDate: string; payments: Array<{ amount: number; date: string }> }>;
+  /** Debtor's Telegram @username (without "@"), if set. */
+  username: string | null;
+  /** Whether that username uses the bot (then the due-date reminder reaches them). */
+  onBot: boolean;
+  debts: Array<{
+    id: string; total: number; remaining: number; dueDate: string | null; username: string | null;
+    createdDate: string; payments: Array<{ amount: number; date: string }>;
+  }>;
 }
 
 export interface Budget { id: string; categoryId: string | null; name: string | null; icon: string | null; limitUzs: number; spentUzs: number }

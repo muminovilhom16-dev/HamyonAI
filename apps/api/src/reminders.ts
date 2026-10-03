@@ -1,9 +1,9 @@
-import type { Api, RawApi } from 'grammy';
+import { InlineKeyboard, type Api, type RawApi } from 'grammy';
 import type { FastifyBaseLogger } from 'fastify';
-import { claimProactive, dueDebtReminders, markProactiveFailed, type DueDebtReminder } from '@hamyon/core';
+import { claimProactive, dueDebtorReminders, dueDebtReminders, markProactiveFailed, type DueDebtorReminder, type DueDebtReminder } from '@hamyon/core';
 import { schema, type Database } from '@hamyon/db';
 import { formatDay, formatMoney } from './format';
-import { tf } from './i18n';
+import { t, tf } from './i18n';
 
 export interface ReminderDeps {
   db: Database;
@@ -29,36 +29,73 @@ export function debtReminderText(r: DueDebtReminder): string {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Sends due debt reminders once each, within the per-user daily cap. */
+/** The debtor's message: who they owe, how much, due today; with an opt-out button. */
+export function debtorReminderText(r: DueDebtorReminder): string {
+  return tf(r.debtorLanguage, 'reminderDebtorDueToday', {
+    name: r.lenderName,
+    amount: formatMoney(r.remaining, r.currency, r.debtorLanguage),
+  });
+}
+
+type Outcome = 'sent' | 'skipped' | 'failed';
+
+/** Claims a proactive slot for `userId`, sends, and records the outcome. */
+async function deliverOnce(
+  deps: ReminderDeps,
+  now: Date,
+  claim: { userId: string; timeZone: string; dedupeKey: string; payload: unknown },
+  send: () => Promise<unknown>,
+): Promise<Outcome> {
+  const id = await claimProactive(deps.db, { kind: 'debt_due', maxPerDay: deps.maxPerDay, now, ...claim });
+  if (!id) return 'skipped';
+  try {
+    await send();
+    await deps.db.insert(schema.analyticsEvents).values({ userId: claim.userId, name: 'reminder_sent', props: { kind: 'debt_due' } });
+    return 'sent';
+  } catch (err) {
+    // E.g. the user blocked the bot. Not counted toward the daily cap.
+    await markProactiveFailed(deps.db, id);
+    deps.log.warn({ err: err instanceof Error ? err.message : 'send failed' }, 'reminder delivery failed');
+    return 'failed';
+  } finally {
+    if (deps.sendGapMs !== 0) await sleep(deps.sendGapMs ?? 40);
+  }
+}
+
+/**
+ * Sends due debt reminders once each, within each user's daily cap:
+ * first to debtors who use the bot (when the lender attached their @username),
+ * then to lenders — whose due-today message says the debtor was reminded too.
+ */
 export async function sendDebtReminders(deps: ReminderDeps): Promise<{ sent: number; skipped: number; failed: number }> {
   const now = deps.now ? deps.now() : new Date();
-  const due = await dueDebtReminders(deps.db, now);
   const stats = { sent: 0, skipped: 0, failed: 0 };
-  for (const r of due) {
-    const id = await claimProactive(deps.db, {
-      userId: r.userId,
-      kind: 'debt_due',
-      dedupeKey: `debt:${r.debtId}:${r.kind}:${r.dueDate}`,
-      timeZone: r.timeZone,
-      maxPerDay: deps.maxPerDay,
+
+  const remindedDebtors = new Map<string, string>(); // debtId → @username
+  for (const r of await dueDebtorReminders(deps.db, now)) {
+    const outcome = await deliverOnce(
+      deps,
       now,
-      payload: { debtId: r.debtId, kind: r.kind },
-    });
-    if (!id) {
-      stats.skipped++;
-      continue;
-    }
-    try {
-      await deps.api.sendMessage(r.telegramId, debtReminderText(r));
-      await deps.db.insert(schema.analyticsEvents).values({ userId: r.userId, name: 'reminder_sent', props: { kind: 'debt_due' } });
-      stats.sent++;
-    } catch (err) {
-      // E.g. the user blocked the bot. Not counted toward the daily cap.
-      await markProactiveFailed(deps.db, id);
-      deps.log.warn({ err: err instanceof Error ? err.message : 'send failed' }, 'reminder delivery failed');
-      stats.failed++;
-    }
-    if (deps.sendGapMs !== 0) await sleep(deps.sendGapMs ?? 40);
+      { userId: r.debtorUserId, timeZone: r.debtorTimeZone, dedupeKey: `debtor:${r.debtId}:${r.dueDate}`, payload: { debtId: r.debtId, debtor: true } },
+      () =>
+        deps.api.sendMessage(r.debtorTelegramId, debtorReminderText(r), {
+          reply_markup: new InlineKeyboard().text(t(r.debtorLanguage, 'debtorOptOut'), 'dro:off'),
+        }),
+    );
+    stats[outcome]++;
+    if (outcome === 'sent') remindedDebtors.set(r.debtId, r.debtorUsername);
+  }
+
+  for (const r of await dueDebtReminders(deps.db, now)) {
+    const debtor = r.kind === 'due_today' ? remindedDebtors.get(r.debtId) : undefined;
+    const text = debtor ? `${debtReminderText(r)}\n${tf(r.language, 'reminderDebtorAlsoSent', { username: debtor })}` : debtReminderText(r);
+    const outcome = await deliverOnce(
+      deps,
+      now,
+      { userId: r.userId, timeZone: r.timeZone, dedupeKey: `debt:${r.debtId}:${r.kind}:${r.dueDate}`, payload: { debtId: r.debtId, kind: r.kind } },
+      () => deps.api.sendMessage(r.telegramId, text),
+    );
+    stats[outcome]++;
   }
   return stats;
 }

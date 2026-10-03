@@ -71,6 +71,11 @@ export const users = pgTable('users', {
   // Telegram user id. Internal only: never sent to AI providers (TZ §39).
   telegramId: bigint('telegram_id', { mode: 'number' }).notNull().unique(),
   displayName: text('display_name'),
+  // Telegram @username, lowercase, without "@". Lets a lender's debt reminder
+  // reach this user when they are the debtor.
+  username: text('username'),
+  /** Debtor-side opt-out of reminders sent on behalf of other users' debts. */
+  debtRemindersFromOthers: boolean('debt_reminders_from_others').notNull().default(true),
   language: languageEnum('language').notNull().default('uz_latn'),
   currency: currencyEnum('currency').notNull().default('UZS'),
   timezone: text('timezone').notNull().default('Asia/Tashkent'),
@@ -83,7 +88,7 @@ export const users = pgTable('users', {
   deletionRequestedAt: timestamp('deletion_requested_at', { withTimezone: true }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
-});
+}, (t) => [index('users_username_idx').on(t.username).where(sql`${t.username} is not null`)]);
 
 export const wallets = pgTable('wallets', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -168,6 +173,9 @@ export const debts = pgTable('debts', {
   counterparty: text('counterparty').notNull(),
   // Normalized name used to match "Murod aka" ≈ "murod aka" ≈ "Мурод ака".
   counterpartyKey: text('counterparty_key').notNull(),
+  // Debtor's Telegram @username (lowercase, no "@"); a reminder reaches them
+  // on the due date only if they use the bot under this username.
+  counterpartyUsername: text('counterparty_username'),
   direction: debtDirectionEnum('direction').notNull(),
   total: money('total').notNull(),
   remaining: money('remaining').notNull(),
@@ -184,6 +192,7 @@ export const debts = pgTable('debts', {
 }, (t) => [
   check('debts_total_positive', sql`${t.total} > 0`),
   check('debts_remaining_range', sql`${t.remaining} >= 0 and ${t.remaining} <= ${t.total}`),
+  check('debts_counterparty_username_format', sql`${t.counterpartyUsername} is null or ${t.counterpartyUsername} ~ '^[a-z0-9_]{5,32}$'`),
   index('debts_wallet_open_idx').on(t.walletId, t.counterpartyKey).where(sql`${t.status} = 'open'`),
 ]);
 

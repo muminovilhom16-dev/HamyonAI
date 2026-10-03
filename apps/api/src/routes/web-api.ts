@@ -6,6 +6,7 @@ import {
   AppError,
   DEBT_TYPES,
   budgetStatus,
+  createDebt,
   accountForNewRecord,
   createAccount,
   listAccounts,
@@ -36,7 +37,7 @@ import {
   localDate,
   periodRange,
   personalWalletId,
-  setDebtDueDate,
+  updateDebtMeta,
   softDeleteTransaction,
   undoDebtEvent,
   undoDelete,
@@ -491,8 +492,7 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
     return { ok: true };
   });
 
-  app.get('/api/debts', { preHandler: session }, async (request) => {
-    const { user, walletId } = await context(opts.db, request);
+  const debtGroups = async (user: { id: string; timezone: string }, walletId: string) => {
     const groups = await listOpenDebts(opts.db, user.id, walletId);
     return Promise.all(
       groups.map(async (g) => ({
@@ -502,12 +502,14 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
         remaining: g.remaining,
         total: g.total,
         nearestDue: g.nearestDue,
+        username: g.username,
+        onBot: g.onBot,
         debts: await Promise.all(
           g.debtIds.map(async (id) => {
             const d = await getDebtForUser(opts.db, user.id, id);
             const payments = await debtPaymentsOf(opts.db, user.id, id);
             return {
-              id: d.id, total: d.total, remaining: d.remaining, dueDate: d.dueDate,
+              id: d.id, total: d.total, remaining: d.remaining, dueDate: d.dueDate, username: d.counterpartyUsername,
               createdDate: localDate(d.createdAt, user.timezone),
               payments: payments.map((p) => ({ amount: p.amount, date: localDate(p.paidAt, user.timezone) })),
             };
@@ -515,12 +517,56 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
         ),
       })),
     );
+  };
+
+  app.get('/api/debts', { preHandler: session }, async (request) => {
+    const { user, walletId } = await context(opts.db, request);
+    return debtGroups(user, walletId);
+  });
+
+  // Debt from the web panel: the same engine as the bot (never an expense).
+  app.post('/api/debts', { preHandler: session }, async (request, reply) => {
+    const body = parse(
+      z.object({
+        direction: z.enum(['given', 'taken']),
+        counterparty: z.string().trim().min(1).max(100),
+        amount: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+        currency: z.enum(['UZS', 'USD']).optional(),
+        date,
+        dueDate: date.nullable().optional(),
+        username: z.string().max(64).nullable().optional(),
+        note: z.string().max(200).nullable().optional(),
+      }).strict(),
+      request.body,
+    );
+    const { user, walletId } = await context(opts.db, request);
+    if (body.date > localDate(fin.now(), user.timezone)) throw new AppError('validation', 'future date');
+    if (body.dueDate && body.dueDate < body.date) throw new AppError('validation', 'due before date');
+    await createDebt(fin, {
+      walletId,
+      userId: user.id,
+      timeZone: user.timezone,
+      direction: body.direction,
+      counterparty: body.counterparty,
+      amount: body.amount,
+      currency: body.currency ?? user.currency,
+      date: body.date,
+      dueDate: body.dueDate ?? null,
+      note: body.note?.trim() || null,
+      counterpartyUsername: body.username ?? null,
+      source: 'web',
+      rawInput: null,
+    });
+    return reply.status(201).send(await debtGroups(user, walletId));
   });
 
   app.patch<{ Params: { id: string } }>('/api/debts/:id', { preHandler: session }, async (request) => {
     const id = parse(uuid, request.params.id);
-    const body = parse(z.object({ dueDate: date.nullable() }).strict(), request.body);
-    const d = await setDebtDueDate(fin, request.auth!.userId, id, body.dueDate);
-    return { id: d.id, dueDate: d.dueDate };
+    const body = parse(z.object({ dueDate: date.nullable().optional(), username: z.string().max(64).nullable().optional() }).strict(), request.body);
+    const d = await updateDebtMeta(fin, request.auth!.userId, id, {
+      ...(body.dueDate !== undefined && { dueDate: body.dueDate }),
+      ...(body.username !== undefined && { counterpartyUsername: body.username }),
+    });
+    return { id: d.id, dueDate: d.dueDate, username: d.counterpartyUsername };
   });
 }

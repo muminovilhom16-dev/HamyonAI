@@ -265,7 +265,7 @@ table.data td.r, table.data th.r { text-align: right; }
 .sheet-head h3 { margin: 0; font-size: 18px; }
 .icon-btn { border: 0; background: var(--surface-2); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--text-2); }
 @media (min-width: 760px) { .sheet-backdrop { align-items: center; } .sheet { border-radius: 24px; } }
-.field { display: grid; gap: 6px; margin-bottom: 14px; }
+.field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-bottom: 14px; min-width: 0; }
 .field label { font-size: 13px; color: var(--text-2); font-weight: 500; }
 .field input, .field select, select.input {
   background: var(--surface-2); border: 1px solid transparent; border-radius: 12px; padding: 10px 12px; min-height: 46px; width: 100%;
@@ -274,7 +274,7 @@ table.data td.r, table.data th.r { text-align: right; }
 .field input:disabled { opacity: 0.6; }
 .amount-input { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .row { display: flex; gap: 10px; }
-.row > * { flex: 1; }
+.row > * { flex: 1; min-width: 0; }
 
 .toast {
   position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%); z-index: 30;
@@ -375,3 +375,11 @@ table.data td.r, table.data th.r { text-align: right; }
 .insight .v.up { color: var(--critical); }
 .insight .v.down { color: var(--good); }
 .num.neg { color: var(--critical); }
+
+/* Debtor's Telegram link on debt cards */
+.tg-status { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12.5px; color: var(--text-2); background: var(--surface-2); border-radius: 10px; padding: 6px 10px; }
+.tg-status.on { color: var(--good); background: color-mix(in srgb, var(--good) 12%, transparent); }
+.tg-input { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-2); border: 1px solid transparent; border-radius: 10px; padding: 0 8px; color: var(--text-3); }
+.tg-input input { border: 0; background: none; padding: 6px 2px; font-size: 13px; min-width: 0; width: 150px; outline: none; color: var(--text); }
+.tg-input:focus-within { border-color: var(--brand); }
+.tg-input.invalid { border-color: var(--critical); }

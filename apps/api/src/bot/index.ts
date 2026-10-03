@@ -70,6 +70,7 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
         telegramId: ctx.from.id,
         displayName: [ctx.from.first_name, ctx.from.last_name].filter(Boolean).join(' '),
         languageCode: ctx.from.language_code ?? null,
+        username: ctx.from.username ?? null,
       },
       deps.defaults,
     );

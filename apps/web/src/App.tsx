@@ -97,7 +97,7 @@ export function App() {
         <h1 className="page-title">{tr(lang, tab)}</h1>
         {tab === 'dashboard' && <DashboardPage lang={lang} onSeeAll={() => go('records')} />}
         {tab === 'records' && <TransactionsPage lang={lang} currency={settings.currency} />}
-        {tab === 'debts' && <DebtsPage lang={lang} />}
+        {tab === 'debts' && <DebtsPage lang={lang} currency={settings.currency} />}
         {tab === 'settings' && <SettingsPage settings={settings} onChange={setSettings} />}
       </main>
     </div>

@@ -95,7 +95,8 @@ export async function createHarness(envOverrides: Record<string, string> = {}): 
     });
     return res.statusCode;
   };
-  const from = (id: number, lang = 'uz') => ({ id, is_bot: false, first_name: 'Ali', language_code: lang });
+  // Every test user has a Telegram username "user<id>" (debtor reminders match on it).
+  const from = (id: number, lang = 'uz') => ({ id, is_bot: false, first_name: 'Ali', username: `user${id}`, language_code: lang });
 
   return {
     app, h, calls, failChatIds, clock, ai, speech,

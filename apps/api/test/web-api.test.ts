@@ -256,6 +256,39 @@ describe('accounts API', () => {
   });
 });
 
+describe('debts from the web (with debtor @username)', () => {
+  it('creates given/taken, validates, reports onBot, edits username; isolation', async () => {
+    const a = await login();
+    const b = await login(); // a bot user named "user<id>"
+    const res = await api(a.cookie, 'POST', '/api/debts', {
+      direction: 'given', counterparty: 'Murod aka', amount: 300_000, date: '2026-10-05', dueDate: '2026-10-20', username: `@User${b.tg}`,
+    });
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject([
+      { counterparty: 'Murod aka', direction: 'given', remaining: 300_000, nearestDue: '2026-10-20', username: `user${b.tg}`, onBot: true },
+    ]);
+    expect((await api(a.cookie, 'POST', '/api/debts', { direction: 'taken', counterparty: 'Sardor', amount: 50_000, date: '2026-10-05' })).statusCode).toBe(201);
+
+    const bad = (body: object) =>
+      api(a.cookie, 'POST', '/api/debts', { direction: 'given', counterparty: 'X Y', amount: 1000, date: '2026-10-05', ...body });
+    expect((await bad({ username: '@ab' })).statusCode).toBe(400); // too short
+    expect((await bad({ username: 'bad name!' })).statusCode).toBe(400);
+    expect((await bad({ dueDate: '2026-10-01' })).statusCode).toBe(400); // before the debt date
+    expect((await bad({ date: '2026-10-06' })).statusCode).toBe(400); // future (test clock: 5 Oct)
+    expect((await bad({ amount: 0 })).statusCode).toBe(400);
+
+    const groups = (await api(a.cookie, 'GET', '/api/debts')).json();
+    expect(groups.find((g: { direction: string }) => g.direction === 'taken')).toMatchObject({ counterparty: 'Sardor', username: null, onBot: false });
+    const debtId = groups.find((g: { direction: string }) => g.direction === 'given').debts[0].id;
+    expect((await api(a.cookie, 'PATCH', `/api/debts/${debtId}`, { username: 'https://t.me/someone_else' })).json()).toMatchObject({ username: 'someone_else' });
+    const after = (await api(a.cookie, 'GET', '/api/debts')).json().find((g: { direction: string }) => g.direction === 'given');
+    expect(after).toMatchObject({ username: 'someone_else', onBot: false });
+    expect((await api(b.cookie, 'PATCH', `/api/debts/${debtId}`, { username: null })).statusCode).toBe(403);
+    // Debts are not expenses: nothing shows up as spending.
+    expect((await api(a.cookie, 'GET', '/api/dashboard?period=month')).json().expenseUzs).toBe(0);
+  });
+});
+
 describe('isolation between users (TZ §39)', () => {
   it("cannot read or change another user's data", async () => {
     const a = await login();

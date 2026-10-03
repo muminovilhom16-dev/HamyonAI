@@ -191,3 +191,61 @@ describe('recurring payments (/obunalar)', () => {
     expect(await H.h.db.select().from(schema.transactions).where(eq(schema.transactions.note, 'Svet'))).toHaveLength(0);
   });
 });
+
+describe('debtor reminders by Telegram @username', () => {
+  const debtOf = async (lenderTg: number) => {
+    const [lender] = await H.h.db.select().from(schema.users).where(eq(schema.users.telegramId, lenderTg));
+    const [d] = await H.h.db.select().from(schema.debts).where(eq(schema.debts.createdByUserId, lender!.id));
+    return d!;
+  };
+
+  it('on the due day at 10:00 the debtor (a bot user) is reminded once; the lender is told', async () => {
+    const lender = await newUser();
+    const debtor = await newUser();
+    await sayAt(lender, '2026-10-01T06:00:00Z', 'Murod akaga 300 ming qarz berdim');
+    const debt = await debtOf(lender);
+    await H.h.db.update(schema.debts).set({ dueDate: '2026-10-08', counterpartyUsername: `user${debtor}` }).where(eq(schema.debts.id, debt.id));
+
+    H.reset();
+    await tick('2026-10-08T04:59:00Z'); // 09:59 Tashkent
+    expect(proactiveTo(debtor)).toHaveLength(0);
+    await tick('2026-10-08T05:00:00Z');
+    await tick('2026-10-08T05:10:00Z'); // deduped
+    const toDebtor = proactiveTo(debtor);
+    expect(toDebtor).toHaveLength(1);
+    expect(htmlToPlain(toDebtor[0]!.text)).toBe("⏰ Eslatma: bugun Aliga 300 000 so'm qarzni qaytarish muddati.");
+    expect(toDebtor[0]!.kb.inline_keyboard[0][0].callback_data).toBe('dro:off');
+    const toLender = proactiveTo(lender).map((m) => htmlToPlain(m.text));
+    expect(toLender).toHaveLength(1);
+    expect(toLender[0]).toContain('Bugun Murod aka');
+    expect(toLender[0]).toContain(`📨 @user${debtor} ga ham eslatma yuborildi.`);
+  });
+
+  it('no bot account under that username → only the lender is reminded', async () => {
+    const lender = await newUser();
+    await sayAt(lender, '2026-10-01T06:00:00Z', 'Sardorga 50 ming qarz berdim');
+    const debt = await debtOf(lender);
+    await H.h.db.update(schema.debts).set({ dueDate: '2026-10-09', counterpartyUsername: 'nobody_here_42' }).where(eq(schema.debts.id, debt.id));
+    H.reset();
+    await tick('2026-10-09T05:00:00Z');
+    const toLender = proactiveTo(lender).map((m) => htmlToPlain(m.text));
+    expect(toLender).toHaveLength(1);
+    expect(toLender[0]).not.toContain('📨');
+    expect(H.calls.filter((c) => c.method === 'sendMessage' && c.payload.chat_id !== lender)).toHaveLength(0);
+  });
+
+  it('the debtor can opt out; "taken" debts never message the other side', async () => {
+    const lender = await newUser();
+    const debtor = await newUser();
+    await sayAt(lender, '2026-10-01T06:00:00Z', 'Aziz akaga 70 ming qarz berdim');
+    await sayAt(lender, '2026-10-01T06:01:00Z', 'Aziz akadan 20 ming qarz oldim');
+    const [l] = await H.h.db.select().from(schema.users).where(eq(schema.users.telegramId, lender));
+    await H.h.db.update(schema.debts).set({ dueDate: '2026-10-10', counterpartyUsername: `user${debtor}` }).where(eq(schema.debts.createdByUserId, l!.id));
+    H.clock.now = new Date('2026-10-01T07:00:00Z');
+    await H.tap(debtor, 'dro:off');
+    expect(H.texts().at(-1)).toContain('endi kelmaydi');
+    H.reset();
+    await tick('2026-10-10T05:00:00Z');
+    expect(proactiveTo(debtor)).toHaveLength(0);
+  });
+});
