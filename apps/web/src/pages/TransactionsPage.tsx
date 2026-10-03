@@ -1,17 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, ApiError, type Category, type Lang, type Tx, type TxType } from '../api';
+import { ReceiptText, Trash2, X } from 'lucide-react';
+import { api, ApiError, type Category, type Lang, type Tx } from '../api';
+import { DEBT_TYPES as DEBT, TxRow } from '../components/TxRow';
 import { day, group, money, parseAmountInput } from '../format';
 import { tr } from '../i18n';
-
-const DEBT: TxType[] = ['debt_given', 'debt_taken', 'debt_return'];
-
-function title(tx: Tx, lang: Lang): string {
-  if (DEBT.includes(tx.type)) {
-    const label = tr(lang, tx.type === 'debt_given' ? 'debtGiven' : tx.type === 'debt_taken' ? 'debtTaken' : 'debtReturn');
-    return `${label}${tx.counterparty ? ` · ${tx.counterparty}` : ''}`;
-  }
-  return tx.categoryName ?? tr(lang, 'uncategorized');
-}
 
 export function TransactionsPage({ lang }: { lang: Lang }) {
   const [items, setItems] = useState<Tx[]>([]);
@@ -87,50 +79,54 @@ export function TransactionsPage({ lang }: { lang: Lang }) {
   };
 
   const year = new Date().getFullYear().toString();
-  let lastDate = '';
+  // Group consecutive rows by day; header shows the day's spending.
+  const days: Array<{ date: string; rows: Tx[]; spentUzs: number }> = [];
+  for (const tx of items) {
+    let d = days.at(-1);
+    if (!d || d.date !== tx.date) days.push((d = { date: tx.date, rows: [], spentUzs: 0 }));
+    d.rows.push(tx);
+    if (tx.type === 'expense') d.spentUzs += tx.amountUzs;
+  }
 
   return (
     <section>
       <div className="filters">
-        <select value={type} onChange={(e) => setType(e.target.value as typeof type)} aria-label={tr(lang, 'records')}>
-          <option value="">{tr(lang, 'all')}</option>
-          <option value="expense">{tr(lang, 'expense')}</option>
-          <option value="income">{tr(lang, 'income')}</option>
-        </select>
-        <label className="small muted" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div className="segmented" role="group" aria-label={tr(lang, 'records')}>
+          {(['', 'expense', 'income'] as const).map((v) => (
+            <button key={v || 'all'} aria-pressed={type === v} onClick={() => setType(v)}>
+              {tr(lang, v || 'all')}
+            </button>
+          ))}
+        </div>
+        <label className="pill-input">
           {tr(lang, 'from')}
           <input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
         </label>
-        <label className="small muted" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <label className="pill-input">
           {tr(lang, 'to')}
           <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
         </label>
       </div>
       {error && <p className="error">{tr(lang, 'error')}</p>}
-      {items.length === 0 && !error && <p className="muted">{tr(lang, 'empty')}</p>}
-      {items.map((tx) => {
-        const head = tx.date !== lastDate ? <div className="day-head">{day(tx.date, lang, year)}</div> : null;
-        lastDate = tx.date;
-        const income = tx.type === 'income';
-        return (
-          <div key={tx.id}>
-            {head}
-            <button className="tx" onClick={() => setEditing(tx)}>
-              <span className="title">{title(tx, lang)}</span>
-              <span className={`amt${income ? ' income' : ''}`}>
-                {income ? '+' : ''}
-                {money(tx.amount, tx.currency, lang)}
-              </span>
-              <span className="sub">
-                {tx.time}
-                {tx.note ? ` · ${tx.note}` : ''}
-                {tx.currency === 'USD' ? ` · ${money(tx.amountUzs, 'UZS', lang)}` : ''}
-                {tx.source === 'voice' ? ' · 🎙' : ''}
-              </span>
-            </button>
+      {items.length === 0 && !error && (
+        <div className="card empty">
+          <ReceiptText size={36} aria-hidden />
+          <div>{tr(lang, 'empty')}</div>
+        </div>
+      )}
+      {days.map((d) => (
+        <div className="day" key={d.date}>
+          <div className="day-head">
+            <span>{day(d.date, lang, year)}</span>
+            {d.spentUzs > 0 && <span className="num">−{money(d.spentUzs, 'UZS', lang)}</span>}
           </div>
-        );
-      })}
+          <div className="card day-list">
+            {d.rows.map((tx) => (
+              <TxRow key={tx.id} tx={tx} lang={lang} onClick={() => setEditing(tx)} />
+            ))}
+          </div>
+        </div>
+      ))}
       {cursor && (
         <button className="btn block" onClick={more}>
           {tr(lang, 'loadMore')}
@@ -200,11 +196,14 @@ function EditSheet(props: {
   return (
     <div className="sheet-backdrop" onClick={props.onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={tr(lang, 'edit')} onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ marginTop: 0 }}>{tr(lang, 'edit')}</h3>
+        <div className="sheet-head">
+          <h3>{tr(lang, 'edit')}</h3>
+          <button className="icon-btn" onClick={props.onClose} aria-label={tr(lang, 'cancel')}><X size={18} /></button>
+        </div>
         {err && <p className="error">{err}</p>}
         <div className="field">
           <label htmlFor="amt">{tr(lang, 'amount')} ({tx.currency})</label>
-          <input id="amt" inputMode="numeric" value={amount} disabled={isDebt} onChange={(e) => setAmount(e.target.value)} />
+          <input id="amt" className="amount-input" inputMode="numeric" value={amount} disabled={isDebt} onChange={(e) => setAmount(e.target.value)} />
           {isDebt && <span className="small muted">{tr(lang, 'debtAmountLocked')}</span>}
         </div>
         {!isDebt && (
@@ -227,7 +226,7 @@ function EditSheet(props: {
           <input id="note" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} />
         </div>
         <div className="row">
-          <button className="btn danger" onClick={props.onDelete}>{tr(lang, 'delete')}</button>
+          <button className="btn danger" onClick={props.onDelete}><Trash2 size={16} aria-hidden />{tr(lang, 'delete')}</button>
           <button className="btn" onClick={props.onClose}>{tr(lang, 'cancel')}</button>
           <button className="btn primary" disabled={busy} onClick={save}>{tr(lang, 'save')}</button>
         </div>

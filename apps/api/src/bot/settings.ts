@@ -13,6 +13,7 @@ import { renderCsv, renderXlsx } from '../export';
 import { formatDay } from '../format';
 import { t, tf } from '../i18n';
 import type { BotContext, BotServices } from './context';
+import { b } from './html';
 
 const LANG_NAMES = { uz_latn: "O'zbekcha", uz_cyrl: 'Ўзбекча', ru: 'Русский' } as const;
 
@@ -20,11 +21,11 @@ function settingsText(u: User): string {
   const l = u.language;
   const reminder = u.remindersEnabled ? u.reminderTime.slice(0, 5) : t(l, 'off');
   return [
-    t(l, 'settingsTitle'),
+    b(t(l, 'settingsTitle')),
     '',
-    `${t(l, 'settingsLanguage')}: ${LANG_NAMES[l]}`,
-    `${t(l, 'settingsReminder')}: ${reminder}`,
-    `${t(l, 'settingsCurrency')}: ${u.currency}`,
+    `🌐 ${t(l, 'settingsLanguage')}: ${b(LANG_NAMES[l])}`,
+    `⏰ ${t(l, 'settingsReminder')}: ${b(reminder)}`,
+    `💱 ${t(l, 'settingsCurrency')}: ${b(u.currency)}`,
   ].join('\n');
 }
 

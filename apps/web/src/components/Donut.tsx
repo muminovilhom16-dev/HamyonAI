@@ -7,7 +7,7 @@ import { tr } from '../i18n';
 const SLOTS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)', 'var(--series-5)', 'var(--series-6)'];
 const MAX_SLICES = SLOTS.length;
 
-export interface Slice { key: string; name: string; totalUzs: number; percentTenths: number; color: string }
+export interface Slice { key: string; name: string; icon: string | null; totalUzs: number; percentTenths: number; color: string }
 
 /** Server percentages already sum to 100.0; folding only adds them up. */
 export function toSlices(rows: Dashboard['byCategory'], lang: Lang): Slice[] {
@@ -15,7 +15,8 @@ export function toSlices(rows: Dashboard['byCategory'], lang: Lang): Slice[] {
   const tail = rows.slice(head.length);
   const slices = head.map((r, i) => ({
     key: r.categoryId ?? 'none',
-    name: r.icon ? `${r.icon} ${r.name}` : r.name,
+    name: r.name,
+    icon: r.icon,
     totalUzs: r.totalUzs,
     percentTenths: r.percentTenths,
     color: SLOTS[i]!,
@@ -24,6 +25,7 @@ export function toSlices(rows: Dashboard['byCategory'], lang: Lang): Slice[] {
     slices.push({
       key: 'others',
       name: tr(lang, 'others'),
+      icon: '…',
       totalUzs: tail.reduce((a, r) => a + r.totalUzs, 0),
       percentTenths: tail.reduce((a, r) => a + r.percentTenths, 0),
       color: 'var(--neutral-fill)',
@@ -35,9 +37,9 @@ export function toSlices(rows: Dashboard['byCategory'], lang: Lang): Slice[] {
 export function Donut({ rows, totalUzs, lang }: { rows: Dashboard['byCategory']; totalUzs: number; lang: Lang }) {
   const [active, setActive] = useState<string | null>(null);
   const slices = toSlices(rows, lang);
-  const size = 168;
-  const r = 62;
-  const stroke = 22;
+  const size = 184;
+  const r = 70;
+  const stroke = 20;
   const c = 2 * Math.PI * r;
   const gap = slices.length > 1 ? 2 : 0; // 2px surface gap between segments
   let offset = 0;
@@ -79,7 +81,7 @@ export function Donut({ rows, totalUzs, lang }: { rows: Dashboard['byCategory'];
           </text>
         </svg>
       </div>
-      {/* Legend with names, amounts and % — identity never relies on color alone. */}
+      {/* Legend: color dot + icon + name, amount and share — identity never relies on color alone. */}
       <ul className="legend">
         {slices.map((s) => (
           <li
@@ -91,10 +93,16 @@ export function Donut({ rows, totalUzs, lang }: { rows: Dashboard['byCategory'];
             onFocus={() => setActive(s.key)}
             onBlur={() => setActive(null)}
           >
-            <span className="swatch" style={{ background: s.color }} aria-hidden />
-            <span>{s.name}</span>
-            <span className="num">{money(s.totalUzs, 'UZS', lang)}</span>
-            <span className="pct num">{percent(s.percentTenths)}</span>
+            <span className="icon-circle" aria-hidden>
+              {s.icon ?? '🏷'}
+              <span className="dot" style={{ background: s.color }} />
+            </span>
+            <span className="name">{s.name}</span>
+            <span className="amt num">{money(s.totalUzs, 'UZS', lang)}</span>
+            <span className="meter">
+              <span className="track"><span className="fill" style={{ display: 'block', width: `${s.percentTenths / 10}%`, background: s.color }} /></span>
+              <span className="pct num">{percent(s.percentTenths)}</span>
+            </span>
           </li>
         ))}
       </ul>

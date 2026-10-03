@@ -9,6 +9,7 @@ import {
 } from '@hamyon/core';
 import { formatDateLabel, formatMoney, groupDigits } from '../format';
 import { t } from '../i18n';
+import { b, esc, i } from './html';
 
 export interface CardEnv {
   lang: Language;
@@ -33,8 +34,9 @@ export function resolveCatRef(categories: WalletCategory[], ref: string): Wallet
   );
 }
 
-const categoryName = (env: CardEnv, key: string | null) =>
-  key ? env.categories.find((c) => c.key === key || c.id === key)?.name ?? null : null;
+const findCategory = (env: CardEnv, key: string | null) =>
+  key ? env.categories.find((c) => c.key === key || c.id === key) ?? null : null;
+const categoryName = (env: CardEnv, key: string | null) => findCategory(env, key)?.name ?? null;
 
 interface CardFields {
   /** Voice input: what we heard, shown on the card (TZ §57). */
@@ -44,23 +46,33 @@ interface CardFields {
   amountUzs?: number;
   type: ParsedTransaction['type'];
   categoryName: string | null;
+  categoryIcon?: string | null;
   categoryPending: boolean;
   note: string | null;
   date: string;
 }
 
+/**
+ * HTML card:
+ *   🚕 <b>25 000 so'm</b>
+ *   Transport · Bugun
+ *   📝 taksi
+ */
 export function cardText(f: CardFields, env: CardEnv, suffix?: string): string {
   const money =
     f.currency === 'USD' && f.amountUzs
       ? `${formatMoney(f.amount, 'USD', env.lang)} · ${formatMoney(f.amountUzs, 'UZS', env.lang)}`
       : formatMoney(f.amount, f.currency, env.lang);
-  const lines = f.transcript ? [`🎙 «${f.transcript}»`, ''] : [];
-  lines.push(f.type === 'income' ? `+${money}` : money);
-  if (f.categoryPending || !f.categoryName) lines.push(t(env.lang, 'categoryPending'));
-  else lines.push(f.type === 'income' ? `${t(env.lang, 'income')} · ${f.categoryName}` : f.categoryName);
-  if (f.note) lines.push(f.note);
-  lines.push(formatDateLabel(f.date, env.today, env.yesterday, env.lang));
-  if (suffix) lines.push('', suffix);
+  const income = f.type === 'income';
+  const known = !f.categoryPending && !!f.categoryName;
+  const icon = (known && f.categoryIcon) || (income ? '💰' : '💸');
+  const lines = f.transcript ? [`🎙 ${i(`«${esc(f.transcript)}»`)}`, ''] : [];
+  lines.push(`${icon} ${b(income ? `+${money}` : money)}`);
+  const what = known ? esc(income ? `${t(env.lang, 'income')} · ${f.categoryName}` : f.categoryName!) : `❓ ${t(env.lang, 'categoryPending')}`;
+  lines.push(`${what} · ${formatDateLabel(f.date, env.today, env.yesterday, env.lang)}`);
+  // A note that only repeats the category ("Oylik" under "Oylik") adds nothing.
+  if (f.note && f.note.toLowerCase() !== (f.categoryName ?? '').toLowerCase()) lines.push(`📝 ${esc(f.note)}`);
+  if (suffix) lines.push('', b(suffix));
   return lines.join('\n');
 }
 
@@ -72,6 +84,7 @@ export function txFields(tx: Transaction, env: CardEnv, timeZone: string): CardF
     amountUzs: tx.amountUzs,
     type: tx.type,
     categoryName: categoryName(env, tx.categoryId),
+    categoryIcon: findCategory(env, tx.categoryId)?.icon ?? null,
     categoryPending: tx.categoryStatus === 'pending',
     note: tx.note,
     date: localDate(tx.occurredAt, timeZone),
@@ -85,6 +98,7 @@ export function parsedFields(tx: ParsedTransaction, env: CardEnv, categoryPendin
     currency: tx.currency,
     type: tx.type,
     categoryName: categoryName(env, tx.category_id),
+    categoryIcon: findCategory(env, tx.category_id)?.icon ?? null,
     categoryPending,
     note: tx.note,
     date: tx.date,
@@ -94,11 +108,11 @@ export function parsedFields(tx: ParsedTransaction, env: CardEnv, categoryPendin
 /** [Transport] [25 000] [Bugun] / [🗑 O'chirish] — no Save button: the record is already saved (TZ §16). */
 export function txKeyboard(tx: Transaction, env: CardEnv, timeZone: string): InlineKeyboard {
   const f = txFields(tx, env, timeZone);
-  const catLabel = f.categoryPending || !f.categoryName ? '❓' : f.categoryName;
+  const catLabel = f.categoryPending || !f.categoryName ? `❓ ${t(env.lang, 'categoryShort')}` : `${f.categoryIcon ?? '🏷'} ${f.categoryName}`;
   return new InlineKeyboard()
     .text(catLabel, `cat:${tx.id}`)
-    .text(groupDigits(tx.amount), `amt:${tx.id}`)
-    .text(formatDateLabel(f.date, env.today, env.yesterday, env.lang), `dt:${tx.id}`)
+    .text(`✏️ ${groupDigits(tx.amount)}`, `amt:${tx.id}`)
+    .text(`📅 ${formatDateLabel(f.date, env.today, env.yesterday, env.lang)}`, `dt:${tx.id}`)
     .row()
     .text(t(env.lang, 'delete'), `del:${tx.id}`);
 }

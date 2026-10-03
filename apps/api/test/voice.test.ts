@@ -44,7 +44,7 @@ describe('voice → STT → parser → confirmation card (TZ §57)', () => {
     const id = await newUser();
     stt("Bozordan go'sht oldim yuz ellik ming");
     await H.voice(id);
-    expect(H.texts()[0]).toBe("🎙 «Bozordan go'sht oldim yuz ellik ming»\n\n150 000 so'm\nOziq-ovqat\nBozordan go'sht\nBugun");
+    expect(H.texts()[0]).toBe("🎙 «Bozordan go'sht oldim yuz ellik ming»\n\n🛒 150 000 so'm\nOziq-ovqat · Bugun\n📝 Bozordan go'sht");
     const { user, txs } = await rowsOf(id);
     expect(txs[0]).toMatchObject({ amount: 150_000, source: 'voice', rawInput: "Bozordan go'sht oldim yuz ellik ming" });
     expect(heard[0]).toMatchObject({ encoding: 'OGG_OPUS', sampleRateHertz: 48000, languages: ['uz-UZ', 'ru-RU'] });
@@ -62,7 +62,7 @@ describe('voice → STT → parser → confirmation card (TZ §57)', () => {
     const { txs } = await rowsOf(id);
     await H.tap(id, `dt:${txs[0]!.id}`);
     await H.tap(id, `sd:${txs[0]!.id}:1`);
-    expect(H.texts().at(-1)).toBe("🎙 «taksi yigirma ming»\n\n20 000 so'm\nTransport\nTaksi\nKecha");
+    expect(H.texts().at(-1)).toBe("🎙 «taksi yigirma ming»\n\n🚕 20 000 so'm\nTransport · Kecha\n📝 Taksi");
   });
 
   it('Russian users: ru-RU first', async () => {
@@ -77,7 +77,7 @@ describe('voice → STT → parser → confirmation card (TZ §57)', () => {
     const id = await newUser();
     stt('Murod akaga uch yuz ming qarz berdim');
     await H.voice(id);
-    expect(H.texts()[0]).toBe("🎙 «Murod akaga uch yuz ming qarz berdim»\n\n🤝 Qarz berdim\nMurod aka\n300 000 so'm\nBugun");
+    expect(H.texts()[0]).toBe("🎙 «Murod akaga uch yuz ming qarz berdim»\n\n🤝 Qarz berdim\n👤 Murod aka\n💵 300 000 so'm\n📅 Bugun");
     const { txs } = await rowsOf(id);
     expect(txs[0]).toMatchObject({ type: 'debt_given', source: 'voice' });
   });
@@ -138,7 +138,7 @@ describe('free plan voice limit (TZ §34-35)', () => {
 
     H.reset();
     await H.send(id, 'taksi 20 ming');
-    expect(H.texts()[0]).toBe("20 000 so'm\nTransport\nTaksi\nBugun");
+    expect(H.texts()[0]).toBe("🚕 20 000 so'm\nTransport · Bugun\n📝 Taksi");
   });
 
   it('usage from previous months does not count', async () => {

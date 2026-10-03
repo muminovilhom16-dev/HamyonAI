@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { schema } from '@hamyon/db';
 import { runProactiveTick } from '../src/notifications';
+import { htmlToPlain } from '../src/bot/html';
 import { createHarness, type Harness } from './harness';
 
 let H: Harness;
@@ -71,7 +72,7 @@ describe('reports (TZ §33)', () => {
     await tick('2026-10-04T15:00:00Z'); // Sunday 20:00 Tashkent
     const [r] = proactiveTo(id);
     expect(r!.text).toBe(
-      "📊 Haftalik hisobot · 28-sentabr — 4-oktabr\n\nXarajat: 163 000 so'm\nDaromad: 6 000 000 so'm\nEng katta kategoriya: Oziq-ovqat — 118 000 so'm\n\n💡 Oziq-ovqat xarajati o'tgan haftaga nisbatan 18% yuqori.",
+      "<b>📊 Haftalik hisobot</b> · 28-sentabr — 4-oktabr\n\n💸 Xarajat: <b>163 000 so'm</b>\n💰 Daromad: <b>6 000 000 so'm</b>\n🛒 Oziq-ovqat  ▰▰▰▰▱ 72% · 118 000 so'm\n\n💡 Oziq-ovqat xarajati o'tgan haftaga nisbatan 18% yuqori.",
     );
     expect(r!.text.split('\n').filter(Boolean).length).toBeLessThanOrEqual(5);
   });
@@ -90,8 +91,8 @@ describe('reports (TZ §33)', () => {
     await sayAt(id, '2026-09-30T06:00:00Z', 'taksi 20 ming');
     H.reset();
     await tick('2026-10-01T05:00:00Z'); // 10:00 Tashkent
-    expect(proactiveTo(id)[0]!.text).toBe(
-      "📊 Oylik hisobot · 1-sentabr — 30-sentabr\n\nXarajat: 70 000 so'm\nEng katta kategoriya: Kafe va restoran — 50 000 so'm\n\n💡 Kafe va restoran xarajati o'tgan oyga nisbatan 50% past.",
+    expect(htmlToPlain(proactiveTo(id)[0]!.text)).toBe(
+      "📊 Oylik hisobot · 1-sentabr — 30-sentabr\n\n💸 Xarajat: 70 000 so'm\n🍽 Kafe va restoran  ▰▰▰▰▱ 71% · 50 000 so'm\n🚕 Transport  ▰▱▱▱▱ 29% · 20 000 so'm\n\n💡 Kafe va restoran xarajati o'tgan oyga nisbatan 50% past.",
     );
   });
 });

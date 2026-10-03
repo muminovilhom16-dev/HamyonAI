@@ -4,6 +4,7 @@ import { AIUnavailableError, type AIProvider, type SpeechProvider } from '@hamyo
 import type { ExchangeRateProvider } from '@hamyon/core';
 import { createDb, resetTestDatabase, testDatabaseUrl, type DbHandle } from '@hamyon/db';
 import { buildApp } from '../src/app';
+import { htmlToPlain } from '../src/bot/html';
 
 export const SECRET = 'w'.repeat(40);
 const BASE_ENV = {
@@ -126,7 +127,8 @@ export async function createHarness(envOverrides: Record<string, string> = {}): 
         },
       });
     },
-    texts: () => calls.filter((c) => c.method === 'sendMessage' || c.method === 'editMessageText').map((c) => c.payload.text as string),
+    // What the user sees: HTML tags removed (messages are sent with parse_mode HTML).
+    texts: () => calls.filter((c) => c.method === 'sendMessage' || c.method === 'editMessageText').map((c) => htmlToPlain(c.payload.text as string)),
     lastKeyboard() {
       const last = [...calls].reverse().find((c) => c.payload.reply_markup?.inline_keyboard);
       return last?.payload.reply_markup.inline_keyboard ?? [];

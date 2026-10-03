@@ -4,6 +4,7 @@
 import { spawn } from 'node:child_process';
 import http from 'node:http';
 import { mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { chromium } from 'playwright-core';
 
 const OUT = process.argv[2] ?? 'web-preview';
@@ -54,8 +55,27 @@ const say = (text) =>
 for (const m of [
   '/start', 'Korzinka 230 ming', 'taksi 25 ming', 'kecha taksi 18 ming', "o'tgan kuni kafe 120 ming", 'svet 120 ming',
   'internet 99 ming', 'kecha dorixona 45 ming', 'kino 60 ming', 'kurtka 450 ming', 'non 5 ming, sut 12 ming',
-  'Murod akaga 300 ming qarz berdim', 'Murod aka 100 ming qaytardi', 'Sardordan 1 mln qarz oldim', '/web',
+  'Murod akaga 300 ming qarz berdim', 'Murod aka 100 ming qaytardi', 'Sardordan 1 mln qarz oldim',
+  'oylik tushdi 6 mln', '/bugun', '/oy', '/oxirgi', '/qarzlar', '/sozlamalar', '/yordam', '/web',
 ]) await say(m);
+
+// Bot messages rendered like a Telegram chat (HTML parse mode + inline keyboards).
+const chat = sent
+  .filter((s) => s.method === 'sendMessage' && s.body.chat_id === user)
+  .map(({ body }) => {
+    const text = body.parse_mode === 'HTML' ? body.text.replace(/\n/g, '<br>') : body.text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]).replace(/\n/g, '<br>');
+    const kb = (typeof body.reply_markup === 'string' ? JSON.parse(body.reply_markup) : body.reply_markup)?.inline_keyboard ?? [];
+    const rows = kb.map((r) => `<div class="kr">${r.map((b) => `<span>${b.text.replace(/[&<>]/g, '')}</span>`).join('')}</div>`).join('');
+    return `<div class="msg"><div class="bubble">${text}</div>${rows ? `<div class="kb">${rows}</div>` : ''}</div>`;
+  });
+const botHtml = `<!doctype html><meta charset="utf-8"><style>
+body{margin:0;background:#8fb7a5 linear-gradient(160deg,#a8c9b3,#7fae9c);font:15px/1.4 -apple-system,'Segoe UI',Roboto,sans-serif;padding:12px}
+.msg{max-width:340px;margin:0 0 10px}.bubble{overflow-wrap:anywhere;background:#fff;border-radius:14px 14px 14px 4px;padding:8px 11px;box-shadow:0 1px 1px rgba(0,0,0,.12)}
+.kb{margin-top:3px}.kr{display:flex;gap:3px;margin-top:3px}.kr span{flex:1;text-align:center;background:rgba(40,70,60,.35);color:#fff;border-radius:8px;padding:7px 4px;font-size:13px;font-weight:500}
+s{opacity:.55}</style>${chat.join('')}`;
+mkdirSync(OUT, { recursive: true });
+const { writeFileSync } = await import('node:fs');
+writeFileSync(`${OUT}/bot-chat.html`, botHtml);
 const link = sent.filter((s) => s.method === 'sendMessage').map((s) => s.body.text).reverse().find((t) => t?.includes('/auth/web?token='));
 const url = /(http\S+token=\S+)/.exec(link)[1]; // consumed below to show the expired page
 
@@ -67,18 +87,22 @@ const shots = async (name, opts, link) => {
   page.on('console', (m) => m.type() === 'error' && !/telegram\.org|ERR_TUNNEL|ERR_NAME/.test(m.text()) && errors.push(`${name}: ${m.text()}`));
   page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
   await page.goto(link);
-  await page.waitForSelector('.kpi-value');
+  await page.waitForSelector('.hero-value');
+  await page.waitForSelector('.legend li');
   await page.screenshot({ path: `${OUT}/${name}-dashboard.png`, fullPage: true });
-  await page.click('nav button:nth-child(2)');
+  await page.click('nav button:nth-of-type(2)');
   await page.waitForSelector('.tx');
   await page.screenshot({ path: `${OUT}/${name}-records.png`, fullPage: true });
   await page.click('.tx');
   await page.waitForSelector('.sheet');
   await page.screenshot({ path: `${OUT}/${name}-edit.png` });
   await page.click('.sheet .btn:not(.primary):not(.danger)');
-  await page.click('nav button:nth-child(3)');
+  await page.click('nav button:nth-of-type(3)');
   await page.waitForSelector('.debt');
   await page.screenshot({ path: `${OUT}/${name}-debts.png`, fullPage: true });
+  await page.click('nav button:nth-of-type(4)');
+  await page.waitForSelector('.group');
+  await page.screenshot({ path: `${OUT}/${name}-settings.png`, fullPage: true });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   if (overflow) errors.push(`${name}: horizontal overflow`);
   await ctx.close();
@@ -120,6 +144,15 @@ for (const [name, opts] of [
       .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.right > window.innerWidth + 1 || r.left < -1); })
       .map((el) => el.className || el.tagName));
   if (clipped.length) errors.push(`${name}: clipped ${[...new Set(clipped)].slice(0, 5).join(', ')}`);
+  await ctx.close();
+}
+
+// Bot chat preview
+{
+  const ctx = await browser.newContext({ viewport: { width: 380, height: 800 }, deviceScaleFactor: 2 });
+  const page = await ctx.newPage();
+  await page.goto(`file://${resolve(OUT, "bot-chat.html")}`);
+  await page.screenshot({ path: `${OUT}/bot-chat.png`, fullPage: true });
   await ctx.close();
 }
 

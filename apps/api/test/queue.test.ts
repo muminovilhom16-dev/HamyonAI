@@ -54,7 +54,7 @@ describe('queue (TZ §43)', () => {
     expect(H.texts()).toEqual(['🎙 Qabul qilindi, eshityapman…']);
 
     await until(() => H.texts().length >= 2);
-    expect(H.texts()[1]).toBe("🎙 «taksi 20 ming»\n\n20 000 so'm\nTransport\nTaksi\nBugun");
+    expect(H.texts()[1]).toBe("🎙 «taksi 20 ming»\n\n🚕 20 000 so'm\nTransport · Bugun\n📝 Taksi");
     expect(calls).toBe(1);
   });
 

@@ -4,6 +4,7 @@ import { App } from './App';
 import { AuthPage } from './landing/AuthPage';
 import { Landing } from './landing/Landing';
 import { usePath } from './router';
+import '@fontsource-variable/inter';
 import './styles.css';
 import './landing/landing.css';
 

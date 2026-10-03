@@ -40,13 +40,13 @@ describe('TZ §61: debt given, partial return → remaining 200 000', () => {
     const id = await newUser();
     await H.send(id, 'Murod akaga 300 ming qarz berdim');
     await H.send(id, 'Murod aka 100 ming qaytardi');
-    expect(H.texts()[1]).toBe("↩️ Qarz qaytarildi\nMurod aka\n100 000 so'm\nQoldiq: 200 000 so'm\nBugun");
+    expect(H.texts()[1]).toBe("↩️ Qarz qaytarildi\n👤 Murod aka\n💵 100 000 so'm\n⏳ Qoldiq: 200 000 so'm\n📅 Bugun");
     const [d] = await debtsOf(id);
     expect(d).toMatchObject({ total: 300_000, remaining: 200_000, status: 'open', direction: 'given' });
 
     H.reset();
     await H.send(id, '/qarzlar');
-    expect(H.texts()[0]).toBe("🤝 Qarzlar\n\nSizga qarzdor:\n• Murod aka — 200 000 so'm");
+    expect(H.texts()[0]).toBe("🤝 Qarzlar\n\n🟢 Sizga qarzdor: 200 000 so'm\n👤 Murod aka — 200 000 so'm");
 
     H.reset();
     await H.send(id, '/bugun');
@@ -66,13 +66,13 @@ describe('TZ §61: debt given, partial return → remaining 200 000', () => {
   it('borrowing and paying back ("qaytardim")', async () => {
     const id = await newUser();
     await H.send(id, 'Sardordan 1 mln qarz oldim');
-    expect(H.texts()[0]).toBe("🤝 Qarz oldim\nSardor\n1 000 000 so'm\nBugun");
+    expect(H.texts()[0]).toBe("🤝 Qarz oldim\n👤 Sardor\n💵 1 000 000 so'm\n📅 Bugun");
     await H.send(id, 'Sardorga 400 ming qarzni qaytardim');
     const [d] = await debtsOf(id);
     expect(d).toMatchObject({ direction: 'taken', remaining: 600_000 });
     H.reset();
     await H.send(id, '/qarzlar');
-    expect(H.texts()[0]).toContain("Siz qarzdorsiz:\n• Sardor — 600 000 so'm");
+    expect(H.texts()[0]).toContain("🔴 Siz qarzdorsiz: 600 000 so'm\n👤 Sardor — 600 000 so'm");
   });
 });
 
@@ -141,7 +141,7 @@ describe('debt card actions', () => {
     await H.send(id, 'Murod akaga 300 ming qarz berdim');
     await H.tap(id, button('📅 Muddat'));
     await H.tap(id, button('1 hafta'));
-    expect(H.texts().at(-1)).toBe("🤝 Qarz berdim\nMurod aka\n300 000 so'm\nBugun\nMuddat: 8-oktabr");
+    expect(H.texts().at(-1)).toBe("🤝 Qarz berdim\n👤 Murod aka\n💵 300 000 so'm\n📅 Bugun\n⏰ Muddat: 8-oktabr");
     expect((await debtsOf(id))[0]!.dueDate).toBe('2026-10-08');
   });
 
@@ -196,11 +196,11 @@ describe('debt reminders (TZ §32)', () => {
     await run('2026-10-05T06:00:00Z');
     expect(sentTexts()).toEqual([]);
     await run('2026-10-06T06:00:00Z');
-    expect(sentTexts()).toEqual(["⏰ Eslatma: Murod aka 300 000 so'm qarzni 8-oktabr gacha qaytarishi kerak."]);
+    expect(sentTexts()).toEqual(["⏰ Eslatma: Murod aka <b>300 000 so'm</b> qarzni 8-oktabr gacha qaytarishi kerak."]);
     await run('2026-10-06T08:00:00Z'); // same day again → deduplicated
     expect(sentTexts()).toHaveLength(1);
     await run('2026-10-08T06:00:00Z');
-    expect(sentTexts().at(-1)).toBe("⏰ Bugun Murod aka 300 000 so'm qarzni qaytarish muddati.");
+    expect(sentTexts().at(-1)).toBe("⏰ Bugun Murod aka <b>300 000 so'm</b> qarzni qaytarish muddati.");
     expect(sentTexts()).toHaveLength(2);
   });
 

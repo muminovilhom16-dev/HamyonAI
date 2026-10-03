@@ -61,6 +61,7 @@ export interface Tx {
   amountUzs: number;
   categoryId: string | null;
   categoryName: string | null;
+  categoryIcon: string | null;
   categoryPending: boolean;
   note: string | null;
   counterparty: string | null;

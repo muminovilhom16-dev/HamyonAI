@@ -46,6 +46,7 @@ import {
   type CardEnv,
 } from './cards';
 import type { BotContext, BotServices } from './context';
+import { b, esc, i } from './html';
 import { answerCounterparty, continueDebt, debtPayloadFrom, isDebtPayload, replyDebtCard, renderDebtCard, type PendingDebtPayload } from './debts';
 import { afterFirstTransaction } from './onboarding';
 
@@ -151,8 +152,8 @@ async function handleItem(ctx: BotContext, s: BotServices, item: PipelineItem, r
     }
     case 'ask_person_kind': {
       const p = await pend('ask_person_kind');
-      const who = item.tx.counterparty ? `${item.tx.counterparty} — ` : '';
-      await ctx.reply(`${who}${formatMoney(item.tx.amount, item.tx.currency, user.language)}\n${t(user.language, 'personKindQ')}`, {
+      const who = item.tx.counterparty ? `👤 ${esc(item.tx.counterparty)} — ` : '';
+      await ctx.reply(`${who}${b(formatMoney(item.tx.amount, item.tx.currency, user.language))}\n${t(user.language, 'personKindQ')}`, {
         reply_markup: new InlineKeyboard()
           .text(t(user.language, 'debtGiven'), `pk:${p.id}:d`)
           .text(t(user.language, 'expense'), `pk:${p.id}:e`),
@@ -164,9 +165,9 @@ async function handleItem(ctx: BotContext, s: BotServices, item: PipelineItem, r
       const dp = debtPayloadFrom(item, rawInput, s.confidenceThreshold, source);
       if (item.amountConfidence < s.confidenceThreshold) {
         const p = await createPending(s.db, { userId: user.id, walletId: ctx.walletId!, kind: 'confirm_amount', payload: dp, now: s.now() });
-        const who = item.tx.counterparty ? ` — ${item.tx.counterparty}` : '';
-        const heard = transcript ? `🎙 «${transcript}»\n\n` : '';
-        await ctx.reply(`${heard}${formatMoney(item.tx.amount, item.tx.currency, user.language)}${who}\n${t(user.language, 'confirmAmountQ')}`, {
+        const who = item.tx.counterparty ? ` — 👤 ${esc(item.tx.counterparty)}` : '';
+        const heard = transcript ? `🎙 ${i(`«${esc(transcript)}»`)}\n\n` : '';
+        await ctx.reply(`${heard}🤝 ${b(formatMoney(item.tx.amount, item.tx.currency, user.language))}${who}\n${t(user.language, 'confirmAmountQ')}`, {
           reply_markup: new InlineKeyboard()
             .text(`✅ ${formatMoney(item.tx.amount, item.tx.currency, user.language)}`, `pa:${p.id}`)
             .text(t(user.language, 'otherAmount'), `pe:${p.id}`),
@@ -248,7 +249,7 @@ export async function processText(ctx: BotContext, s: BotServices, text: string,
   if (result.kind === 'no_amount') {
     // Never guess (TZ §61: "bugun bozorga bordim" → ask amount).
     await createPending(s.db, { userId: user.id, walletId: ctx.walletId!, kind: 'ask_amount', payload: { text: result.maskedText }, now: s.now() });
-    const heard = source === 'voice' ? `🎙 «${result.maskedText}»\n\n` : '';
+    const heard = source === 'voice' ? `🎙 ${i(`«${esc(result.maskedText)}»`)}\n\n` : '';
     await ctx.reply(`${heard}${t(user.language, 'askAmount')}`);
     return;
   }
@@ -333,7 +334,7 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
       }
       await ctx.answerCallbackQuery();
       const card = await renderDebtCard(s, user, deleted);
-      await ctx.reply(`${t(user.language, 'deleted')}\n${card.text}`, {
+      await ctx.reply(`${b(t(user.language, 'deleted'))}\n<s>${card.text}</s>`, {
         reply_markup: new InlineKeyboard().text(t(user.language, 'undo'), `dundo:${deleted.id}`),
       });
       return;
@@ -341,7 +342,7 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
     const tx = await softDeleteTransaction(fin(s), user.id, target.id);
     const env = await envFor(s, user, tx.walletId);
     await ctx.answerCallbackQuery();
-    await ctx.reply(`${t(user.language, 'deleted')}\n${cardText(txFields(tx, env, user.timezone), env)}`, {
+    await ctx.reply(`${b(t(user.language, 'deleted'))}\n<s>${cardText(txFields(tx, env, user.timezone), env)}</s>`, {
       reply_markup: new InlineKeyboard().text(t(user.language, 'undo'), `undo:${tx.id}`),
     });
   });
@@ -399,7 +400,7 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
     const user = ctx.user!;
     const tx = await softDeleteTransaction(fin(s), user.id, ctx.match[1]!);
     const env = await envFor(s, user, tx.walletId);
-    await ctx.editMessageText(`${t(user.language, 'deleted')}\n${cardText(txFields(tx, env, user.timezone), env)}`, {
+    await ctx.editMessageText(`${b(t(user.language, 'deleted'))}\n<s>${cardText(txFields(tx, env, user.timezone), env)}</s>`, {
       reply_markup: new InlineKeyboard().text(t(user.language, 'undo'), `undo:${tx.id}`),
     });
     await ctx.answerCallbackQuery();

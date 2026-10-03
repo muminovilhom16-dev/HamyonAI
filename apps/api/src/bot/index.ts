@@ -3,6 +3,7 @@ import type { UserFromGetMe } from 'grammy/types';
 import { ensureUser, issueLoginToken, AppError } from '@hamyon/core';
 import { t } from '../i18n';
 import type { BotContext, BotServices } from './context';
+import { esc, useHtmlParseMode } from './html';
 import { registerDebtFlows } from './debts';
 import { registerTransactionFlows } from './flows';
 import { registerVoice } from './voice';
@@ -28,6 +29,8 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
     ...(deps.apiRoot && { client: { apiRoot: deps.apiRoot } }),
   });
   deps.configureApi?.(bot.api);
+  // Installed last so it wraps every other transformer (tests see the final payload).
+  useHtmlParseMode(bot.api);
 
   // Error boundary first: bot.catch() is polling-only, so webhook mode needs this.
   // Internal errors are logged; the user sees only a localized generic message.
@@ -92,7 +95,7 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
     const { token } = await issueLoginToken(deps.db, deps.auth, user.id);
     const url = deps.webLoginUrl(token);
     const keyboard = url.startsWith('https://') ? new InlineKeyboard().url(t(user.language, 'webLinkButton'), url) : undefined;
-    await ctx.reply(`${t(user.language, 'webLink')}\n${url}`, {
+    await ctx.reply(`🔐 ${t(user.language, 'webLink')}\n${esc(url)}`, {
       ...(keyboard && { reply_markup: keyboard }),
       link_preview_options: { is_disabled: true },
     });

@@ -46,7 +46,7 @@ describe('onboarding (TZ §14)', () => {
     expect(H.texts().at(-1)).toContain('первый расход');
     H.reset();
     await H.send(id, 'такси 15к');
-    expect(H.texts()[0]).toBe('15 000 сум\nТранспорт\nТакси\nСегодня');
+    expect(H.texts()[0]).toBe('🚕 15 000 сум\nТранспорт · Сегодня\n📝 Такси');
     expect(H.texts()[1]).toContain('напоминать');
     await H.tap(id, 'ob:r:2100');
     const [u] = await H.h.db.select().from(schema.users).where(eq(schema.users.telegramId, id));
@@ -61,8 +61,8 @@ describe('TZ §61 acceptance through the bot', () => {
   it('taksi 20 ming → saved, card with [Transport][20 000][Bugun][O\'chirish]', async () => {
     const id = await newUser();
     await H.send(id, 'taksi 20 ming');
-    expect(H.texts()).toEqual(["20 000 so'm\nTransport\nTaksi\nBugun"]);
-    expect(H.lastKeyboard().map((r) => r.map((b) => b.text))).toEqual([['Transport', '20 000', 'Bugun'], ["🗑 O'chirish"]]);
+    expect(H.texts()).toEqual(["🚕 20 000 so'm\nTransport · Bugun\n📝 Taksi"]);
+    expect(H.lastKeyboard().map((r) => r.map((b) => b.text))).toEqual([['🚕 Transport', '✏️ 20 000', '📅 Bugun'], ["🗑 O'chirish"]]);
     const rows = await txsOf(id);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ type: 'expense', amount: 20_000, currency: 'UZS', amountUzs: 20_000, source: 'text' });
@@ -94,7 +94,7 @@ describe('TZ §61 acceptance through the bot', () => {
   it('bozordan go\'sht oldim yuz ellik ming → 150 000, Oziq-ovqat', async () => {
     const id = await newUser();
     await H.send(id, "bozordan go'sht oldim yuz ellik ming");
-    expect(H.texts()[0]).toMatch(/^150 000 so'm\nOziq-ovqat/);
+    expect(H.texts()[0]).toMatch(/^🛒 150 000 so'm\nOziq-ovqat/);
   });
 
   it('non 5 ming, sut 12 ming → two transactions, two cards', async () => {
@@ -114,7 +114,7 @@ describe('TZ §61 acceptance through the bot', () => {
   it('Murod akaga 300 ming qarz berdim → debt, NOT expense', async () => {
     const id = await newUser();
     await H.send(id, 'Murod akaga 300 ming qarz berdim');
-    expect(H.texts()[0]).toBe("🤝 Qarz berdim\nMurod aka\n300 000 so'm\nBugun");
+    expect(H.texts()[0]).toBe("🤝 Qarz berdim\n👤 Murod aka\n💵 300 000 so'm\n📅 Bugun");
     const rows = await txsOf(id);
     expect(rows.map((r) => [r.type, r.categoryId])).toEqual([['debt_given', null]]);
   });
@@ -135,14 +135,14 @@ describe('TZ §61 acceptance through the bot', () => {
   it('oylik tushdi 6 mln → income', async () => {
     const id = await newUser();
     await H.send(id, 'oylik tushdi 6 mln');
-    expect(H.texts()[0]).toBe("+6 000 000 so'm\nDaromad · Oylik\nOylik\nBugun");
+    expect(H.texts()[0]).toBe("💰 +6 000 000 so'm\nDaromad · Oylik · Bugun");
     expect((await txsOf(id))[0]).toMatchObject({ type: 'income', amount: 6_000_000 });
   });
 
   it('50$ kurtka → 50 USD, converted to UZS, Kiyim', async () => {
     const id = await newUser();
     await H.send(id, '50$ kurtka');
-    expect(H.texts()[0]).toBe("$50 · 640 000 so'm\nKiyim\nKurtka\nBugun");
+    expect(H.texts()[0]).toBe("👕 $50 · 640 000 so'm\nKiyim · Bugun\n📝 Kurtka");
     expect((await txsOf(id))[0]).toMatchObject({ amount: 50, currency: 'USD', amountUzs: 640_000, fxRateUzs: '12800.00' });
   });
 
@@ -196,7 +196,7 @@ describe('card editing, delete, undo', () => {
     await H.send(id, '25 ming');
     await H.tap(id, `dt:${tx!.id}`);
     await H.tap(id, `sd:${tx!.id}:1`);
-    expect(H.texts().at(-1)).toBe("25 000 so'm\nTransport\nTaksi\nKecha");
+    expect(H.texts().at(-1)).toBe("🚕 25 000 so'm\nTransport · Kecha\n📝 Taksi");
   });
 
   it('delete → undo within 10 s restores; after 10 s it is too late', async () => {
@@ -229,8 +229,11 @@ describe('reports and lists', () => {
     H.reset();
     await H.send(id, '/bugun');
     const report = H.texts()[0]!;
-    expect(report).toBe("📊 Bugungi hisobot\n\nXarajat: 37 000 so'm\nDaromad: 6 000 000 so'm\nEng katta kategoriya: Transport — 20 000 so'm");
-    expect(report.split('\n').length).toBeLessThanOrEqual(6);
+    expect(report).toBe(
+      "📊 Bugungi hisobot\n\n💸 Xarajat: 37 000 so'm\n💰 Daromad: 6 000 000 so'm\n🚕 Transport  ▰▰▰▱▱ 54% · 20 000 so'm\n🛒 Oziq-ovqat  ▰▰▱▱▱ 46% · 17 000 so'm",
+    );
+    // TZ §33: at most 5 lines besides the blank separator.
+    expect(report.split('\n').filter(Boolean).length).toBeLessThanOrEqual(5);
 
     H.reset();
     await H.send(id, '/oxirgi');
@@ -248,6 +251,19 @@ describe('reports and lists', () => {
 });
 
 describe('security', () => {
+  it('messages are HTML and user text inside them is escaped', async () => {
+    const id = await newUser();
+    await H.send(id, 'taksi 20 ming');
+    // Notes can be edited freely in the web panel.
+    await H.h.db.update(schema.transactions).set({ note: '<b>x</b> & <a href="t.me">y</a>' }).where(eq(schema.transactions.userId, (await txsOf(id))[0]!.userId));
+    H.reset();
+    await H.send(id, '/oxirgi');
+    const list = H.calls.find((c) => c.method === 'sendMessage')!;
+    expect(list.payload.parse_mode).toBe('HTML');
+    expect(list.payload.text).toContain('&lt;b&gt;x&lt;/b&gt; &amp; &lt;a href="t.me"&gt;y&lt;/a&gt;');
+    expect(H.texts()[0]).toContain('<b>x</b> & <a href="t.me">y</a>');
+  });
+
   it("cannot edit or delete another user's transaction via forged callbacks", async () => {
     const owner = await newUser();
     const attacker = await newUser();

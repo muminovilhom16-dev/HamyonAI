@@ -1,3 +1,4 @@
+import { esc } from './bot/html';
 import type { Language } from '@hamyon/core';
 
 type Msgs = Record<string, Record<Language, string>>;
@@ -5,9 +6,9 @@ type Msgs = Record<string, Record<Language, string>>;
 const messages = {
   // ─── Onboarding ───
   welcome: {
-    uz_latn: "Assalomu alaykum! Men Hamyon AI — Telegramdagi o'zbekcha aqlli hamyonman.\n\nTilni tanlang:",
-    uz_cyrl: 'Ассалому алайкум! Мен Hamyon AI — Телеграмдаги ўзбекча ақлли ҳамёнман.\n\nТилни танланг:',
-    ru: 'Здравствуйте! Я Hamyon AI — умный кошелёк в Telegram.\n\nВыберите язык:',
+    uz_latn: "👋 Assalomu alaykum! Men <b>Hamyon AI</b> — Telegramdagi o'zbekcha aqlli hamyonman.\n\nTilni tanlang:",
+    uz_cyrl: '👋 Ассалому алайкум! Мен <b>Hamyon AI</b> — Телеграмдаги ўзбекча ақлли ҳамёнман.\n\nТилни танланг:',
+    ru: '👋 Здравствуйте! Я <b>Hamyon AI</b> — умный кошелёк в Telegram.\n\nВыберите язык:',
   },
   welcomeBack: {
     uz_latn: "Xarajat yoki daromadni oddiy yozing, masalan: «taksi 25 ming».\n/yordam — barcha buyruqlar.",
@@ -22,9 +23,9 @@ const messages = {
   currencyUzs: { uz_latn: "So'm (UZS)", uz_cyrl: 'Сўм (UZS)', ru: 'Сум (UZS)' },
   currencyUsd: { uz_latn: 'Dollar (USD)', uz_cyrl: 'Доллар (USD)', ru: 'Доллар (USD)' },
   askFirstTx: {
-    uz_latn: "Tayyor! Endi birinchi xarajatingizni yozing.\nMasalan: «taksi 25 ming» yoki «non 5 ming, sut 12 ming».",
-    uz_cyrl: 'Тайёр! Энди биринчи харажатингизни ёзинг.\nМасалан: «такси 25 минг» ёки «нон 5 минг, сут 12 минг».',
-    ru: 'Готово! Теперь напишите первый расход.\nНапример: «такси 25 тысяч» или «хлеб 5к, молоко 12к».',
+    uz_latn: "✍️ Tayyor! Endi birinchi xarajatingizni yozing.\nMasalan: «taksi 25 ming» yoki «non 5 ming, sut 12 ming».",
+    uz_cyrl: '✍️ Тайёр! Энди биринчи харажатингизни ёзинг.\nМасалан: «такси 25 минг» ёки «нон 5 минг, сут 12 минг».',
+    ru: '✍️ Готово! Теперь напишите первый расход.\nНапример: «такси 25 тысяч» или «хлеб 5к, молоко 12к».',
   },
   askReminder: {
     uz_latn: 'Har kuni soat nechada eslatay? (faqat o\'sha kuni hech narsa yozmagan bo\'lsangiz)',
@@ -33,13 +34,14 @@ const messages = {
   },
   reminderOff: { uz_latn: 'Kerak emas', uz_cyrl: 'Керак эмас', ru: 'Не нужно' },
   onboardingDone: {
-    uz_latn: "Hammasi tayyor! Endi har bir xarajatni bitta xabar bilan yozing.\n/bugun, /hafta, /oy — hisobotlar, /yordam — yordam.",
-    uz_cyrl: 'Ҳаммаси тайёр! Энди ҳар бир харажатни битта хабар билан ёзинг.\n/bugun, /hafta, /oy — ҳисоботлар, /yordam — ёрдам.',
-    ru: 'Всё готово! Записывайте каждый расход одним сообщением.\n/bugun, /hafta, /oy — отчёты, /yordam — помощь.',
+    uz_latn: "🎉 Hammasi tayyor! Endi har bir xarajatni bitta xabar bilan yozing.\n/bugun, /hafta, /oy — hisobotlar, /yordam — yordam.",
+    uz_cyrl: '🎉 Ҳаммаси тайёр! Энди ҳар бир харажатни битта хабар билан ёзинг.\n/bugun, /hafta, /oy — ҳисоботлар, /yordam — ёрдам.',
+    ru: '🎉 Всё готово! Записывайте каждый расход одним сообщением.\n/bugun, /hafta, /oy — отчёты, /yordam — помощь.',
   },
 
   // ─── Cards ───
   categoryPending: { uz_latn: 'Kategoriya: aniqlanmagan', uz_cyrl: 'Категория: аниқланмаган', ru: 'Категория: не определена' },
+  categoryShort: { uz_latn: 'Kategoriya', uz_cyrl: 'Категория', ru: 'Категория' },
   income: { uz_latn: 'Daromad', uz_cyrl: 'Даромад', ru: 'Доход' },
   delete: { uz_latn: "🗑 O'chirish", uz_cyrl: '🗑 Ўчириш', ru: '🗑 Удалить' },
   deleted: { uz_latn: "🗑 O'chirildi", uz_cyrl: '🗑 Ўчирилди', ru: '🗑 Удалено' },
@@ -88,6 +90,9 @@ const messages = {
   expenseLabel: { uz_latn: 'Xarajat', uz_cyrl: 'Харажат', ru: 'Расходы' },
   incomeLabel: { uz_latn: 'Daromad', uz_cyrl: 'Даромад', ru: 'Доходы' },
   topCategory: { uz_latn: 'Eng katta kategoriya', uz_cyrl: 'Энг катта категория', ru: 'Крупнейшая категория' },
+  balanceLabel: { uz_latn: 'Qoldiq', uz_cyrl: 'Қолдиқ', ru: 'Остаток' },
+  topCategories: { uz_latn: 'Eng katta xarajatlar', uz_cyrl: 'Энг катта харажатлар', ru: 'Основные расходы' },
+  recordsCount: { uz_latn: '{count} ta yozuv', uz_cyrl: '{count} та ёзув', ru: 'записей: {count}' },
   noRecords: {
     uz_latn: "Bu davrda hali yozuv yo'q. Masalan: «taksi 25 ming».",
     uz_cyrl: 'Бу даврда ҳали ёзув йўқ. Масалан: «такси 25 минг».',
@@ -97,11 +102,11 @@ const messages = {
   uncategorized: { uz_latn: 'Kategoriyasiz', uz_cyrl: 'Категориясиз', ru: 'Без категории' },
   help: {
     uz_latn:
-      "Xarajatni oddiy yozing: «taksi 25 ming», «non 5 ming, sut 12 ming», «50$ kurtka».\nDaromad: «oylik tushdi 6 mln», «+500 ming».\nQarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi».\n\n/qarzlar — qarzlar\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/web — web panel\n/yordam — yordam",
+      "<b>📖 Qanday yozish kerak</b>\n\n💸 Xarajat: «taksi 25 ming», «non 5 ming, sut 12 ming», «50$ kurtka»\n💰 Daromad: «oylik tushdi 6 mln», «+500 ming»\n🤝 Qarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi»\n\n<b>📊 Hisobotlar</b>\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/qarzlar — qarzlar\n\n<b>⚙️ Boshqa</b>\n/web — web panel\n/sozlamalar — sozlamalar\n/yordam — yordam",
     uz_cyrl:
-      'Харажатни оддий ёзинг: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка».\nДаромад: «ойлик тушди 6 млн», «+500 минг».\nҚарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди».\n\n/qarzlar — қарзлар\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/web — веб панел\n/yordam — ёрдам',
+      '<b>📖 Қандай ёзиш керак</b>\n\n💸 Харажат: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка»\n💰 Даромад: «ойлик тушди 6 млн», «+500 минг»\n🤝 Қарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди»\n\n<b>📊 Ҳисоботлар</b>\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/qarzlar — қарзлар\n\n<b>⚙️ Бошқа</b>\n/web — веб панел\n/sozlamalar — созламалар\n/yordam — ёрдам',
     ru:
-      'Просто пишите расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка».\nДоход: «зарплата 6 млн», «+500 тысяч».\nДолг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к».\n\n/qarzlar — долги\n/bugun — отчёт за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/web — веб-панель\n/yordam — помощь',
+      '<b>📖 Как записывать</b>\n\n💸 Расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка»\n💰 Доход: «зарплата 6 млн», «+500 тысяч»\n🤝 Долг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к»\n\n<b>📊 Отчёты</b>\n/bugun — за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/qarzlar — долги\n\n<b>⚙️ Другое</b>\n/web — веб-панель\n/sozlamalar — настройки\n/yordam — помощь',
   },
 
   // ─── Debts ───
@@ -154,24 +159,24 @@ const messages = {
   noDebts: { uz_latn: "Ochiq qarzlar yo'q.", uz_cyrl: 'Очиқ қарзлар йўқ.', ru: 'Открытых долгов нет.' },
   debtLabel: { uz_latn: 'Qarz', uz_cyrl: 'Қарз', ru: 'Долг' },
   reminderDueSoonGiven: {
-    uz_latn: '⏰ Eslatma: {name} {amount} qarzni {date} gacha qaytarishi kerak.',
-    uz_cyrl: '⏰ Эслатма: {name} {amount} қарзни {date} гача қайтариши керак.',
-    ru: '⏰ Напоминание: {name} должен вернуть {amount} до {date}.',
+    uz_latn: '⏰ Eslatma: {name} <b>{amount}</b> qarzni {date} gacha qaytarishi kerak.',
+    uz_cyrl: '⏰ Эслатма: {name} <b>{amount}</b> қарзни {date} гача қайтариши керак.',
+    ru: '⏰ Напоминание: {name} должен вернуть <b>{amount}</b> до {date}.',
   },
   reminderDueSoonTaken: {
-    uz_latn: '⏰ Eslatma: {name}ga {amount} qarzni {date} gacha qaytarishingiz kerak.',
-    uz_cyrl: '⏰ Эслатма: {name}га {amount} қарзни {date} гача қайтаришингиз керак.',
-    ru: '⏰ Напоминание: вернуть {name} {amount} до {date}.',
+    uz_latn: '⏰ Eslatma: {name}ga <b>{amount}</b> qarzni {date} gacha qaytarishingiz kerak.',
+    uz_cyrl: '⏰ Эслатма: {name}га <b>{amount}</b> қарзни {date} гача қайтаришингиз керак.',
+    ru: '⏰ Напоминание: вернуть {name} <b>{amount}</b> до {date}.',
   },
   reminderDueTodayGiven: {
-    uz_latn: '⏰ Bugun {name} {amount} qarzni qaytarish muddati.',
-    uz_cyrl: '⏰ Бугун {name} {amount} қарзни қайтариш муддати.',
-    ru: '⏰ Сегодня {name} должен вернуть {amount}.',
+    uz_latn: '⏰ Bugun {name} <b>{amount}</b> qarzni qaytarish muddati.',
+    uz_cyrl: '⏰ Бугун {name} <b>{amount}</b> қарзни қайтариш муддати.',
+    ru: '⏰ Сегодня {name} должен вернуть <b>{amount}</b>.',
   },
   reminderDueTodayTaken: {
-    uz_latn: '⏰ Bugun {name}ga {amount} qarzni qaytarish muddati.',
-    uz_cyrl: '⏰ Бугун {name}га {amount} қарзни қайтариш муддати.',
-    ru: '⏰ Сегодня срок вернуть {name} {amount}.',
+    uz_latn: '⏰ Bugun {name}ga <b>{amount}</b> qarzni qaytarish muddati.',
+    uz_cyrl: '⏰ Бугун {name}га <b>{amount}</b> қарзни қайтариш муддати.',
+    ru: '⏰ Сегодня срок вернуть {name} <b>{amount}</b>.',
   },
 
   // ─── Proactive (TZ §32-33: short, never shaming) ───
@@ -304,9 +309,9 @@ export type MessageKey = keyof typeof messages;
 
 export const t = (lang: Language, key: MessageKey): string => messages[key][lang];
 
-/** Message with `{param}` placeholders filled in. */
+/** Message with `{param}` placeholders filled in. Params are HTML-escaped: bot messages are sent with parse_mode HTML. */
 export function tf(lang: Language, key: MessageKey, params: Record<string, string>): string {
-  return t(lang, key).replace(/\{(\w+)\}/g, (_, k: string) => params[k] ?? '');
+  return t(lang, key).replace(/\{(\w+)\}/g, (_, k: string) => esc(params[k] ?? ''));
 }
 
 export function languageFromAcceptHeader(header: string | undefined): Language {

@@ -62,7 +62,10 @@ async function context(db: Database, request: FastifyRequest) {
   return { user, walletId: await personalWalletId(db, userId) };
 }
 
-function txDto(tx: Transaction, timeZone: string, categoryName: (id: string | null) => string | null) {
+type CategoryRef = { id: string; name: string; icon: string | null };
+
+function txDto(tx: Transaction, timeZone: string, cats: CategoryRef[]) {
+  const cat = tx.categoryId ? cats.find((c) => c.id === tx.categoryId) : undefined;
   const local = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(tx.occurredAt);
   return {
     id: tx.id,
@@ -71,7 +74,8 @@ function txDto(tx: Transaction, timeZone: string, categoryName: (id: string | nu
     currency: tx.currency,
     amountUzs: tx.amountUzs,
     categoryId: tx.categoryId,
-    categoryName: categoryName(tx.categoryId),
+    categoryName: cat?.name ?? null,
+    categoryIcon: cat?.icon ?? null,
     categoryPending: tx.categoryStatus === 'pending',
     note: tx.note,
     counterparty: tx.counterparty,
@@ -202,7 +206,6 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
     );
     const { user, walletId } = await context(opts.db, request);
     const cats = await listWalletCategories(opts.db, walletId, user.language);
-    const name = (id: string | null) => cats.find((c) => c.id === id)?.name ?? null;
     const rows = await listTransactions(opts.db, user.id, walletId, {
       timeZone: user.timezone,
       limit: q.limit,
@@ -213,7 +216,7 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
       ...(q.cursor && { before: decodeCursor(q.cursor) }),
     });
     return {
-      items: rows.map((r) => txDto(r, user.timezone, name)),
+      items: rows.map((r) => txDto(r, user.timezone, cats)),
       nextCursor: rows.length === q.limit ? encodeCursor(rows.at(-1)!) : null,
     };
   });
@@ -243,7 +246,7 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
       user.timezone,
     );
     const cats = await listWalletCategories(opts.db, walletId, user.language);
-    return txDto(tx, user.timezone, (cid) => cats.find((c) => c.id === cid)?.name ?? null);
+    return txDto(tx, user.timezone, cats);
   });
 
   // Delete (soft) — debts go through the debt engine so balances stay right.

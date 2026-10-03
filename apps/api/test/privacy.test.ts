@@ -82,7 +82,7 @@ describe('/sozlamalar and account deletion (TZ §40)', () => {
   it('shows settings; delete needs confirmation; cancel restores', async () => {
     const id = await newUser();
     await H.send(id, '/sozlamalar');
-    expect(H.texts()[0]).toBe("⚙️ Sozlamalar\n\nTil: O'zbekcha\nKunlik eslatma: 21:00\nValyuta: UZS");
+    expect(H.texts()[0]).toBe("⚙️ Sozlamalar\n\n🌐 Til: O'zbekcha\n⏰ Kunlik eslatma: 21:00\n💱 Valyuta: UZS");
     await H.tap(id, 'acc:del');
     expect(H.texts().at(-1)).toContain('7 kundan keyin');
     await H.tap(id, 'acc:no');

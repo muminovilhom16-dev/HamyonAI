@@ -1,5 +1,6 @@
 import { InlineKeyboard, type Bot } from 'grammy';
 import {
+  addDays,
   listRecentTransactions,
   listWalletCategories,
   localDate,
@@ -7,9 +8,11 @@ import {
   summarize,
   type Period,
 } from '@hamyon/core';
-import { formatDay, formatMoney } from '../format';
+import { formatDateLabel, formatMoney } from '../format';
 import { t, type MessageKey } from '../i18n';
 import type { BotContext, BotServices } from './context';
+import { b, esc } from './html';
+import { summaryLines } from './summary';
 
 const TITLES: Record<Period, MessageKey> = { day: 'reportDay', week: 'reportWeek', month: 'reportMonth' };
 
@@ -19,19 +22,13 @@ async function report(ctx: BotContext, s: BotServices, period: Period) {
   const lang = user.language;
   const { from, to } = periodRange(period, s.now(), user.timezone);
   const sum = await summarize(s.db, user.id, ctx.walletId!, from, to);
+  const title = b(t(lang, TITLES[period]));
   if (sum.count === 0) {
-    await ctx.reply(`${t(lang, TITLES[period])}\n\n${t(lang, 'noRecords')}`);
+    await ctx.reply(`${title}\n\n${t(lang, 'noRecords')}`);
     return;
   }
-  const lines = [t(lang, TITLES[period]), '', `${t(lang, 'expenseLabel')}: ${formatMoney(sum.expenseUzs, 'UZS', lang)}`];
-  if (sum.incomeUzs > 0) lines.push(`${t(lang, 'incomeLabel')}: ${formatMoney(sum.incomeUzs, 'UZS', lang)}`);
-  const top = sum.byCategory[0];
-  if (top) {
-    const cats = await listWalletCategories(s.db, ctx.walletId!, lang);
-    const name = cats.find((c) => c.id === top.categoryId)?.name ?? t(lang, 'uncategorized');
-    lines.push(`${t(lang, 'topCategory')}: ${name} — ${formatMoney(top.totalUzs, 'UZS', lang)}`);
-  }
-  await ctx.reply(lines.join('\n'));
+  const cats = await listWalletCategories(s.db, ctx.walletId!, lang);
+  await ctx.reply([title, '', ...summaryLines(lang, sum, cats)].join('\n'));
 }
 
 export function registerReports(bot: Bot<BotContext>, s: BotServices): void {
@@ -49,19 +46,30 @@ export function registerReports(bot: Bot<BotContext>, s: BotServices): void {
       return;
     }
     const cats = await listWalletCategories(s.db, ctx.walletId!, lang);
-    const year = localDate(s.now(), user.timezone).slice(0, 4);
-    const lines = rows.map((r, i) => {
+    const today = localDate(s.now(), user.timezone);
+    const yesterday = addDays(today, -1);
+    const lines: string[] = [];
+    let lastDay = '';
+    rows.forEach((r, i) => {
+      const day = localDate(r.occurredAt, user.timezone);
+      if (day !== lastDay) {
+        lines.push('', b(`📅 ${formatDateLabel(day, today, yesterday, lang)}`));
+        lastDay = day;
+      }
       const isDebt = r.type === 'debt_given' || r.type === 'debt_taken' || r.type === 'debt_return';
-      const cat = isDebt
-        ? `${t(lang, 'debtLabel')}${r.counterparty ? ` · ${r.counterparty}` : ''}`
-        : cats.find((c) => c.id === r.categoryId)?.name ?? t(lang, 'uncategorized');
-      const money = `${r.type === 'income' ? '+' : ''}${formatMoney(r.amount, r.currency, lang)}`;
-      const note = r.note ? ` · ${r.note}` : '';
-      return `${i + 1}. ${money} · ${cat}${note} · ${formatDay(localDate(r.occurredAt, user.timezone), lang, year)}`;
+      const cat = cats.find((c) => c.id === r.categoryId);
+      const label = isDebt
+        ? `🤝 ${t(lang, 'debtLabel')}${r.counterparty ? ` · ${esc(r.counterparty)}` : ''}`
+        : cat
+          ? `${cat.icon ?? '🏷'} ${esc(cat.name)}`
+          : `❓ ${t(lang, 'uncategorized')}`;
+      const money = b(`${r.type === 'income' ? '+' : ''}${formatMoney(r.amount, r.currency, lang)}`);
+      const note = r.note && r.note.toLowerCase() !== (cat?.name ?? '').toLowerCase() ? ` · ${esc(r.note)}` : '';
+      lines.push(`${i + 1}. ${money} · ${label}${note}`);
     });
     const kb = new InlineKeyboard();
     rows.forEach((r, i) => kb.text(`✏️ ${i + 1}`, `open:${r.id}`).text(`🗑 ${i + 1}`, `ldel:${r.id}`).row());
-    await ctx.reply(`${t(lang, 'recentTitle')}\n\n${lines.join('\n')}`, { reply_markup: kb });
+    await ctx.reply(`${b(t(lang, 'recentTitle'))}\n${lines.join('\n')}`, { reply_markup: kb });
   });
 
   bot.command('yordam', (ctx) => ctx.reply(t(ctx.user!.language, 'help')));

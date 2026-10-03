@@ -76,7 +76,7 @@ export function Bars({ daily, lang }: { daily: Dashboard['daily']; lang: Lang })
                   {h > 0 && (
                     <path
                       d={`M${x},${y(0)} V${top + r} Q${x},${top} ${x + r},${top} H${x + barW - r} Q${x + barW},${top} ${x + barW},${top + r} V${y(0)} Z`}
-                      fill="var(--series-1)"
+                      fill="var(--brand)"
                       opacity={hover === null || hover === i ? 1 : 0.55}
                     />
                   )}

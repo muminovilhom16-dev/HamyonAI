@@ -82,7 +82,7 @@ describe('transactions', () => {
     const cats = (await api(cookie, 'GET', '/api/categories')).json();
     const fun = cats.find((c: { name: string }) => c.name === "Ko'ngilochar");
     const edited = await api(cookie, 'PATCH', `/api/transactions/${xyz.id}`, { categoryId: fun.id, amount: 45_000, note: 'Bouling' });
-    expect(edited.json()).toMatchObject({ amount: 45_000, categoryName: "Ko'ngilochar", note: 'Bouling', categoryPending: false });
+    expect(edited.json()).toMatchObject({ amount: 45_000, categoryName: "Ko'ngilochar", categoryIcon: '🎬', note: 'Bouling', categoryPending: false });
 
     expect((await api(cookie, 'DELETE', `/api/transactions/${xyz.id}`)).statusCode).toBe(204);
     expect((await api(cookie, 'GET', '/api/transactions')).json().items).toHaveLength(1);

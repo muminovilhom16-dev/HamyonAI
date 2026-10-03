@@ -16,7 +16,9 @@ import {
   type ReminderKind,
 } from '@hamyon/core';
 import { schema, type Database } from '@hamyon/db';
-import { formatDay, formatMoney } from './format';
+import { formatDay } from './format';
+import { b } from './bot/html';
+import { summaryLines } from './bot/summary';
 import { t, tf } from './i18n';
 import { sendDebtReminders } from './reminders';
 
@@ -87,25 +89,27 @@ export async function buildPeriodReport(
   if (cur.count === 0) return null;
   const lang = input.language;
   const cats = await listWalletCategories(db, walletId, lang);
-  const lines = [
-    `${t(lang, input.period === 'week' ? 'weeklyTitle' : 'monthlyTitle')} · ${formatDay(input.startDate, lang)} — ${formatDay(input.endDate, lang)}`,
-    '',
-    `${t(lang, 'expenseLabel')}: ${formatMoney(cur.expenseUzs, 'UZS', lang)}`,
-  ];
-  if (cur.incomeUzs > 0) lines.push(`${t(lang, 'incomeLabel')}: ${formatMoney(cur.incomeUzs, 'UZS', lang)}`);
+  // Comparison of the top category with the previous period (one line, only when notable).
   const top = cur.byCategory[0];
-  if (top) {
+  let compare: string | null = null;
+  if (top?.categoryId) {
     const name = cats.find((c) => c.id === top.categoryId)?.name ?? t(lang, 'uncategorized');
-    lines.push(`${t(lang, 'topCategory')}: ${name} — ${formatMoney(top.totalUzs, 'UZS', lang)}`);
     const [pf, pt] = range(input.prevStart, input.prevEnd);
     const prev = await summarize(db, input.userId, walletId, pf, pt);
     const prevTop = prev.byCategory.find((c) => c.categoryId === top.categoryId)?.totalUzs ?? 0;
     const pct = changePct(top.totalUzs, prevTop);
-    if (pct !== null && top.categoryId) {
+    if (pct !== null) {
       const key = input.period === 'week' ? (pct > 0 ? 'compareUpWeek' : 'compareDownWeek') : pct > 0 ? 'compareUpMonth' : 'compareDownMonth';
-      lines.push('', tf(lang, key, { category: name, pct: String(Math.abs(pct)) }));
+      compare = tf(lang, key, { category: name, pct: String(Math.abs(pct)) });
     }
   }
+  // TZ §33: title + body + comparison ≤ 5 lines.
+  const lines = [
+    `${b(t(lang, input.period === 'week' ? 'weeklyTitle' : 'monthlyTitle'))} · ${formatDay(input.startDate, lang)} — ${formatDay(input.endDate, lang)}`,
+    '',
+    ...summaryLines(lang, cur, cats, compare ? 3 : 4),
+  ];
+  if (compare) lines.push('', compare);
   return lines.join('\n');
 }
 

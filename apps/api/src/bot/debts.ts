@@ -26,6 +26,7 @@ import { schema } from '@hamyon/db';
 import { formatDateLabel, formatDay, formatMoney } from '../format';
 import { t, tf } from '../i18n';
 import type { BotContext, BotServices } from './context';
+import { b, esc, i } from './html';
 
 /** Debt item waiting for the user (direction / name / return direction). */
 export interface PendingDebtPayload {
@@ -47,6 +48,8 @@ function dates(s: BotServices, user: User) {
   return { today, yesterday: addDays(today, -1), year: today.slice(0, 4) };
 }
 
+const who = (tx: Transaction) => (tx.counterparty ? `👤 ${esc(tx.counterparty)}` : '');
+
 /** Text + keyboard for a debt event card. */
 export async function renderDebtCard(s: BotServices, user: User, tx: Transaction): Promise<{ text: string; reply_markup: InlineKeyboard }> {
   const lang = user.language;
@@ -57,7 +60,7 @@ export async function renderDebtCard(s: BotServices, user: User, tx: Transaction
   const kb = new InlineKeyboard();
 
   if (tx.type === 'debt_return') {
-    lines.push(t(lang, 'debtReturnTitle'), tx.counterparty ?? '', formatMoney(tx.amount, tx.currency, lang));
+    lines.push(b(t(lang, 'debtReturnTitle')), who(tx), `💵 ${b(formatMoney(tx.amount, tx.currency, lang))}`);
     if (debt) {
       const open = await s.db
         .select({ remaining: schema.debts.remaining, status: schema.debts.status, deletedAt: schema.debts.deletedAt })
@@ -71,19 +74,19 @@ export async function renderDebtCard(s: BotServices, user: User, tx: Transaction
           ),
         );
       const remaining = open.filter((r) => r.status === 'open' && !r.deletedAt).reduce((a, r) => a + r.remaining, 0);
-      lines.push(remaining === 0 ? t(lang, 'debtClosed') : `${t(lang, 'remainingLabel')}: ${formatMoney(remaining, tx.currency, lang)}`);
+      lines.push(remaining === 0 ? t(lang, 'debtClosed') : `⏳ ${t(lang, 'remainingLabel')}: ${b(formatMoney(remaining, tx.currency, lang))}`);
     }
-    lines.push(when);
+    lines.push(`📅 ${when}`);
   } else {
-    lines.push(t(lang, tx.type === 'debt_given' ? 'debtGivenTitle' : 'debtTakenTitle'), tx.counterparty ?? '', formatMoney(tx.amount, tx.currency, lang));
-    if (debt && debt.remaining !== debt.total) lines.push(`${t(lang, 'remainingLabel')}: ${formatMoney(debt.remaining, debt.currency, lang)}`);
-    lines.push(when);
-    if (debt?.dueDate) lines.push(`${t(lang, 'dueLabel')}: ${formatDay(debt.dueDate, lang, d.year)}`);
+    lines.push(b(t(lang, tx.type === 'debt_given' ? 'debtGivenTitle' : 'debtTakenTitle')), who(tx), `💵 ${b(formatMoney(tx.amount, tx.currency, lang))}`);
+    if (debt && debt.remaining !== debt.total) lines.push(`⏳ ${t(lang, 'remainingLabel')}: ${b(formatMoney(debt.remaining, debt.currency, lang))}`);
+    lines.push(`📅 ${when}`);
+    if (debt?.dueDate) lines.push(`⏰ ${t(lang, 'dueLabel')}: ${formatDay(debt.dueDate, lang, d.year)}`);
     if (debt) kb.text(t(lang, 'setDue'), `dd:${debt.id}`);
   }
-  if (tx.note) lines.splice(2, 0, tx.note);
+  if (tx.note) lines.splice(3, 0, `📝 ${esc(tx.note)}`);
   kb.text(t(lang, 'delete'), `ddel:${tx.id}`);
-  const heard = tx.source === 'voice' && tx.rawInput ? `🎙 «${tx.rawInput}»\n\n` : '';
+  const heard = tx.source === 'voice' && tx.rawInput ? `🎙 ${i(`«${esc(tx.rawInput)}»`)}\n\n` : '';
   return { text: heard + lines.filter(Boolean).join('\n'), reply_markup: kb };
 }
 
@@ -114,7 +117,7 @@ export async function continueDebt(
   if (p.typeUncertain) {
     const pending = await pend('ask_debt_direction');
     await send(
-      `${formatMoney(p.tx.amount, p.tx.currency, lang)}\n${t(lang, 'askDebtDirection')}`,
+      `💵 ${b(formatMoney(p.tx.amount, p.tx.currency, lang))}\n${t(lang, 'askDebtDirection')}`,
       new InlineKeyboard().text(t(lang, 'debtGiven'), `dk:${pending.id}:g`).text(t(lang, 'debtTaken'), `dk:${pending.id}:t`),
     );
     return false;
@@ -169,7 +172,7 @@ export async function continueDebt(
       case 'ambiguous_direction': {
         const pending = await pend('ask_debt_direction');
         await send(
-          `${p.tx.counterparty} — ${formatMoney(p.tx.amount, p.tx.currency, lang)}\n${t(lang, 'askReturnDirection')}`,
+          `👤 ${esc(p.tx.counterparty)} — ${b(formatMoney(p.tx.amount, p.tx.currency, lang))}\n${t(lang, 'askReturnDirection')}`,
           new InlineKeyboard().text(t(lang, 'returnToMe'), `dr:${pending.id}:m`).text(t(lang, 'returnByMe'), `dr:${pending.id}:i`),
         );
         return false;
@@ -286,7 +289,7 @@ export function registerDebtFlows(bot: Bot<BotContext>, s: BotServices): void {
     }
     await ctx.answerCallbackQuery();
     const card = await renderDebtCard(s, user, tx);
-    await ctx.editMessageText(`${t(user.language, 'deleted')}\n${card.text}`, {
+    await ctx.editMessageText(`${b(t(user.language, 'deleted'))}\n<s>${card.text}</s>`, {
       reply_markup: new InlineKeyboard().text(t(user.language, 'undo'), `dundo:${tx.id}`),
     });
   });
@@ -309,17 +312,22 @@ export function registerDebtFlows(bot: Bot<BotContext>, s: BotServices): void {
     const lang = user.language;
     const rows = await listOpenDebts(s.db, user.id, ctx.walletId!);
     if (rows.length === 0) {
-      await ctx.reply(`${t(lang, 'debtsTitle')}\n\n${t(lang, 'noDebts')}`);
+      await ctx.reply(`${b(t(lang, 'debtsTitle'))}\n\n${t(lang, 'noDebts')}`);
       return;
     }
     const year = localDate(s.now(), user.timezone).slice(0, 4);
     const line = (r: (typeof rows)[number]) =>
-      `• ${r.counterparty} — ${formatMoney(r.remaining, r.currency, lang)}${r.nearestDue ? ` (${t(lang, 'dueLabel').toLowerCase()}: ${formatDay(r.nearestDue, lang, year)})` : ''}`;
+      `👤 ${esc(r.counterparty)} — ${b(formatMoney(r.remaining, r.currency, lang))}${r.nearestDue ? `\n     ⏰ ${t(lang, 'dueLabel').toLowerCase()}: ${formatDay(r.nearestDue, lang, year)}` : ''}`;
     const given = rows.filter((r) => r.direction === 'given');
     const taken = rows.filter((r) => r.direction === 'taken');
-    const parts = [t(lang, 'debtsTitle')];
-    if (given.length) parts.push('', t(lang, 'owedToMe'), ...given.map(line));
-    if (taken.length) parts.push('', t(lang, 'iOwe'), ...taken.map(line));
+    const total = (list: typeof rows) => {
+      const byCur = new Map<string, number>();
+      for (const r of list) byCur.set(r.currency, (byCur.get(r.currency) ?? 0) + r.remaining);
+      return [...byCur].map(([c, v]) => formatMoney(v, c as 'UZS' | 'USD', lang)).join(' + ');
+    };
+    const parts = [b(t(lang, 'debtsTitle'))];
+    if (given.length) parts.push('', `🟢 ${b(t(lang, 'owedToMe'))} ${total(given)}`, ...given.map(line));
+    if (taken.length) parts.push('', `🔴 ${b(t(lang, 'iOwe'))} ${total(taken)}`, ...taken.map(line));
     await ctx.reply(parts.join('\n'));
   });
 }

@@ -91,6 +91,15 @@ const M = {
   confirmDelete: { uz_latn: "Ha, o'chirilsin", uz_cyrl: 'Ҳа, ўчирилсин', ru: 'Да, удалить' },
   scheduledDeletion: { uz_latn: "Akkaunt o'chirilishi rejalashtirilgan:", uz_cyrl: 'Аккаунт ўчирилиши режалаштирилган:', ru: 'Удаление аккаунта запланировано:' },
   cancelDeletion: { uz_latn: "O'chirishni bekor qilish", uz_cyrl: 'Ўчиришни бекор қилиш', ru: 'Отменить удаление' },
+  recent: { uz_latn: 'Oxirgi yozuvlar', uz_cyrl: 'Охирги ёзувлар', ru: 'Последние операции' },
+  profile: { uz_latn: 'Profil', uz_cyrl: 'Профил', ru: 'Профиль' },
+  preferences: { uz_latn: 'Asosiy', uz_cyrl: 'Асосий', ru: 'Основное' },
+  account: { uz_latn: 'Akkaunt', uz_cyrl: 'Аккаунт', ru: 'Аккаунт' },
+  overdue: { uz_latn: "Muddati o'tgan", uz_cyrl: 'Муддати ўтган', ru: 'Просрочен' },
+  repaid: { uz_latn: 'qaytarildi', uz_cyrl: 'қайтарилди', ru: 'возвращено' },
+  timezone: { uz_latn: 'Vaqt mintaqasi', uz_cyrl: 'Вақт минтақаси', ru: 'Часовой пояс' },
+  format: { uz_latn: 'Format', uz_cyrl: 'Формат', ru: 'Формат' },
+  period: { uz_latn: 'Davr', uz_cyrl: 'Давр', ru: 'Период' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;
