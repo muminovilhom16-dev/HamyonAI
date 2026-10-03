@@ -38,7 +38,7 @@ export async function getOpenPending(db: Database, userId: string, id: string, n
 
 /** Latest open item waiting for a typed reply (amount), if any. */
 /** Pending kinds answered by the user's next text message (not by a button). */
-const AWAITING_REPLY_KINDS: Array<Pending['kind']> = ['ask_amount', 'edit_amount', 'ask_counterparty', 'budget_amount', 'recurring_text', 'goal_text', 'goal_amount'];
+const AWAITING_REPLY_KINDS: Array<Pending['kind']> = ['ask_amount', 'edit_amount', 'ask_counterparty', 'budget_amount', 'recurring_text', 'goal_text', 'goal_amount', 'account_text'];
 
 export async function latestAwaitingReply(db: Database, userId: string, now: Date = new Date()): Promise<Pending | null> {
   const [row] = await db

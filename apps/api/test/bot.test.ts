@@ -302,6 +302,50 @@ describe('savings goals (/maqsad)', () => {
   });
 });
 
+describe('accounts (/hisoblar)', () => {
+  it('cards and cash with balances; "kartadan"/"naqd" route records; switcher on the card', async () => {
+    const id = await newUser();
+    await H.send(id, 'taksi 10 ming'); // before any account: no account UI
+    expect(buttons().some((b) => b.callback_data?.startsWith('acc:'))).toBe(false);
+
+    await H.send(id, '/hisoblar');
+    expect(H.texts().at(-1)).toContain("Hali hisob yo'q");
+    await H.tap(id, 'ac:add');
+    await H.send(id, 'Humo 2 mln');
+    await H.tap(id, 'ac:add');
+    await H.send(id, 'naqd 300 ming');
+    expect(H.texts().at(-1)).toContain("💳 Humo (asosiy) — 2 000 000 so'm");
+    expect(H.texts().at(-1)).toContain("💵 Naqd — 300 000 so'm");
+
+    H.reset();
+    await H.send(id, 'taksi 20 ming kartadan');
+    expect(H.texts()[0]).toBe("🚕 20 000 so'm\nTransport · Bugun · 💳 Humo\n📝 Taksi");
+    await H.send(id, 'non 5 ming naqd');
+    expect(H.texts().at(-1)).toContain('💵 Naqd');
+    await H.send(id, 'sut 12 ming'); // no hint → default account
+    expect(H.texts().at(-1)).toContain('💳 Humo');
+
+    // Switch the last record to the next account from the card.
+    await H.tap(id, button(/^💳 Humo/));
+    expect(H.texts().at(-1)).toContain('💵 Naqd');
+
+    H.reset();
+    await H.send(id, '/hisoblar');
+    expect(H.texts()[0]).toContain("Humo (asosiy) — 1 980 000 so'm");
+    expect(H.texts()[0]).toContain("Naqd — 283 000 so'm");
+  });
+
+  it('Cyrillic goal shortcut works', async () => {
+    const id = await newUser();
+    await H.send(id, '/maqsad');
+    await H.tap(id, 'gl:new');
+    await H.send(id, 'телефон 1 млн');
+    H.reset();
+    await H.send(id, 'мақсадга 100 минг');
+    expect(H.texts()[0]).toContain("+100 000 so'm");
+  });
+});
+
 describe('card editing, delete, undo', () => {
   it('category correction becomes a rule for the next message', async () => {
     const id = await newUser();

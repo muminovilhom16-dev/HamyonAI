@@ -116,3 +116,10 @@ describe('goals', () => {
     await rejectsWith(h.db.insert(s.goalContributions).values({ goalId: g!.id, amount: 0 }), 'goal_contributions_non_zero');
   });
 });
+
+describe('accounts', () => {
+  it('one default per wallet', async () => {
+    await h.db.insert(s.accounts).values({ walletId, name: 'A', kind: 'cash', isDefault: true });
+    await rejectsWith(h.db.insert(s.accounts).values({ walletId, name: 'B', kind: 'card', isDefault: true }), 'accounts_wallet_default_uq');
+  });
+});

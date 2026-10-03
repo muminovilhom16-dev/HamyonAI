@@ -3,8 +3,13 @@ import {
   AppError,
   RateUnavailableError,
   addDays,
+  accountForNewRecord,
+  accountHint,
   cancelAwaitingReplies,
   checkAiBudget,
+  listAccounts,
+  setTransactionAccount,
+  stripAccountWords,
   getRate,
   createPending,
   createTransaction,
@@ -52,6 +57,7 @@ import type { BotContext, BotServices } from './context';
 import { answerBudgetAmount, budgetAlertLines } from './budgets';
 import { answerRecurringText } from './recurring';
 import { answerGoalAmount, answerGoalText, tryGoalShortcut } from './goals';
+import { answerAccountText } from './accounts';
 import { b, esc, i } from './html';
 import { answerCounterparty, continueDebt, debtPayloadFrom, isDebtPayload, replyDebtCard, renderDebtCard, type PendingDebtPayload } from './debts';
 import { afterFirstTransaction } from './onboarding';
@@ -73,7 +79,8 @@ const UUID = '[0-9a-f-]{36}';
 
 async function envFor(s: BotServices, user: User, walletId: string): Promise<CardEnv> {
   const categories = await listWalletCategories(s.db, walletId, user.language);
-  return cardEnv(user.language, user.timezone, s.now(), categories);
+  const accounts = await listAccounts(s.db, { userId: user.id, walletId });
+  return cardEnv(user.language, user.timezone, s.now(), categories, accounts);
 }
 
 function fin(s: BotServices) {
@@ -89,16 +96,20 @@ async function saveAndShow(
   opts: { categoryPending?: boolean; edit?: boolean; source?: InputSource },
 ): Promise<Transaction | null> {
   const user = ctx.user!;
+  // "kartadan" / "naqd" pick the account (when the user has accounts) and leave the note.
+  const hint = accountHint(rawInput);
+  const accountId = await accountForNewRecord(s.db, ctx.walletId!, hint);
   let saved: Transaction;
   try {
     saved = await createTransaction(fin(s), {
       walletId: ctx.walletId!,
       userId: user.id,
       timeZone: user.timezone,
-      tx,
+      tx: hint ? { ...tx, note: stripAccountWords(tx.note) } : tx,
       source: opts.source ?? 'text',
       rawInput,
       categoryPending: opts.categoryPending ?? false,
+      accountId,
     });
   } catch (err) {
     if (err instanceof RateUnavailableError) {
@@ -241,6 +252,10 @@ export async function processText(ctx: BotContext, s: BotServices, text: string,
         await continueAfterAmount(ctx, s, pending.id, { ...p, tx: { ...p.tx, amount } }, false);
         return;
       }
+    }
+    if (awaiting.kind === 'account_text') {
+      await answerAccountText(ctx, s, awaiting.id, text);
+      return;
     }
     if (awaiting.kind === 'goal_text') {
       await answerGoalText(ctx, s, awaiting.id, text);
@@ -426,6 +441,19 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
     const cat = resolveCatRef(env.categories, ctx.match[2]!);
     if (!cat) throw new AppError('validation');
     const tx = await updateTransaction(fin(s), user.id, current.id, { categoryKey: cat.key }, user.timezone);
+    await ctx.editMessageText(cardText(txFields(tx, env, user.timezone), env), { reply_markup: txKeyboard(tx, env, user.timezone) });
+    await ctx.answerCallbackQuery();
+  });
+
+  // Cycle the record through the user's accounts.
+  bot.callbackQuery(new RegExp(`^acc:(${UUID})$`), async (ctx) => {
+    const user = ctx.user!;
+    const current = await getTransactionForUser(s.db, user.id, ctx.match[1]!);
+    const env = await envFor(s, user, current.walletId);
+    if (env.accounts.length === 0) return ctx.answerCallbackQuery();
+    const i = env.accounts.findIndex((a) => a.id === current.accountId);
+    const next = env.accounts[(i + 1) % env.accounts.length]!;
+    const tx = await setTransactionAccount(s.db, user.id, current.id, next.id);
     await ctx.editMessageText(cardText(txFields(tx, env, user.timezone), env), { reply_markup: txKeyboard(tx, env, user.timezone) });
     await ctx.answerCallbackQuery();
   });

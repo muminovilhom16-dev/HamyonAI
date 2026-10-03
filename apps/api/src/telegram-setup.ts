@@ -12,6 +12,7 @@ const COMMANDS: Array<[string, string, string]> = [
   ['byudjet', 'Oylik limitlar', 'Месячные лимиты'],
   ['obunalar', "Doimiy to'lovlar", 'Регулярные платежи'],
   ['maqsad', "Jamg'arma maqsadlari", 'Цели накоплений'],
+  ['hisoblar', 'Karta va naqd qoldiqlari', 'Остатки на счетах'],
   ['eksport', 'Eksport (Excel/CSV)', 'Экспорт (Excel/CSV)'],
   ['sozlamalar', 'Sozlamalar', 'Настройки'],
   ['web', 'Web panel', 'Веб-панель'],

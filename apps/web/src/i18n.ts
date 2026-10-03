@@ -149,6 +149,21 @@ const M = {
   dailyAverage: { uz_latn: 'Kuniga o‘rtacha', uz_cyrl: 'Кунига ўртача', ru: 'В среднем в день' },
   forecast: { uz_latn: 'Oy oxiriga prognoz', uz_cyrl: 'Ой охирига прогноз', ru: 'Прогноз на месяц' },
   vsLastMonth: { uz_latn: 'O‘tgan oyning shu kunlariga nisbatan', uz_cyrl: 'Ўтган ойнинг шу кунларига нисбатан', ru: 'К тем же дням прошлого месяца' },
+  accounts: { uz_latn: 'Hisoblar', uz_cyrl: 'Ҳисоблар', ru: 'Счета' },
+  accountsEmpty: {
+    uz_latn: 'Karta va naqd pulni qo‘shing — qoldiq ko‘rinadi. Botda «kartadan» yoki «naqd» desangiz, o‘sha hisobga yoziladi.',
+    uz_cyrl: 'Карта ва нақд пулни қўшинг — қолдиқ кўринади. Ботда «картадан» ёки «нақд» десангиз, ўша ҳисобга ёзилади.',
+    ru: 'Добавьте карты и наличные — увидите остатки. В боте «картой» или «наличными» запишет на нужный счёт.',
+  },
+  card: { uz_latn: 'Karta', uz_cyrl: 'Карта', ru: 'Карта' },
+  cash: { uz_latn: 'Naqd', uz_cyrl: 'Нақд', ru: 'Наличные' },
+  cardNameHint: { uz_latn: 'Masalan: Humo', uz_cyrl: 'Масалан: Humo', ru: 'Например: Humo' },
+  cashNameHint: { uz_latn: 'Masalan: Naqd', uz_cyrl: 'Масалан: Нақд', ru: 'Например: Наличные' },
+  currentBalance: { uz_latn: 'Hozirgi qoldiq', uz_cyrl: 'Ҳозирги қолдиқ', ru: 'Текущий остаток' },
+  main: { uz_latn: 'asosiy', uz_cyrl: 'асосий', ru: 'основной' },
+  makeMain: { uz_latn: 'Asosiy qilish', uz_cyrl: 'Асосий қилиш', ru: 'Сделать основным' },
+  accountField: { uz_latn: 'Hisob', uz_cyrl: 'Ҳисоб', ru: 'Счёт' },
+  noAccount: { uz_latn: 'Hisobsiz', uz_cyrl: 'Ҳисобсиз', ru: 'Без счёта' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;

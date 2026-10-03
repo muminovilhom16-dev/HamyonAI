@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, ReceiptText, Search, Trash2, X } from 'lucide-react';
-import { api, ApiError, type Category, type Currency, type Lang, type Tx } from '../api';
+import { api, ApiError, type Account, type Category, type Currency, type Lang, type Tx } from '../api';
 import { DEBT_TYPES as DEBT, TxRow } from '../components/TxRow';
 import { day, group, money, parseAmountInput } from '../format';
 import { tr } from '../i18n';
@@ -50,8 +50,10 @@ export function TransactionsPage({ lang, currency }: { lang: Lang; currency: Cur
   }, [query]);
 
   useEffect(load, [load]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   useEffect(() => {
     api.get<Category[]>('/api/categories').then(setCategories).catch(() => {});
+    api.get<Account[]>('/api/accounts').then(setAccounts).catch(() => {});
   }, []);
 
   const more = async () => {
@@ -154,6 +156,7 @@ export function TransactionsPage({ lang, currency }: { lang: Lang; currency: Cur
           lang={lang}
           currency={currency}
           categories={categories}
+          accounts={accounts}
           onClose={() => { setEditing(null); setCreating(false); }}
           onSaved={(tx) => {
             if (creating) load();
@@ -185,6 +188,7 @@ function EditSheet(props: {
   lang: Lang;
   currency: Currency;
   categories: Category[];
+  accounts: Account[];
   onClose: () => void;
   onSaved: (tx: Tx) => void;
   onDelete?: () => void;
@@ -197,6 +201,8 @@ function EditSheet(props: {
   const [categoryId, setCategoryId] = useState(tx?.categoryId ?? '');
   const [date, setDate] = useState(tx?.date ?? todayIso());
   const [note, setNote] = useState(tx?.note ?? '');
+  const defaultAccount = props.accounts.find((a) => a.isDefault)?.id ?? '';
+  const [accountId, setAccountId] = useState(tx ? tx.accountId ?? '' : defaultAccount);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const options = props.categories.filter((c) => c.kind === kind);
@@ -208,7 +214,7 @@ function EditSheet(props: {
       if (!categoryId) return setErr(tr(lang, 'pickCategory'));
       setBusy(true);
       try {
-        props.onSaved(await api.post<Tx>('/api/transactions', { type: kind, amount: n, categoryId, date, note: note.trim() || null }));
+        props.onSaved(await api.post<Tx>('/api/transactions', { type: kind, amount: n, categoryId, date, note: note.trim() || null, accountId: accountId || null }));
       } catch (e) {
         setErr(e instanceof ApiError && e.status === 400 ? tr(lang, 'invalidAmount') : tr(lang, 'error'));
       } finally {
@@ -223,6 +229,7 @@ function EditSheet(props: {
     }
     if (date !== tx!.date) patch.date = date;
     if (note !== (tx!.note ?? '')) patch.note = note || null;
+    if (!isDebt && accountId !== (tx!.accountId ?? '')) patch.accountId = accountId || null;
     if (Object.keys(patch).length === 0) return props.onClose();
     setBusy(true);
     try {
@@ -261,6 +268,17 @@ function EditSheet(props: {
               {(!categoryId || (tx && !tx.categoryId)) && <option value="">{creating ? '—' : tr(lang, 'uncategorized')}</option>}
               {options.map((c) => (
                 <option key={c.id} value={c.id}>{`${c.icon ?? ''} ${c.name}`.trim()}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {!isDebt && props.accounts.length > 0 && (
+          <div className="field">
+            <label htmlFor="acc">{tr(lang, 'accountField')}</label>
+            <select id="acc" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+              <option value="">{tr(lang, 'noAccount')}</option>
+              {props.accounts.map((a) => (
+                <option key={a.id} value={a.id}>{`${a.kind === 'cash' ? '💵' : '💳'} ${a.name}`}</option>
               ))}
             </select>
           </div>

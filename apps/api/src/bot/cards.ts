@@ -4,6 +4,7 @@ import {
   localDate,
   type Language,
   type ParsedTransaction,
+  type Account,
   type Transaction,
   type WalletCategory,
 } from '@hamyon/core';
@@ -16,12 +17,20 @@ export interface CardEnv {
   today: string;
   yesterday: string;
   categories: WalletCategory[];
+  /** Active cash/card accounts; empty when the user has none (no account UI then). */
+  accounts: Array<Pick<Account, 'id' | 'name' | 'kind'>>;
 }
 
-export function cardEnv(lang: Language, timeZone: string, now: Date, categories: WalletCategory[]): CardEnv {
+export function cardEnv(lang: Language, timeZone: string, now: Date, categories: WalletCategory[], accounts: CardEnv['accounts'] = []): CardEnv {
   const today = localDate(now, timeZone);
-  return { lang, today, yesterday: addDays(today, -1), categories };
+  return { lang, today, yesterday: addDays(today, -1), categories, accounts };
 }
+
+const accountIcon = (kind: 'cash' | 'card') => (kind === 'cash' ? '💵' : '💳');
+const accountLabel = (env: CardEnv, id: string | null) => {
+  const a = id ? env.accounts.find((x) => x.id === id) : undefined;
+  return a ? `${accountIcon(a.kind)} ${a.name}` : null;
+};
 
 /** Short category reference for callback data (64-byte limit). */
 export const catRef = (c: WalletCategory) => (c.key === c.id ? `c${c.id.slice(0, 8)}` : c.key);
@@ -50,6 +59,7 @@ interface CardFields {
   categoryPending: boolean;
   note: string | null;
   date: string;
+  accountLabel?: string | null;
 }
 
 /**
@@ -69,7 +79,7 @@ export function cardText(f: CardFields, env: CardEnv, suffix?: string): string {
   const lines = f.transcript ? [`🎙 ${i(`«${esc(f.transcript)}»`)}`, ''] : [];
   lines.push(`${icon} ${b(income ? `+${money}` : money)}`);
   const what = known ? esc(income ? `${t(env.lang, 'income')} · ${f.categoryName}` : f.categoryName!) : `❓ ${t(env.lang, 'categoryPending')}`;
-  lines.push(`${what} · ${formatDateLabel(f.date, env.today, env.yesterday, env.lang)}`);
+  lines.push(`${what} · ${formatDateLabel(f.date, env.today, env.yesterday, env.lang)}${f.accountLabel ? ` · ${esc(f.accountLabel)}` : ''}`);
   // A note that only repeats the category ("Oylik" under "Oylik") adds nothing.
   if (f.note && f.note.toLowerCase() !== (f.categoryName ?? '').toLowerCase()) lines.push(`📝 ${esc(f.note)}`);
   if (suffix) lines.push('', b(suffix));
@@ -88,6 +98,7 @@ export function txFields(tx: Transaction, env: CardEnv, timeZone: string): CardF
     categoryPending: tx.categoryStatus === 'pending',
     note: tx.note,
     date: localDate(tx.occurredAt, timeZone),
+    accountLabel: accountLabel(env, tx.accountId),
   };
 }
 
@@ -109,12 +120,14 @@ export function parsedFields(tx: ParsedTransaction, env: CardEnv, categoryPendin
 export function txKeyboard(tx: Transaction, env: CardEnv, timeZone: string): InlineKeyboard {
   const f = txFields(tx, env, timeZone);
   const catLabel = f.categoryPending || !f.categoryName ? `❓ ${t(env.lang, 'categoryShort')}` : `${f.categoryIcon ?? '🏷'} ${f.categoryName}`;
-  return new InlineKeyboard()
+  const kb = new InlineKeyboard()
     .text(catLabel, `cat:${tx.id}`)
     .text(`✏️ ${groupDigits(tx.amount)}`, `amt:${tx.id}`)
     .text(`📅 ${formatDateLabel(f.date, env.today, env.yesterday, env.lang)}`, `dt:${tx.id}`)
-    .row()
-    .text(t(env.lang, 'delete'), `del:${tx.id}`);
+    .row();
+  // Account switcher (cycles through accounts) only when the user has accounts.
+  if (env.accounts.length > 0) kb.text(accountLabel(env, tx.accountId) ?? `💳 ${t(env.lang, 'accountNone')}`, `acc:${tx.id}`);
+  return kb.text(t(env.lang, 'delete'), `del:${tx.id}`);
 }
 
 /** Category grid; `prefix` decides what a tap does (e.g. `sc:<txId>` or `pc:<pendingId>`). */

@@ -43,6 +43,13 @@
       "when": 1791029636392,
       "tag": "0005_goals",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791030226825,
+      "tag": "0006_accounts",
+      "breakpoints": true
     }
   ]
 }

@@ -65,6 +65,7 @@ export interface Tx {
   categoryName: string | null;
   categoryIcon: string | null;
   categoryPending: boolean;
+  accountId: string | null;
   note: string | null;
   counterparty: string | null;
   date: string;
@@ -94,4 +95,9 @@ export interface Recurring {
 export interface Goal {
   id: string; name: string; targetAmount: number; currency: Currency; savedAmount: number;
   targetDate: string | null; completed: boolean; perMonth: number | null;
+}
+
+export interface Account {
+  id: string; name: string; kind: 'cash' | 'card'; currency: Currency;
+  openingBalance: number; isDefault: boolean; archived: boolean; balance: number;
 }

@@ -21,6 +21,7 @@ export * from './finance/budgets';
 export * from './finance/recurring';
 export * from './finance/goals';
 export * from './finance/insights';
+export * from './finance/accounts';
 export * from './finance/dashboard';
 export * from './finance/settings';
 export * from './finance/proactive';

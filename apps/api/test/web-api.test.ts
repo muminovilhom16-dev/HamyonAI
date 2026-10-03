@@ -235,6 +235,27 @@ describe('goals API', () => {
   });
 });
 
+describe('accounts API', () => {
+  it('create, default routing for web records, move a record, balances, archive; isolation', async () => {
+    const a = await login();
+    const b = await login();
+    const created = (await api(a.cookie, 'POST', '/api/accounts', { name: 'Humo', kind: 'card', openingBalance: 1_000_000 })).json();
+    expect(created).toMatchObject([{ name: 'Humo', kind: 'card', isDefault: true, balance: 1_000_000 }]);
+    const [, cash] = (await api(a.cookie, 'POST', '/api/accounts', { name: 'Naqd', kind: 'cash' })).json();
+    const food = (await api(a.cookie, 'GET', '/api/categories')).json().find((c: { name: string }) => c.name === 'Oziq-ovqat');
+    const tx = (await api(a.cookie, 'POST', '/api/transactions', { type: 'expense', amount: 100_000, categoryId: food.id, date: '2026-10-05' })).json();
+    expect(tx.accountId).toBe(created[0].id); // default account
+    expect((await api(a.cookie, 'PATCH', `/api/transactions/${tx.id}`, { accountId: cash.id })).json().accountId).toBe(cash.id);
+    const list = (await api(a.cookie, 'GET', '/api/accounts')).json();
+    expect(list.map((x: { name: string; balance: number }) => [x.name, x.balance])).toEqual([['Humo', 1_000_000], ['Naqd', -100_000]]);
+
+    expect((await api(b.cookie, 'PATCH', `/api/accounts/${cash.id}`, { name: 'x' })).statusCode).toBe(403);
+    expect((await api(b.cookie, 'PATCH', `/api/transactions/${tx.id}`, { accountId: null })).statusCode).toBe(403);
+    const after = (await api(a.cookie, 'PATCH', `/api/accounts/${created[0].id}`, { archived: true })).json();
+    expect(after).toMatchObject([{ name: 'Naqd', isDefault: true }]);
+  });
+});
+
 describe('isolation between users (TZ §39)', () => {
   it("cannot read or change another user's data", async () => {
     const a = await login();

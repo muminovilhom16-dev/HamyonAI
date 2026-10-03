@@ -6,6 +6,11 @@ import {
   AppError,
   DEBT_TYPES,
   budgetStatus,
+  accountForNewRecord,
+  createAccount,
+  listAccounts,
+  setTransactionAccount,
+  updateAccount,
   monthInsights,
   contributeToGoal,
   createGoal,
@@ -93,6 +98,7 @@ function txDto(tx: Transaction, timeZone: string, cats: CategoryRef[]) {
     categoryName: cat?.name ?? null,
     categoryIcon: cat?.icon ?? null,
     categoryPending: tx.categoryStatus === 'pending',
+    accountId: tx.accountId,
     note: tx.note,
     counterparty: tx.counterparty,
     date: localDate(tx.occurredAt, timeZone),
@@ -325,6 +331,43 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
     return reply.status(204).send();
   });
 
+  // ─── Accounts (cash / cards) ───
+  app.get('/api/accounts', { preHandler: session }, async (request) => {
+    const { user, walletId } = await context(opts.db, request);
+    return listAccounts(opts.db, { userId: user.id, walletId });
+  });
+
+  app.post('/api/accounts', { preHandler: session }, async (request, reply) => {
+    const body = parse(
+      z.object({
+        name: z.string().min(1).max(40),
+        kind: z.enum(['cash', 'card']),
+        currency: z.enum(['UZS', 'USD']).optional(),
+        openingBalance: z.number().int().refine(Number.isSafeInteger).optional(),
+      }).strict(),
+      request.body,
+    );
+    const { user, walletId } = await context(opts.db, request);
+    await createAccount(opts.db, { userId: user.id, walletId, ...body });
+    return reply.status(201).send(await listAccounts(opts.db, { userId: user.id, walletId }));
+  });
+
+  app.patch<{ Params: { id: string } }>('/api/accounts/:id', { preHandler: session }, async (request) => {
+    const id = parse(uuid, request.params.id);
+    const body = parse(
+      z.object({
+        name: z.string().min(1).max(40).optional(),
+        openingBalance: z.number().int().refine(Number.isSafeInteger).optional(),
+        isDefault: z.literal(true).optional(),
+        archived: z.boolean().optional(),
+      }).strict(),
+      request.body,
+    );
+    const { user, walletId } = await context(opts.db, request);
+    await updateAccount(opts.db, user.id, id, body);
+    return listAccounts(opts.db, { userId: user.id, walletId });
+  });
+
   app.get('/api/transactions', { preHandler: session }, async (request) => {
     const q = parse(
       z.object({
@@ -369,6 +412,7 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
         categoryId: uuid,
         date,
         note: z.string().max(200).nullable().optional(),
+        accountId: uuid.nullable().optional(),
       }).strict(),
       request.body,
     );
@@ -393,6 +437,7 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
       },
       source: 'web',
       rawInput: null,
+      accountId: body.accountId ?? (await accountForNewRecord(opts.db, walletId, null)),
     });
     return reply.status(201).send(txDto(tx, user.timezone, cats));
   });
@@ -405,10 +450,12 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
         categoryId: uuid.optional(),
         date: date.optional(),
         note: z.string().max(200).nullable().optional(),
+        accountId: uuid.nullable().optional(),
       }).strict(),
       request.body,
     );
     const { user, walletId } = await context(opts.db, request);
+    if (body.accountId !== undefined) await setTransactionAccount(opts.db, user.id, id, body.accountId);
     const tx = await updateTransaction(
       fin,
       user.id,

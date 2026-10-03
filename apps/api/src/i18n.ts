@@ -102,11 +102,11 @@ const messages = {
   uncategorized: { uz_latn: 'Kategoriyasiz', uz_cyrl: 'Категориясиз', ru: 'Без категории' },
   help: {
     uz_latn:
-      "<b>📖 Qanday yozish kerak</b>\n\n💸 Xarajat: «taksi 25 ming», «non 5 ming, sut 12 ming», «telefon 2kk», «50$ kurtka»\n💰 Daromad: «oylik tushdi 6 mln», «+500 ming»\n🤝 Qarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi»\n\n<b>📊 Hisobotlar</b>\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/ochir — oxirgi yozuvni o'chirish\n/qarzlar — qarzlar\n/byudjet — oylik limitlar\n/obunalar — doimiy to'lovlar\n/maqsad — jamg'arma maqsadlari («maqsadga 200 ming»)\n\n<b>⚙️ Boshqa</b>\n/web — web panel\n/sozlamalar — sozlamalar\n/yordam — yordam",
+      "<b>📖 Qanday yozish kerak</b>\n\n💸 Xarajat: «taksi 25 ming», «non 5 ming, sut 12 ming», «telefon 2kk», «50$ kurtka»\n💰 Daromad: «oylik tushdi 6 mln», «+500 ming»\n🤝 Qarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi»\n\n<b>📊 Hisobotlar</b>\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/ochir — oxirgi yozuvni o'chirish\n/qarzlar — qarzlar\n/byudjet — oylik limitlar\n/obunalar — doimiy to'lovlar\n/maqsad — jamg'arma maqsadlari («maqsadga 200 ming»)\n/hisoblar — karta va naqd qoldiqlari\n\n<b>⚙️ Boshqa</b>\n/web — web panel\n/sozlamalar — sozlamalar\n/yordam — yordam",
     uz_cyrl:
-      '<b>📖 Қандай ёзиш керак</b>\n\n💸 Харажат: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка»\n💰 Даромад: «ойлик тушди 6 млн», «+500 минг»\n🤝 Қарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди»\n\n<b>📊 Ҳисоботлар</b>\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/ochir — охирги ёзувни ўчириш\n/qarzlar — қарзлар\n/byudjet — ойлик лимитлар\n/obunalar — доимий тўловлар\n/maqsad — жамғарма мақсадлари («мақсадга 200 минг»)\n\n<b>⚙️ Бошқа</b>\n/web — веб панел\n/sozlamalar — созламалар\n/yordam — ёрдам',
+      '<b>📖 Қандай ёзиш керак</b>\n\n💸 Харажат: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка»\n💰 Даромад: «ойлик тушди 6 млн», «+500 минг»\n🤝 Қарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди»\n\n<b>📊 Ҳисоботлар</b>\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/ochir — охирги ёзувни ўчириш\n/qarzlar — қарзлар\n/byudjet — ойлик лимитлар\n/obunalar — доимий тўловлар\n/maqsad — жамғарма мақсадлари («мақсадга 200 минг»)\n/hisoblar — карта ва нақд қолдиқлари\n\n<b>⚙️ Бошқа</b>\n/web — веб панел\n/sozlamalar — созламалар\n/yordam — ёрдам',
     ru:
-      '<b>📖 Как записывать</b>\n\n💸 Расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка»\n💰 Доход: «зарплата 6 млн», «+500 тысяч»\n🤝 Долг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к»\n\n<b>📊 Отчёты</b>\n/bugun — за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/ochir — удалить последнюю запись\n/qarzlar — долги\n/byudjet — месячные лимиты\n/obunalar — регулярные платежи\n/maqsad — цели накоплений («на цель 200 тысяч»)\n\n<b>⚙️ Другое</b>\n/web — веб-панель\n/sozlamalar — настройки\n/yordam — помощь',
+      '<b>📖 Как записывать</b>\n\n💸 Расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка»\n💰 Доход: «зарплата 6 млн», «+500 тысяч»\n🤝 Долг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к»\n\n<b>📊 Отчёты</b>\n/bugun — за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/ochir — удалить последнюю запись\n/qarzlar — долги\n/byudjet — месячные лимиты\n/obunalar — регулярные платежи\n/maqsad — цели накоплений («на цель 200 тысяч»)\n/hisoblar — остатки на картах и наличными\n\n<b>⚙️ Другое</b>\n/web — веб-панель\n/sozlamalar — настройки\n/yordam — помощь',
   },
 
   // ─── Debts ───
@@ -279,6 +279,25 @@ const messages = {
   insightAvg: { uz_latn: '📅 Kuniga ~{amount}', uz_cyrl: '📅 Кунига ~{amount}', ru: '📅 В день ~{amount}' },
   insightForecast: { uz_latn: 'oy oxiriga ~{amount}', uz_cyrl: 'ой охирига ~{amount}', ru: 'к концу месяца ~{amount}' },
   insightChange: { uz_latn: "o'tgan oyga nisbatan {pct}", uz_cyrl: 'ўтган ойга нисбатан {pct}', ru: '{pct} к прошлому месяцу' },
+
+  // ─── Accounts (cash / cards) ───
+  accountNone: { uz_latn: 'Hisobsiz', uz_cyrl: 'Ҳисобсиз', ru: 'Без счёта' },
+  accountsTitle: { uz_latn: '💳 Hisoblar', uz_cyrl: '💳 Ҳисоблар', ru: '💳 Счета' },
+  accountsEmpty: {
+    uz_latn: "Hali hisob yo'q. Naqd pul va kartalaringizni qo'shing — har birining qoldig'i ko'rinadi. Keyin «taksi 20 ming kartadan» deb yozsangiz, karta hisobiga yoziladi.",
+    uz_cyrl: 'Ҳали ҳисоб йўқ. Нақд пул ва карталарингизни қўшинг — ҳар бирининг қолдиғи кўринади. Кейин «такси 20 минг картадан» деб ёзсангиз, карта ҳисобига ёзилади.',
+    ru: 'Счетов пока нет. Добавьте наличные и карты — увидите остаток каждого. Потом «такси 20к картой» запишется на карту.',
+  },
+  accountAdd: { uz_latn: "➕ Hisob qo'shish", uz_cyrl: '➕ Ҳисоб қўшиш', ru: '➕ Добавить счёт' },
+  accountAskText: {
+    uz_latn: "Hisob nomi va hozirgi qoldig'ini yozing, masalan: «Humo 1,2 mln» yoki «naqd 300 ming».",
+    uz_cyrl: 'Ҳисоб номи ва ҳозирги қолдиғини ёзинг, масалан: «Humo 1,2 млн» ёки «нақд 300 минг».',
+    ru: 'Напишите название счёта и текущий остаток, например: «Humo 1,2 млн» или «наличные 300 тысяч».',
+  },
+  accountDefault: { uz_latn: 'asosiy', uz_cyrl: 'асосий', ru: 'основной' },
+  accountCash: { uz_latn: 'Naqd', uz_cyrl: 'Нақд', ru: 'Наличные' },
+  accountCard: { uz_latn: 'Karta', uz_cyrl: 'Карта', ru: 'Карта' },
+  accountTooMany: { uz_latn: 'Hisoblar soni chegaraga yetdi (10).', uz_cyrl: 'Ҳисоблар сони чегарага етди (10).', ru: 'Достигнут предел счетов (10).' },
 
   // ─── Proactive (TZ §32-33: short, never shaming) ───
   dailyReminder: {

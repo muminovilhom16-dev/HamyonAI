@@ -23,7 +23,7 @@ import { b, bar, esc } from './html';
 const UUID = '[0-9a-f-]{36}';
 
 /** "maqsadga 200 ming", "мақсадга 200 минг", "на цель 200к", "в копилку 50к". */
-const GOAL_PREFIX = /^\s*(maqsad(ga|imga)?|мақсад(га|имга)?|на\s+цель|в\s+копилку|копилка)\b[\s:,-]*/iu;
+const GOAL_PREFIX = /^\s*(maqsad(ga|imga)?|мақсад(га|имга)?|на\s+цель|в\s+копилку|копилка)(?!\p{L})[\s:,-]*/iu;
 
 export function goalsText(lang: Language, list: Goal[], year: string): string {
   const title = b(t(lang, 'goalsTitle'));
@@ -89,7 +89,7 @@ export async function answerGoalText(ctx: BotContext, s: BotServices, pendingId:
   const amounts = extractAmounts(tokenize(text));
   const name = text
     .replace(/[-+]?\d[\d\s.,]*/g, ' ')
-    .replace(/\b(ming|mln|million|milliard|k|kk|so'?m|сум|сўм|тыс\w*|млн|минг|\$|dollar)\b/giu, ' ')
+    .replace(/(?<!\p{L})(ming|mln|million|milliard|k|kk|so'?m|сум|сўм|тыс\p{L}*|млн|минг|dollar)(?!\p{L})|\$/giu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   if (amounts.length !== 1 || !name) {

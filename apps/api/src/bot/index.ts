@@ -7,6 +7,7 @@ import { esc, useHtmlParseMode } from './html';
 import { registerBudgets } from './budgets';
 import { registerRecurring } from './recurring';
 import { registerGoals } from './goals';
+import { registerAccounts } from './accounts';
 import { registerDebtFlows } from './debts';
 import { registerTransactionFlows } from './flows';
 import { registerVoice } from './voice';
@@ -108,6 +109,7 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
   registerBudgets(bot, deps);
   registerRecurring(bot, deps);
   registerGoals(bot, deps);
+  registerAccounts(bot, deps);
   registerVoice(bot, deps);
   registerTransactionFlows(bot, deps);
 

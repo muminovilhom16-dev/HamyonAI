@@ -47,6 +47,7 @@ export const transactionSourceEnum = pgEnum('transaction_source', [
   'web',
 ]);
 export const categoryKindEnum = pgEnum('category_kind', ['expense', 'income']);
+export const accountKindEnum = pgEnum('account_kind', ['cash', 'card']);
 export const categoryStatusEnum = pgEnum('category_status', ['final', 'pending']);
 export const walletKindEnum = pgEnum('wallet_kind', ['personal', 'family']);
 export const memberRoleEnum = pgEnum('member_role', ['owner', 'member']);
@@ -203,6 +204,29 @@ export const exchangeRates = pgTable('exchange_rates', {
 
 // ─── Transactions ───────────────────────────────────────────────────────────
 
+/**
+ * Where the money is: cash or a card (Humo, Uzcard, Visa...). Optional — a
+ * transaction without an account still counts everywhere else. Balance =
+ * opening balance + income − expenses recorded on the account.
+ */
+export const accounts = pgTable('accounts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  walletId: uuid('wallet_id')
+    .notNull()
+    .references(() => wallets.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  kind: accountKindEnum('kind').notNull(),
+  currency: currencyEnum('currency').notNull().default('UZS'),
+  openingBalance: money('opening_balance').notNull().default(0),
+  isDefault: boolean('is_default').notNull().default(false),
+  archived: boolean('archived').notNull().default(false),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+}, (t) => [
+  index('accounts_wallet_idx').on(t.walletId),
+  uniqueIndex('accounts_wallet_default_uq').on(t.walletId).where(sql`${t.isDefault}`),
+]);
+
 export const transactions = pgTable('transactions', {
   id: uuid('id').primaryKey().defaultRandom(),
   walletId: uuid('wallet_id')
@@ -220,6 +244,7 @@ export const transactions = pgTable('transactions', {
   categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
   categoryStatus: categoryStatusEnum('category_status').notNull().default('final'),
   debtId: uuid('debt_id').references(() => debts.id, { onDelete: 'set null' }),
+  accountId: uuid('account_id').references(() => accounts.id, { onDelete: 'set null' }),
   note: text('note'),
   counterparty: text('counterparty'),
   occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
@@ -365,6 +390,7 @@ export const pendingKindEnum = pgEnum('pending_kind', [
   'goal_text',
   'goal_amount',
   'goal_pick',
+  'account_text',
 ]);
 
 /**

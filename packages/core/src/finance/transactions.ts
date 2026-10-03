@@ -51,6 +51,8 @@ export interface CreateTransactionInput {
   /** Already PII-masked. */
   rawInput: string | null;
   categoryPending?: boolean;
+  /** Cash/card account; must belong to the wallet. */
+  accountId?: string | null;
 }
 
 /**
@@ -65,6 +67,13 @@ export async function createTransaction(deps: FinanceDeps, input: CreateTransact
   const now = nowOf(deps);
   const categoryId = input.categoryPending ? null : await resolveCategoryId(deps.db, input.walletId, tx.category_id);
   const { amountUzs, fxRateUzs } = await amountInUzs(deps, tx.amount, tx.currency, tx.date);
+  if (input.accountId) {
+    const [acc] = await deps.db
+      .select({ id: schema.accounts.id })
+      .from(schema.accounts)
+      .where(and(eq(schema.accounts.id, input.accountId), eq(schema.accounts.walletId, input.walletId)));
+    if (!acc) throw new AppError('validation', 'account');
+  }
 
   return deps.db.transaction(async (dbtx) => {
     const [row] = await dbtx
@@ -79,6 +88,7 @@ export async function createTransaction(deps: FinanceDeps, input: CreateTransact
         fxRateUzs,
         categoryId,
         categoryStatus: input.categoryPending ? 'pending' : 'final',
+        accountId: input.accountId ?? null,
         note: tx.note,
         counterparty: tx.counterparty,
         occurredAt: occurredAtFor(tx.date, now, input.timeZone),
