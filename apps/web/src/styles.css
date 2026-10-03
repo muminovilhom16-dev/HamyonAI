@@ -229,6 +229,12 @@ table.data th { color: var(--text-2); font-weight: 500; }
 table.data td.r, table.data th.r { text-align: right; }
 
 /* ─── Transactions (bank-statement rows) ─── */
+.search-box {
+  display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 0 14px; margin-bottom: 12px; color: var(--text-3);
+}
+.search-box input { flex: 1; border: 0; background: none; min-height: 46px; outline: none; color: var(--text); min-width: 0; }
+.search-box:focus-within { border-color: var(--brand); }
 .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
 .pill-input {
   display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border);

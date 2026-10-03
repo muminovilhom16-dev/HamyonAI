@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ReceiptText, Trash2, X } from 'lucide-react';
+import { ReceiptText, Search, Trash2, X } from 'lucide-react';
 import { api, ApiError, type Category, type Lang, type Tx } from '../api';
 import { DEBT_TYPES as DEBT, TxRow } from '../components/TxRow';
 import { day, group, money, parseAmountInput } from '../format';
@@ -11,6 +11,13 @@ export function TransactionsPage({ lang }: { lang: Lang }) {
   const [type, setType] = useState<'' | 'expense' | 'income'>('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+  const [search, setSearch] = useState('');
+  const [q, setQ] = useState('');
+  // Debounce typing so every keystroke is not a request.
+  useEffect(() => {
+    const t = window.setTimeout(() => setQ(search.trim()), 300);
+    return () => window.clearTimeout(t);
+  }, [search]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [editing, setEditing] = useState<Tx | null>(null);
   const [toast, setToast] = useState<Tx | null>(null);
@@ -23,10 +30,11 @@ export function TransactionsPage({ lang }: { lang: Lang }) {
       if (type) p.set('type', type);
       if (start) p.set('start', start);
       if (end) p.set('end', end);
+      if (q) p.set('q', q);
       if (c) p.set('cursor', c);
       return `/api/transactions?${p}`;
     },
-    [type, start, end],
+    [type, start, end, q],
   );
 
   const load = useCallback(() => {
@@ -90,6 +98,10 @@ export function TransactionsPage({ lang }: { lang: Lang }) {
 
   return (
     <section>
+      <label className="search-box">
+        <Search size={18} aria-hidden />
+        <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tr(lang, 'searchHint')} aria-label={tr(lang, 'search')} />
+      </label>
       <div className="filters">
         <div className="segmented" role="group" aria-label={tr(lang, 'records')}>
           {(['', 'expense', 'income'] as const).map((v) => (

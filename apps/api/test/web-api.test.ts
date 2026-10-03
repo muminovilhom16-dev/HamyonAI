@@ -116,6 +116,17 @@ describe('transactions', () => {
     expect(p2.items).toHaveLength(1);
     expect((await api(cookie, 'GET', '/api/transactions?cursor=garbage')).statusCode).toBe(400);
   });
+
+  it('searches by note, person and category name; wildcards are literal', async () => {
+    const { tg, cookie } = await login();
+    for (const m of ['taksi 10 ming', 'Korzinka 50 ming', 'Murod akaga 100 ming qarz berdim', 'kino 30 ming']) await H.send(tg, m);
+    const search = async (q: string) =>
+      (await api(cookie, 'GET', `/api/transactions?q=${encodeURIComponent(q)}`)).json().items.map((t: { amount: number }) => t.amount);
+    expect(await search('korz')).toEqual([50_000]);
+    expect(await search('murod')).toEqual([100_000]);
+    expect(await search('transport')).toEqual([10_000]); // category name
+    expect(await search('%')).toEqual([]);
+  });
 });
 
 describe('isolation between users (TZ §39)', () => {

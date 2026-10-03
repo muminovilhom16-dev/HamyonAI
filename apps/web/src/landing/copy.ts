@@ -44,13 +44,13 @@ const uz_latn: Copy = {
   hero: {
     kicker: "Telegramdagi o'zbekcha aqlli hamyon",
     title: 'Pulingiz qayerga ketayotganini aniq biling',
-    text: 'Gapiring, yozing yoki forward qiling — Hamyon AI qolganini avtomatik hisobga oladi. Jadval yo‘q, formalar yo‘q: bitta xabar yetarli.',
+    text: 'Odatdagidek yozing yoki forward qiling — Hamyon AI qolganini avtomatik hisobga oladi. Jadval yo‘q, formalar yo‘q: bitta xabar yetarli.',
     primary: 'Telegramda boshlash',
     secondary: 'Qanday ishlaydi',
   },
   steps: [
     { n: '01', title: 'Bitta xabar', text: '«taksi 25 ming» — summa, kategoriya va sana o‘zi aniqlanadi' },
-    { n: '02', title: 'Ovoz ham bo‘ladi', text: 'Aytib yuboring — matnga aylanadi va kartochkada ko‘rinadi' },
+    { n: '02', title: 'Limit nazorati', text: 'Kategoriya limitiga yaqinlashsangiz, bot darhol ogohlantiradi' },
   ],
   badge: "TELEGRAMDAGI O'ZBEKCHA AQLLI HAMYON • ",
   stat: { value: '3 soniya', label: 'bitta yozuvga ketadigan vaqt' },
@@ -67,7 +67,7 @@ const uz_latn: Copy = {
     title: 'Qanday ishlaydi',
     text: 'Hamyon AI odatdagidek yozganingizni tushunadi: lotin, kirill, rus tili, xatolar va qisqartmalar bilan.',
     items: [
-      { title: 'Yozing yoki gapiring', text: 'Xarajat, daromad yoki qarzni oddiy so‘z bilan yuboring.', example: '«bozordan go‘sht oldim yuz ellik ming»' },
+      { title: 'Yozing', text: 'Xarajat, daromad yoki qarzni oddiy so‘z bilan yuboring.', example: '«bozordan go‘sht oldim yuz ellik ming»' },
       { title: 'Kartochkani tekshiring', text: 'Summa, kategoriya va sana ko‘rsatiladi. Noto‘g‘ri bo‘lsa — bir bosishda tuzating.', example: '150 000 so‘m · Oziq-ovqat · Bugun' },
       { title: 'Natijani ko‘ring', text: '/bugun, /hafta, /oy hisobotlari va web paneldagi grafiklar.', example: '📊 Xarajat: 185 000 so‘m' },
     ],
@@ -75,7 +75,7 @@ const uz_latn: Copy = {
   features: {
     title: 'Imkoniyatlar',
     items: [
-      { icon: '💬', title: 'Matn va ovoz', text: '«20k», «1,5 mln», «yigirma besh ming», «50$» — hammasi tushuniladi.' },
+      { icon: '💬', title: 'Oddiy matn', text: '«20k», «2kk», «1,5 mln», «yigirma besh ming», «50$» — hammasi tushuniladi.' },
       { icon: '🏷', title: 'Aqlli kategoriyalar', text: 'Bir marta tuzatsangiz, keyingi safar o‘zi to‘g‘ri qo‘yadi.' },
       { icon: '🤝', title: 'Qarzlar', text: 'Kimga qancha berganingiz, qaytgan qismi va qoldig‘i. Muddatdan oldin eslatma.' },
       { icon: '📊', title: 'Hisobotlar', text: 'Qisqa kunlik, haftalik va oylik hisobotlar — 3–5 qatorda.' },
@@ -89,13 +89,13 @@ const uz_latn: Copy = {
     free: {
       name: 'Bepul',
       price: "0 so'm",
-      items: ['Cheklovsiz matnli yozuvlar', 'Ovozli xabarlar (oylik limit bilan)', 'Qarzlar va eslatmalar', 'Hisobotlar va web panel'],
+      items: ['Cheklovsiz matnli yozuvlar', 'Byudjet, maqsadlar va obunalar', 'Qarzlar va eslatmalar', 'Hisobotlar va web panel'],
       cta: 'Boshlash',
     },
     pro: {
       name: 'Pro',
       price: 'Tez orada',
-      items: ['Cheklovsiz ovoz', 'Chek suratini o‘qish', 'Bank xabarlarini import qilish', 'Byudjet va maqsadlar'],
+      items: ['Ovozli xabarlar', 'Chek suratini o‘qish', 'Bank xabarlarini import qilish', 'Oilaviy hamyon'],
       note: 'Narx hali belgilanmagan',
     },
   },
@@ -103,7 +103,7 @@ const uz_latn: Copy = {
     title: 'Ko‘p beriladigan savollar',
     items: [
       { q: 'Telefon raqami yoki email kerakmi?', a: 'Yo‘q. Telegram akkauntingiz yetarli.' },
-      { q: 'Bank kartamni ulashim kerakmi?', a: 'Yo‘q. Xarajatlarni o‘zingiz yozasiz yoki aytasiz. Karta raqami, CVV yoki SMS kod hech qachon so‘ralmaydi va saqlanmaydi.' },
+      { q: 'Bank kartamni ulashim kerakmi?', a: 'Yo‘q. Xarajatlarni o‘zingiz yozasiz. Karta raqami, CVV yoki SMS kod hech qachon so‘ralmaydi va saqlanmaydi.' },
       { q: 'Qaysi tillarda ishlaydi?', a: 'O‘zbek (lotin va kirill) va rus tillarida, aralash yozilsa ham.' },
       { q: 'Noto‘g‘ri tushunsa nima bo‘ladi?', a: 'Har bir yozuv kartochkada ko‘rsatiladi — bir bosishda tuzatasiz yoki o‘chirasiz (10 soniya ichida qaytarish mumkin). Summa noaniq bo‘lsa, bot so‘raydi va taxmin qilmaydi.' },
       { q: 'Ma’lumotlarimni o‘chira olamanmi?', a: 'Ha. Ma’lumotlarni eksport qilish va akkauntni o‘chirish imkoniyati beriladi.' },
@@ -136,13 +136,13 @@ const uz_cyrl: Copy = {
   hero: {
     kicker: 'Телеграмдаги ўзбекча ақлли ҳамён',
     title: 'Пулингиз қаерга кетаётганини аниқ билинг',
-    text: 'Гапиринг, ёзинг ёки forward қилинг — Hamyon AI қолганини автоматик ҳисобга олади. Жадвал йўқ, формалар йўқ: битта хабар етарли.',
+    text: 'Одатдагидек ёзинг ёки forward қилинг — Hamyon AI қолганини автоматик ҳисобга олади. Жадвал йўқ, формалар йўқ: битта хабар етарли.',
     primary: 'Телеграмда бошлаш',
     secondary: 'Қандай ишлайди',
   },
   steps: [
     { n: '01', title: 'Битта хабар', text: '«такси 25 минг» — сумма, категория ва сана ўзи аниқланади' },
-    { n: '02', title: 'Овоз ҳам бўлади', text: 'Айтиб юборинг — матнга айланади ва карточкада кўринади' },
+    { n: '02', title: 'Лимит назорати', text: 'Категория лимитига яқинлашсангиз, бот дарҳол огоҳлантиради' },
   ],
   badge: 'ТЕЛЕГРАМДАГИ ЎЗБЕКЧА АҚЛЛИ ҲАМЁН • ',
   stat: { value: '3 сония', label: 'битта ёзувга кетадиган вақт' },
@@ -159,7 +159,7 @@ const uz_cyrl: Copy = {
     title: 'Қандай ишлайди',
     text: 'Hamyon AI одатдагидек ёзганингизни тушунади: лотин, кирилл, рус тили, хатолар ва қисқартмалар билан.',
     items: [
-      { title: 'Ёзинг ёки гапиринг', text: 'Харажат, даромад ёки қарзни оддий сўз билан юборинг.', example: '«бозордан гўшт олдим юз эллик минг»' },
+      { title: 'Ёзинг', text: 'Харажат, даромад ёки қарзни оддий сўз билан юборинг.', example: '«бозордан гўшт олдим юз эллик минг»' },
       { title: 'Карточкани текширинг', text: 'Сумма, категория ва сана кўрсатилади. Нотўғри бўлса — бир босишда тузатинг.', example: '150 000 сўм · Озиқ-овқат · Бугун' },
       { title: 'Натижани кўринг', text: '/bugun, /hafta, /oy ҳисоботлари ва веб панелдаги графиклар.', example: '📊 Харажат: 185 000 сўм' },
     ],
@@ -167,7 +167,7 @@ const uz_cyrl: Copy = {
   features: {
     title: 'Имкониятлар',
     items: [
-      { icon: '💬', title: 'Матн ва овоз', text: '«20k», «1,5 млн», «йигирма беш минг», «50$» — ҳаммаси тушунилади.' },
+      { icon: '💬', title: 'Оддий матн', text: '«20k», «2kk», «1,5 млн», «йигирма беш минг», «50$» — ҳаммаси тушунилади.' },
       { icon: '🏷', title: 'Ақлли категориялар', text: 'Бир марта тузатсангиз, кейинги сафар ўзи тўғри қўяди.' },
       { icon: '🤝', title: 'Қарзлар', text: 'Кимга қанча берганингиз, қайтган қисми ва қолдиғи. Муддатдан олдин эслатма.' },
       { icon: '📊', title: 'Ҳисоботлар', text: 'Қисқа кунлик, ҳафталик ва ойлик ҳисоботлар — 3–5 қаторда.' },
@@ -181,13 +181,13 @@ const uz_cyrl: Copy = {
     free: {
       name: 'Бепул',
       price: '0 сўм',
-      items: ['Чекловсиз матнли ёзувлар', 'Овозли хабарлар (ойлик лимит билан)', 'Қарзлар ва эслатмалар', 'Ҳисоботлар ва веб панел'],
+      items: ['Чекловсиз матнли ёзувлар', 'Бюджет, мақсадлар ва обуналар', 'Қарзлар ва эслатмалар', 'Ҳисоботлар ва веб панел'],
       cta: 'Бошлаш',
     },
     pro: {
       name: 'Pro',
       price: 'Тез орада',
-      items: ['Чекловсиз овоз', 'Чек суратини ўқиш', 'Банк хабарларини импорт қилиш', 'Бюджет ва мақсадлар'],
+      items: ['Овозли хабарлар', 'Чек суратини ўқиш', 'Банк хабарларини импорт қилиш', 'Оилавий ҳамён'],
       note: 'Нарх ҳали белгиланмаган',
     },
   },
@@ -195,7 +195,7 @@ const uz_cyrl: Copy = {
     title: 'Кўп бериладиган саволлар',
     items: [
       { q: 'Телефон рақами ёки email керакми?', a: 'Йўқ. Телеграм аккаунтингиз етарли.' },
-      { q: 'Банк картамни улашим керакми?', a: 'Йўқ. Харажатларни ўзингиз ёзасиз ёки айтасиз. Карта рақами, CVV ёки SMS код ҳеч қачон сўралмайди ва сақланмайди.' },
+      { q: 'Банк картамни улашим керакми?', a: 'Йўқ. Харажатларни ўзингиз ёзасиз. Карта рақами, CVV ёки SMS код ҳеч қачон сўралмайди ва сақланмайди.' },
       { q: 'Қайси тилларда ишлайди?', a: 'Ўзбек (лотин ва кирилл) ва рус тилларида, аралаш ёзилса ҳам.' },
       { q: 'Нотўғри тушунса нима бўлади?', a: 'Ҳар бир ёзув карточкада кўрсатилади — бир босишда тузатасиз ёки ўчирасиз (10 сония ичида қайтариш мумкин). Сумма ноаниқ бўлса, бот сўрайди ва тахмин қилмайди.' },
       { q: 'Маълумотларимни ўчира оламанми?', a: 'Ҳа. Маълумотларни экспорт қилиш ва аккаунтни ўчириш имконияти берилади.' },
@@ -228,13 +228,13 @@ const ru: Copy = {
   hero: {
     kicker: 'Умный кошелёк на узбекском — в Telegram',
     title: 'Знайте точно, куда уходят ваши деньги',
-    text: 'Скажите, напишите или перешлите — Hamyon AI учтёт всё сам. Никаких таблиц и форм: достаточно одного сообщения.',
+    text: 'Пишите как обычно или пересылайте — Hamyon AI учтёт всё сам. Никаких таблиц и форм: достаточно одного сообщения.',
     primary: 'Начать в Telegram',
     secondary: 'Как это работает',
   },
   steps: [
     { n: '01', title: 'Одно сообщение', text: '«такси 25к» — сумма, категория и дата определяются сами' },
-    { n: '02', title: 'Можно голосом', text: 'Надиктуйте — текст появится прямо в карточке' },
+    { n: '02', title: 'Контроль лимитов', text: 'Бот сразу предупредит, когда расходы приблизятся к лимиту категории' },
   ],
   badge: 'УМНЫЙ КОШЕЛЁК В TELEGRAM • HAMYON AI • ',
   stat: { value: '3 секунды', label: 'на одну запись' },
@@ -251,7 +251,7 @@ const ru: Copy = {
     title: 'Как это работает',
     text: 'Hamyon AI понимает, как вы обычно пишете: латиница, кириллица, русский, опечатки и сокращения.',
     items: [
-      { title: 'Напишите или скажите', text: 'Расход, доход или долг — обычными словами.', example: '«на рынке мясо сто пятьдесят тысяч»' },
+      { title: 'Напишите', text: 'Расход, доход или долг — обычными словами.', example: '«на рынке мясо сто пятьдесят тысяч»' },
       { title: 'Проверьте карточку', text: 'Сумма, категория и дата видны сразу. Ошибка — исправьте в одно касание.', example: '150 000 сум · Продукты · Сегодня' },
       { title: 'Смотрите итоги', text: 'Отчёты /bugun, /hafta, /oy и графики в веб-панели.', example: '📊 Расходы: 185 000 сум' },
     ],
@@ -259,7 +259,7 @@ const ru: Copy = {
   features: {
     title: 'Возможности',
     items: [
-      { icon: '💬', title: 'Текст и голос', text: '«20к», «1,5 млн», «двадцать пять тысяч», «50$» — понимается всё.' },
+      { icon: '💬', title: 'Обычный текст', text: '«20к», «2кк», «1,5 млн», «двадцать пять тысяч», «50$» — понимается всё.' },
       { icon: '🏷', title: 'Умные категории', text: 'Исправили один раз — в следующий раз будет правильно.' },
       { icon: '🤝', title: 'Долги', text: 'Кому сколько дали, что вернули и сколько осталось. Напоминание до срока.' },
       { icon: '📊', title: 'Отчёты', text: 'Короткие отчёты за день, неделю и месяц — в 3–5 строк.' },
@@ -273,13 +273,13 @@ const ru: Copy = {
     free: {
       name: 'Бесплатно',
       price: '0 сум',
-      items: ['Безлимитные текстовые записи', 'Голосовые сообщения (с месячным лимитом)', 'Долги и напоминания', 'Отчёты и веб-панель'],
+      items: ['Безлимитные текстовые записи', 'Бюджеты, цели и подписки', 'Долги и напоминания', 'Отчёты и веб-панель'],
       cta: 'Начать',
     },
     pro: {
       name: 'Pro',
       price: 'Скоро',
-      items: ['Безлимитный голос', 'Распознавание чеков', 'Импорт банковских уведомлений', 'Бюджеты и цели'],
+      items: ['Голосовые сообщения', 'Распознавание чеков', 'Импорт банковских уведомлений', 'Семейный кошелёк'],
       note: 'Цена ещё не определена',
     },
   },
@@ -287,7 +287,7 @@ const ru: Copy = {
     title: 'Частые вопросы',
     items: [
       { q: 'Нужен номер телефона или email?', a: 'Нет. Достаточно аккаунта Telegram.' },
-      { q: 'Нужно подключать банковскую карту?', a: 'Нет. Расходы вы пишете или говорите сами. Номер карты, CVV или SMS-код никогда не запрашиваются и не хранятся.' },
+      { q: 'Нужно подключать банковскую карту?', a: 'Нет. Расходы вы записываете сами. Номер карты, CVV или SMS-код никогда не запрашиваются и не хранятся.' },
       { q: 'На каких языках работает?', a: 'Узбекский (латиница и кириллица) и русский, в том числе вперемешку.' },
       { q: 'Что если бот поймёт неправильно?', a: 'Каждая запись показывается карточкой — исправить или удалить можно в одно касание (отмена в течение 10 секунд). Если сумма неясна, бот спросит, а не угадает.' },
       { q: 'Можно удалить свои данные?', a: 'Да. Будет доступен экспорт данных и удаление аккаунта.' },

@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gte, ilike, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 import { schema, type Database } from '@hamyon/db';
 import { assertWalletAccess } from '../access';
 import { categoryDisplayName, type Language } from '../categories';
@@ -124,6 +124,9 @@ export interface ListFilter {
   timeZone: string;
   type?: Transaction['type'];
   categoryId?: string;
+  /** Text search in note / person; `searchCategoryIds` adds categories whose name matched. */
+  search?: string;
+  searchCategoryIds?: string[];
   limit: number;
   /** Keyset cursor: rows strictly older than this (occurredAt, id). */
   before?: { occurredAt: Date; id: string };
@@ -136,6 +139,12 @@ export async function listTransactions(db: Database, userId: string, walletId: s
   if (f.endDate) conds.push(lt(transactions.occurredAt, zonedInstant(addDays(f.endDate, 1), f.timeZone)));
   if (f.type) conds.push(eq(transactions.type, f.type));
   if (f.categoryId) conds.push(eq(transactions.categoryId, f.categoryId));
+  if (f.search) {
+    const pattern = `%${f.search.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+    const matches: SQL[] = [ilike(transactions.note, pattern), ilike(transactions.counterparty, pattern)];
+    if (f.searchCategoryIds?.length) matches.push(inArray(transactions.categoryId, f.searchCategoryIds));
+    conds.push(or(...matches)!);
+  }
   if (f.before) {
     conds.push(
       or(

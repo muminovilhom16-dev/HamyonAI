@@ -291,6 +291,23 @@ describe('reports and lists', () => {
     expect(H.texts()[0]).toContain('Qarz · Murod aka');
   });
 
+  it('/ochir deletes the last record with undo; with nothing left it says so', async () => {
+    const id = await newUser();
+    await H.send(id, 'taksi 20 ming');
+    await H.send(id, 'non 5 ming');
+    H.reset();
+    await H.send(id, '/ochir');
+    expect(H.texts()[0]).toContain("O'chirildi");
+    expect(H.texts()[0]).toContain('5 000');
+    expect((await txsOf(id)).map((r) => r.amount)).toEqual([20_000]);
+    await H.tap(id, button(/Qaytarish/));
+    expect(await txsOf(id)).toHaveLength(2);
+
+    const empty = await newUser();
+    await H.send(empty, '/ochir');
+    expect(H.texts().at(-1)).toContain("hali yozuv yo'q");
+  });
+
   it('/hafta with no records says so', async () => {
     const id = await newUser();
     await H.send(id, '/hafta');

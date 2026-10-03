@@ -100,6 +100,8 @@ const M = {
   timezone: { uz_latn: 'Vaqt mintaqasi', uz_cyrl: 'Вақт минтақаси', ru: 'Часовой пояс' },
   format: { uz_latn: 'Format', uz_cyrl: 'Формат', ru: 'Формат' },
   period: { uz_latn: 'Davr', uz_cyrl: 'Давр', ru: 'Период' },
+  search: { uz_latn: 'Qidirish', uz_cyrl: 'Қидириш', ru: 'Поиск' },
+  searchHint: { uz_latn: 'Izoh, kategoriya yoki ism…', uz_cyrl: 'Изоҳ, категория ёки исм…', ru: 'Комментарий, категория или имя…' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;

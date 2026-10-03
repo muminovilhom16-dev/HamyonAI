@@ -199,6 +199,7 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
         end: date.optional(),
         type: z.enum(['expense', 'income', 'debt_given', 'debt_taken', 'debt_return']).optional(),
         categoryId: uuid.optional(),
+        q: z.string().trim().min(1).max(60).optional(),
         limit: z.coerce.number().int().min(1).max(100).default(50),
         cursor: z.string().max(200).optional(),
       }),
@@ -213,6 +214,10 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
       ...(q.end && { endDate: q.end }),
       ...(q.type && { type: q.type }),
       ...(q.categoryId && { categoryId: q.categoryId }),
+      ...(q.q && {
+        search: q.q,
+        searchCategoryIds: cats.filter((c) => c.name.toLowerCase().includes(q.q!.toLowerCase())).map((c) => c.id),
+      }),
       ...(q.cursor && { before: decodeCursor(q.cursor) }),
     });
     return {

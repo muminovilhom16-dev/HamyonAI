@@ -102,11 +102,11 @@ const messages = {
   uncategorized: { uz_latn: 'Kategoriyasiz', uz_cyrl: 'Категориясиз', ru: 'Без категории' },
   help: {
     uz_latn:
-      "<b>📖 Qanday yozish kerak</b>\n\n💸 Xarajat: «taksi 25 ming», «non 5 ming, sut 12 ming», «50$ kurtka»\n💰 Daromad: «oylik tushdi 6 mln», «+500 ming»\n🤝 Qarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi»\n\n<b>📊 Hisobotlar</b>\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/qarzlar — qarzlar\n\n<b>⚙️ Boshqa</b>\n/web — web panel\n/sozlamalar — sozlamalar\n/yordam — yordam",
+      "<b>📖 Qanday yozish kerak</b>\n\n💸 Xarajat: «taksi 25 ming», «non 5 ming, sut 12 ming», «telefon 2kk», «50$ kurtka»\n💰 Daromad: «oylik tushdi 6 mln», «+500 ming»\n🤝 Qarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi»\n\n<b>📊 Hisobotlar</b>\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/ochir — oxirgi yozuvni o'chirish\n/qarzlar — qarzlar\n\n<b>⚙️ Boshqa</b>\n/web — web panel\n/sozlamalar — sozlamalar\n/yordam — yordam",
     uz_cyrl:
-      '<b>📖 Қандай ёзиш керак</b>\n\n💸 Харажат: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка»\n💰 Даромад: «ойлик тушди 6 млн», «+500 минг»\n🤝 Қарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди»\n\n<b>📊 Ҳисоботлар</b>\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/qarzlar — қарзлар\n\n<b>⚙️ Бошқа</b>\n/web — веб панел\n/sozlamalar — созламалар\n/yordam — ёрдам',
+      '<b>📖 Қандай ёзиш керак</b>\n\n💸 Харажат: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка»\n💰 Даромад: «ойлик тушди 6 млн», «+500 минг»\n🤝 Қарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди»\n\n<b>📊 Ҳисоботлар</b>\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/ochir — охирги ёзувни ўчириш\n/qarzlar — қарзлар\n\n<b>⚙️ Бошқа</b>\n/web — веб панел\n/sozlamalar — созламалар\n/yordam — ёрдам',
     ru:
-      '<b>📖 Как записывать</b>\n\n💸 Расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка»\n💰 Доход: «зарплата 6 млн», «+500 тысяч»\n🤝 Долг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к»\n\n<b>📊 Отчёты</b>\n/bugun — за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/qarzlar — долги\n\n<b>⚙️ Другое</b>\n/web — веб-панель\n/sozlamalar — настройки\n/yordam — помощь',
+      '<b>📖 Как записывать</b>\n\n💸 Расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка»\n💰 Доход: «зарплата 6 млн», «+500 тысяч»\n🤝 Долг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к»\n\n<b>📊 Отчёты</b>\n/bugun — за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/ochir — удалить последнюю запись\n/qarzlar — долги\n\n<b>⚙️ Другое</b>\n/web — веб-панель\n/sozlamalar — настройки\n/yordam — помощь',
   },
 
   // ─── Debts ───

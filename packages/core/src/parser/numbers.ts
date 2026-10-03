@@ -39,7 +39,8 @@ export type Scale = 1_000 | 1_000_000 | 1_000_000_000;
 const THOUSAND_STEMS = ['ming', 'mng', 'tys', 'tysh'];
 const THOUSAND_EXACT = new Set(['k', 'min', 'mig', 'tis', 'тыс'].map(foldWord));
 const MILLION_STEMS = ['million', 'milion', 'millon', 'mln'];
-const MILLION_EXACT = new Set(['m', 'mil']);
+// "2kk" = 2 mln (common shorthand, like "20k" for thousands).
+const MILLION_EXACT = new Set(['m', 'mil', 'kk']);
 const BILLION_STEMS = ['milliard', 'mlrd'];
 
 /**

@@ -13,6 +13,7 @@ import {
   getTransactionForUser,
   latestAwaitingReply,
   learnRule,
+  listRecentTransactions,
   listUserRules,
   listWalletCategories,
   localDate,
@@ -312,6 +313,37 @@ async function continueAfterAmount(
   if (saved) await afterFirstTransaction(ctx, s);
 }
 
+/** Deletes a record (debt events through the debt engine) and replies with an undo button. */
+async function deleteWithUndo(ctx: BotContext, s: BotServices, target: Transaction): Promise<void> {
+  const user = ctx.user!;
+  const answer = (opts?: { text: string; show_alert?: boolean }) => (ctx.callbackQuery ? ctx.answerCallbackQuery(opts) : Promise.resolve(true));
+  if (DEBT_TYPES.has(target.type)) {
+    let deleted: Transaction;
+    try {
+      deleted = await deleteDebtEvent(fin(s), user.id, target.id);
+    } catch (err) {
+      if (err instanceof AppError && err.code === 'validation') {
+        if (ctx.callbackQuery) await answer({ text: t(user.language, 'debtHasPayments'), show_alert: true });
+        else await ctx.reply(t(user.language, 'debtHasPayments'));
+        return;
+      }
+      throw err;
+    }
+    await answer();
+    const card = await renderDebtCard(s, user, deleted);
+    await ctx.reply(`${b(t(user.language, 'deleted'))}\n<s>${card.text}</s>`, {
+      reply_markup: new InlineKeyboard().text(t(user.language, 'undo'), `dundo:${deleted.id}`),
+    });
+    return;
+  }
+  const tx = await softDeleteTransaction(fin(s), user.id, target.id);
+  const env = await envFor(s, user, tx.walletId);
+  await answer();
+  await ctx.reply(`${b(t(user.language, 'deleted'))}\n<s>${cardText(txFields(tx, env, user.timezone), env)}</s>`, {
+    reply_markup: new InlineKeyboard().text(t(user.language, 'undo'), `undo:${tx.id}`),
+  });
+}
+
 export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): void {
   bot.on('message:text', async (ctx, next) => {
     if (ctx.message.text.startsWith('/')) return next();
@@ -342,32 +374,19 @@ export function registerTransactionFlows(bot: Bot<BotContext>, s: BotServices): 
   });
 
   bot.callbackQuery(new RegExp(`^ldel:(${UUID})$`), async (ctx) => {
+    const target = await getTransactionForUser(s.db, ctx.user!.id, ctx.match[1]!);
+    await deleteWithUndo(ctx, s, target);
+  });
+
+  // /ochir — delete the most recent record (with the usual 10 s undo).
+  bot.command('ochir', async (ctx) => {
     const user = ctx.user!;
-    const target = await getTransactionForUser(s.db, user.id, ctx.match[1]!);
-    if (DEBT_TYPES.has(target.type)) {
-      let deleted: Transaction;
-      try {
-        deleted = await deleteDebtEvent(fin(s), user.id, target.id);
-      } catch (err) {
-        if (err instanceof AppError && err.code === 'validation') {
-          await ctx.answerCallbackQuery({ text: t(user.language, 'debtHasPayments'), show_alert: true });
-          return;
-        }
-        throw err;
-      }
-      await ctx.answerCallbackQuery();
-      const card = await renderDebtCard(s, user, deleted);
-      await ctx.reply(`${b(t(user.language, 'deleted'))}\n<s>${card.text}</s>`, {
-        reply_markup: new InlineKeyboard().text(t(user.language, 'undo'), `dundo:${deleted.id}`),
-      });
+    const [last] = await listRecentTransactions(s.db, user.id, ctx.walletId!, 1);
+    if (!last) {
+      await ctx.reply(t(user.language, 'noRecords'));
       return;
     }
-    const tx = await softDeleteTransaction(fin(s), user.id, target.id);
-    const env = await envFor(s, user, tx.walletId);
-    await ctx.answerCallbackQuery();
-    await ctx.reply(`${b(t(user.language, 'deleted'))}\n<s>${cardText(txFields(tx, env, user.timezone), env)}</s>`, {
-      reply_markup: new InlineKeyboard().text(t(user.language, 'undo'), `undo:${tx.id}`),
-    });
+    await deleteWithUndo(ctx, s, last);
   });
 
   bot.callbackQuery(new RegExp(`^cat:(${UUID})$`), async (ctx) => {

@@ -1,11 +1,19 @@
 import type { Api, RawApi } from 'grammy';
 import type { Env } from '@hamyon/config';
 
-const COMMANDS = ['bugun', 'hafta', 'oy', 'oxirgi', 'qarzlar', 'eksport', 'sozlamalar', 'web', 'yordam'];
-const LABELS = {
-  uz: ['Bugungi hisobot', 'Haftalik hisobot', 'Oylik hisobot', 'Oxirgi yozuvlar', 'Qarzlar', 'Eksport (Excel/CSV)', 'Sozlamalar', 'Web panel', 'Yordam'],
-  ru: ['Отчёт за сегодня', 'Отчёт за неделю', 'Отчёт за месяц', 'Последние записи', 'Долги', 'Экспорт (Excel/CSV)', 'Настройки', 'Веб-панель', 'Помощь'],
-};
+/** Command menu: [command, uz label, ru label]. */
+const COMMANDS: Array<[string, string, string]> = [
+  ['bugun', 'Bugungi hisobot', 'Отчёт за сегодня'],
+  ['hafta', 'Haftalik hisobot', 'Отчёт за неделю'],
+  ['oy', 'Oylik hisobot', 'Отчёт за месяц'],
+  ['oxirgi', 'Oxirgi yozuvlar', 'Последние записи'],
+  ['ochir', "Oxirgi yozuvni o'chirish", 'Удалить последнюю запись'],
+  ['qarzlar', 'Qarzlar', 'Долги'],
+  ['eksport', 'Eksport (Excel/CSV)', 'Экспорт (Excel/CSV)'],
+  ['sozlamalar', 'Sozlamalar', 'Настройки'],
+  ['web', 'Web panel', 'Веб-панель'],
+  ['yordam', 'Yordam', 'Помощь'],
+];
 
 /**
  * Registers the webhook (with the secret token) and the command menu.
@@ -21,8 +29,7 @@ export async function setupTelegram(api: Api<RawApi>, env: Pick<Env, 'PUBLIC_BAS
     allowed_updates: ['message', 'edited_message', 'callback_query'],
     max_connections: 40,
   });
-  const commands = (labels: string[]) => COMMANDS.map((command, i) => ({ command, description: labels[i]! }));
-  await api.setMyCommands(commands(LABELS.uz));
-  await api.setMyCommands(commands(LABELS.ru), { language_code: 'ru' });
+  await api.setMyCommands(COMMANDS.map(([command, uz]) => ({ command, description: uz })));
+  await api.setMyCommands(COMMANDS.map(([command, , ru]) => ({ command, description: ru })), { language_code: 'ru' });
   return url;
 }
