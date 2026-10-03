@@ -80,6 +80,9 @@ const uz_latn: Copy = {
       { icon: '🤝', title: 'Qarzlar', text: 'Kimga qancha berganingiz, qaytgan qismi va qoldig‘i. Muddatdan oldin eslatma.' },
       { icon: '📊', title: 'Hisobotlar', text: 'Qisqa kunlik, haftalik va oylik hisobotlar — 3–5 qatorda.' },
       { icon: '🖥', title: 'Web panel', text: 'Grafiklar, filtrlar va tahrirlash — telefonda ham, kompyuterda ham.' },
+      { icon: '🎯', title: 'Limit va maqsadlar', text: 'Kategoriya limitiga 80% yetganda ogohlantirish; «maqsadga 200 ming» bilan jamg‘arma.' },
+      { icon: '🔁', title: 'Doimiy to‘lovlar', text: 'Internet, kommunal, kredit — to‘lov kuni eslatma va bir bosishda yozish.' },
+      { icon: '💳', title: 'Karta va naqd', text: '«taksi 20 ming kartadan» — har bir hisobning qoldig‘i alohida ko‘rinadi.' },
       { icon: '🔒', title: 'Xavfsizlik', text: 'Karta raqami saqlanmaydi, telefon va email so‘ralmaydi. Bank parolini hech qachon so‘ramaymiz.' },
     ],
   },
@@ -89,7 +92,7 @@ const uz_latn: Copy = {
     free: {
       name: 'Bepul',
       price: "0 so'm",
-      items: ['Cheklovsiz matnli yozuvlar', 'Byudjet, maqsadlar va obunalar', 'Qarzlar va eslatmalar', 'Hisobotlar va web panel'],
+      items: ['Cheklovsiz matnli yozuvlar', 'Limitlar, maqsadlar va doimiy to‘lovlar', 'Karta va naqd hisoblari', 'Qarzlar va eslatmalar', 'Hisobotlar, prognoz va web panel'],
       cta: 'Boshlash',
     },
     pro: {
@@ -172,6 +175,9 @@ const uz_cyrl: Copy = {
       { icon: '🤝', title: 'Қарзлар', text: 'Кимга қанча берганингиз, қайтган қисми ва қолдиғи. Муддатдан олдин эслатма.' },
       { icon: '📊', title: 'Ҳисоботлар', text: 'Қисқа кунлик, ҳафталик ва ойлик ҳисоботлар — 3–5 қаторда.' },
       { icon: '🖥', title: 'Веб панел', text: 'Графиклар, фильтрлар ва таҳрирлаш — телефонда ҳам, компьютерда ҳам.' },
+      { icon: '🎯', title: 'Лимит ва мақсадлар', text: 'Категория лимитига 80% етганда огоҳлантириш; «мақсадга 200 минг» билан жамғарма.' },
+      { icon: '🔁', title: 'Доимий тўловлар', text: 'Интернет, коммунал, кредит — тўлов куни эслатма ва бир босишда ёзиш.' },
+      { icon: '💳', title: 'Карта ва нақд', text: '«такси 20 минг картадан» — ҳар бир ҳисобнинг қолдиғи алоҳида кўринади.' },
       { icon: '🔒', title: 'Хавфсизлик', text: 'Карта рақами сақланмайди, телефон ва email сўралмайди. Банк паролини ҳеч қачон сўрамаймиз.' },
     ],
   },
@@ -181,7 +187,7 @@ const uz_cyrl: Copy = {
     free: {
       name: 'Бепул',
       price: '0 сўм',
-      items: ['Чекловсиз матнли ёзувлар', 'Бюджет, мақсадлар ва обуналар', 'Қарзлар ва эслатмалар', 'Ҳисоботлар ва веб панел'],
+      items: ['Чекловсиз матнли ёзувлар', 'Лимитлар, мақсадлар ва доимий тўловлар', 'Карта ва нақд ҳисоблари', 'Қарзлар ва эслатмалар', 'Ҳисоботлар, прогноз ва веб панел'],
       cta: 'Бошлаш',
     },
     pro: {
@@ -264,6 +270,9 @@ const ru: Copy = {
       { icon: '🤝', title: 'Долги', text: 'Кому сколько дали, что вернули и сколько осталось. Напоминание до срока.' },
       { icon: '📊', title: 'Отчёты', text: 'Короткие отчёты за день, неделю и месяц — в 3–5 строк.' },
       { icon: '🖥', title: 'Веб-панель', text: 'Графики, фильтры и редактирование — на телефоне и компьютере.' },
+      { icon: '🎯', title: 'Лимиты и цели', text: 'Предупреждение на 80% лимита категории; «на цель 200 тысяч» — накопления.' },
+      { icon: '🔁', title: 'Регулярные платежи', text: 'Интернет, коммуналка, кредит — напоминание в день оплаты и запись в одно касание.' },
+      { icon: '💳', title: 'Карты и наличные', text: '«такси 20к картой» — остаток по каждому счёту отдельно.' },
       { icon: '🔒', title: 'Безопасность', text: 'Номер карты не хранится, телефон и email не нужны. Пароль от банка мы никогда не спросим.' },
     ],
   },
@@ -273,7 +282,7 @@ const ru: Copy = {
     free: {
       name: 'Бесплатно',
       price: '0 сум',
-      items: ['Безлимитные текстовые записи', 'Бюджеты, цели и подписки', 'Долги и напоминания', 'Отчёты и веб-панель'],
+      items: ['Безлимитные текстовые записи', 'Лимиты, цели и регулярные платежи', 'Счета: карты и наличные', 'Долги и напоминания', 'Отчёты, прогноз и веб-панель'],
       cta: 'Начать',
     },
     pro: {
