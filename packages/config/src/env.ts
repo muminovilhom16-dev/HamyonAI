@@ -49,6 +49,8 @@ export const envSchema = z.object({
   COOKIE_SECURE: bool.optional(),
 
   RATE_LIMIT_MAX_PER_MINUTE: z.coerce.number().int().min(1).default(120),
+  /** Stricter per-IP limit on login endpoints (token guessing). */
+  AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(20),
   TRUST_PROXY: bool.default(false),
 
   DEFAULT_CURRENCY: z.enum(['UZS', 'USD']).default('UZS'),

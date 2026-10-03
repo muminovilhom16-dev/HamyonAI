@@ -362,3 +362,7 @@ table.data td.r, table.data th.r { text-align: right; }
 .input:focus { outline: none; border-color: var(--brand); background: var(--surface); }
 .recurring-form { display: grid; gap: 10px; margin-top: 12px; }
 @media (min-width: 600px) { .recurring-form { grid-template-columns: 1fr 1fr; } .recurring-form .error, .recurring-form .btn { grid-column: 1 / -1; } }
+.goal + .goal { border-top: 1px solid var(--border); padding-top: 6px; }
+.goal-money { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; margin: 0 0 10px 52px; }
+.goal-money .btn { padding: 8px 12px; white-space: nowrap; }
+@media (max-width: 420px) { .goal-money { grid-template-columns: 1fr 1fr; margin-left: 0; } .goal-money .input { grid-column: 1 / -1; } }

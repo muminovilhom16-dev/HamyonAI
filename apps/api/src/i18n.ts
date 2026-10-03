@@ -102,11 +102,11 @@ const messages = {
   uncategorized: { uz_latn: 'Kategoriyasiz', uz_cyrl: 'Категориясиз', ru: 'Без категории' },
   help: {
     uz_latn:
-      "<b>📖 Qanday yozish kerak</b>\n\n💸 Xarajat: «taksi 25 ming», «non 5 ming, sut 12 ming», «telefon 2kk», «50$ kurtka»\n💰 Daromad: «oylik tushdi 6 mln», «+500 ming»\n🤝 Qarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi»\n\n<b>📊 Hisobotlar</b>\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/ochir — oxirgi yozuvni o'chirish\n/qarzlar — qarzlar\n/byudjet — oylik limitlar\n/obunalar — doimiy to'lovlar\n\n<b>⚙️ Boshqa</b>\n/web — web panel\n/sozlamalar — sozlamalar\n/yordam — yordam",
+      "<b>📖 Qanday yozish kerak</b>\n\n💸 Xarajat: «taksi 25 ming», «non 5 ming, sut 12 ming», «telefon 2kk», «50$ kurtka»\n💰 Daromad: «oylik tushdi 6 mln», «+500 ming»\n🤝 Qarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi»\n\n<b>📊 Hisobotlar</b>\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/ochir — oxirgi yozuvni o'chirish\n/qarzlar — qarzlar\n/byudjet — oylik limitlar\n/obunalar — doimiy to'lovlar\n/maqsad — jamg'arma maqsadlari («maqsadga 200 ming»)\n\n<b>⚙️ Boshqa</b>\n/web — web panel\n/sozlamalar — sozlamalar\n/yordam — yordam",
     uz_cyrl:
-      '<b>📖 Қандай ёзиш керак</b>\n\n💸 Харажат: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка»\n💰 Даромад: «ойлик тушди 6 млн», «+500 минг»\n🤝 Қарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди»\n\n<b>📊 Ҳисоботлар</b>\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/ochir — охирги ёзувни ўчириш\n/qarzlar — қарзлар\n/byudjet — ойлик лимитлар\n/obunalar — доимий тўловлар\n\n<b>⚙️ Бошқа</b>\n/web — веб панел\n/sozlamalar — созламалар\n/yordam — ёрдам',
+      '<b>📖 Қандай ёзиш керак</b>\n\n💸 Харажат: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка»\n💰 Даромад: «ойлик тушди 6 млн», «+500 минг»\n🤝 Қарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди»\n\n<b>📊 Ҳисоботлар</b>\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/ochir — охирги ёзувни ўчириш\n/qarzlar — қарзлар\n/byudjet — ойлик лимитлар\n/obunalar — доимий тўловлар\n/maqsad — жамғарма мақсадлари («мақсадга 200 минг»)\n\n<b>⚙️ Бошқа</b>\n/web — веб панел\n/sozlamalar — созламалар\n/yordam — ёрдам',
     ru:
-      '<b>📖 Как записывать</b>\n\n💸 Расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка»\n💰 Доход: «зарплата 6 млн», «+500 тысяч»\n🤝 Долг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к»\n\n<b>📊 Отчёты</b>\n/bugun — за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/ochir — удалить последнюю запись\n/qarzlar — долги\n/byudjet — месячные лимиты\n/obunalar — регулярные платежи\n\n<b>⚙️ Другое</b>\n/web — веб-панель\n/sozlamalar — настройки\n/yordam — помощь',
+      '<b>📖 Как записывать</b>\n\n💸 Расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка»\n💰 Доход: «зарплата 6 млн», «+500 тысяч»\n🤝 Долг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к»\n\n<b>📊 Отчёты</b>\n/bugun — за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/ochir — удалить последнюю запись\n/qarzlar — долги\n/byudjet — месячные лимиты\n/obunalar — регулярные платежи\n/maqsad — цели накоплений («на цель 200 тысяч»)\n\n<b>⚙️ Другое</b>\n/web — веб-панель\n/sozlamalar — настройки\n/yordam — помощь',
   },
 
   // ─── Debts ───
@@ -243,6 +243,37 @@ const messages = {
     ru: 'Не понял название и сумму. Например: «интернет 99 тысяч».',
   },
   recurringTooMany: { uz_latn: "Doimiy to'lovlar soni chegaraga yetdi (30).", uz_cyrl: 'Доимий тўловлар сони чегарага етди (30).', ru: 'Достигнут предел регулярных платежей (30).' },
+
+  // ─── Savings goals ───
+  goalsTitle: { uz_latn: '🎯 Maqsadlar', uz_cyrl: '🎯 Мақсадлар', ru: '🎯 Цели' },
+  goalsEmpty: {
+    uz_latn: "Hali maqsad yo'q. Masalan: telefon uchun 5 mln yig'ish. Jamg'arma xarajat hisoblanmaydi.",
+    uz_cyrl: 'Ҳали мақсад йўқ. Масалан: телефон учун 5 млн йиғиш. Жамғарма харажат ҳисобланмайди.',
+    ru: 'Целей пока нет. Например: накопить 5 млн на телефон. Накопления не считаются расходами.',
+  },
+  goalNew: { uz_latn: '➕ Yangi maqsad', uz_cyrl: '➕ Янги мақсад', ru: '➕ Новая цель' },
+  goalAskText: {
+    uz_latn: "Maqsad va summani yozing, masalan: «telefon 5 mln».",
+    uz_cyrl: 'Мақсад ва суммани ёзинг, масалан: «телефон 5 млн».',
+    ru: 'Напишите цель и сумму, например: «телефон 5 млн».',
+  },
+  goalAskAmount: {
+    uz_latn: "«{name}» uchun qancha qo'yasiz? Masalan: «200 ming». Olish uchun minus bilan: «-100 ming».",
+    uz_cyrl: '«{name}» учун қанча қўясиз? Масалан: «200 минг». Олиш учун минус билан: «-100 минг».',
+    ru: 'Сколько отложить на «{name}»? Например: «200 тысяч». Чтобы снять — с минусом: «-100 тысяч».',
+  },
+  goalPick: { uz_latn: 'Qaysi maqsadga?', uz_cyrl: 'Қайси мақсадга?', ru: 'На какую цель?' },
+  goalNotUnderstood: {
+    uz_latn: "Maqsad nomi va summasini tushunmadim. Masalan: «telefon 5 mln».",
+    uz_cyrl: 'Мақсад номи ва суммасини тушунмадим. Масалан: «телефон 5 млн».',
+    ru: 'Не понял название и сумму цели. Например: «телефон 5 млн».',
+  },
+  goalSaved: { uz_latn: "💰 {name}: +{amount} qo'yildi", uz_cyrl: '💰 {name}: +{amount} қўйилди', ru: '💰 {name}: отложено +{amount}' },
+  goalWithdrawn: { uz_latn: '💸 {name}: {amount} olindi', uz_cyrl: '💸 {name}: {amount} олинди', ru: '💸 {name}: снято {amount}' },
+  goalDone: { uz_latn: '🎉 Tabriklaymiz! «{name}» maqsadiga yetdingiz!', uz_cyrl: '🎉 Табриклаймиз! «{name}» мақсадига етдингиз!', ru: '🎉 Поздравляем! Цель «{name}» достигнута!' },
+  goalPerMonth: { uz_latn: 'oyiga {amount} kerak', uz_cyrl: 'ойига {amount} керак', ru: 'нужно {amount} в месяц' },
+  goalTooMuch: { uz_latn: "Maqsadda buncha pul yo'q.", uz_cyrl: 'Мақсадда бунча пул йўқ.', ru: 'В цели нет столько денег.' },
+  goalAddMoney: { uz_latn: "💰 {name}", uz_cyrl: '💰 {name}', ru: '💰 {name}' },
 
   // ─── Proactive (TZ §32-33: short, never shaming) ───
   dailyReminder: {

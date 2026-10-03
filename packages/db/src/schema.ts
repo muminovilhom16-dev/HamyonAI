@@ -362,6 +362,9 @@ export const pendingKindEnum = pgEnum('pending_kind', [
   'budget_amount',
   'recurring_text',
   'recurring_day',
+  'goal_text',
+  'goal_amount',
+  'goal_pick',
 ]);
 
 /**
@@ -429,3 +432,41 @@ export const recurringPayments = pgTable('recurring_payments', {
   check('recurring_day_range', sql`${t.dayOfMonth} between 1 and 28`),
   check('recurring_amount_positive', sql`${t.amount} > 0`),
 ]);
+
+/**
+ * Savings goals. Money put aside is NOT an expense (like debts): it lives
+ * only here, so spending reports stay true. `saved_amount` is the running
+ * sum of `goal_contributions`, updated in the same transaction.
+ */
+export const goals = pgTable('goals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  walletId: uuid('wallet_id')
+    .notNull()
+    .references(() => wallets.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  targetAmount: money('target_amount').notNull(),
+  currency: currencyEnum('currency').notNull().default('UZS'),
+  savedAmount: money('saved_amount').notNull().default(0),
+  targetDate: date('target_date', { mode: 'string' }),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+}, (t) => [
+  index('goals_wallet_idx').on(t.walletId),
+  check('goals_target_positive', sql`${t.targetAmount} > 0`),
+  check('goals_saved_non_negative', sql`${t.savedAmount} >= 0`),
+]);
+
+export const goalContributions = pgTable('goal_contributions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  goalId: uuid('goal_id')
+    .notNull()
+    .references(() => goals.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  // Negative = taken back out of the goal.
+  amount: money('amount').notNull(),
+  createdAt: createdAt(),
+}, (t) => [index('goal_contributions_goal_idx').on(t.goalId), check('goal_contributions_non_zero', sql`${t.amount} <> 0`)]);

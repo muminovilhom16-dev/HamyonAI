@@ -6,6 +6,10 @@ import {
   AppError,
   DEBT_TYPES,
   budgetStatus,
+  contributeToGoal,
+  createGoal,
+  listGoals,
+  removeGoal,
   createRecurring,
   listRecurring,
   removeRecurring,
@@ -277,6 +281,43 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
 
   app.delete<{ Params: { id: string } }>('/api/recurring/:id', { preHandler: session }, async (request, reply) => {
     await removeRecurring(opts.db, request.auth!.userId, parse(uuid, request.params.id));
+    return reply.status(204).send();
+  });
+
+  // ─── Savings goals (not expenses) ───
+  const goalsOf = (user: { id: string; timezone: string }, walletId: string) =>
+    listGoals(opts.db, { userId: user.id, walletId, timeZone: user.timezone, now: fin.now() });
+
+  app.get('/api/goals', { preHandler: session }, async (request) => {
+    const { user, walletId } = await context(opts.db, request);
+    return goalsOf(user, walletId);
+  });
+
+  app.post('/api/goals', { preHandler: session }, async (request, reply) => {
+    const body = parse(
+      z.object({
+        name: z.string().min(1).max(60),
+        targetAmount: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+        currency: z.enum(['UZS', 'USD']).optional(),
+        targetDate: date.nullable().optional(),
+      }).strict(),
+      request.body,
+    );
+    const { user, walletId } = await context(opts.db, request);
+    await createGoal(opts.db, { userId: user.id, walletId, name: body.name, targetAmount: body.targetAmount, currency: body.currency ?? user.currency, targetDate: body.targetDate ?? null });
+    return reply.status(201).send(await goalsOf(user, walletId));
+  });
+
+  app.post<{ Params: { id: string } }>('/api/goals/:id/contributions', { preHandler: session }, async (request) => {
+    const id = parse(uuid, request.params.id);
+    const body = parse(z.object({ amount: z.number().int().refine((n) => n !== 0).refine(Number.isSafeInteger) }).strict(), request.body);
+    const { user, walletId } = await context(opts.db, request);
+    await contributeToGoal(opts.db, { userId: user.id, goalId: id, amount: body.amount, timeZone: user.timezone, now: fin.now() });
+    return goalsOf(user, walletId);
+  });
+
+  app.delete<{ Params: { id: string } }>('/api/goals/:id', { preHandler: session }, async (request, reply) => {
+    await removeGoal(opts.db, request.auth!.userId, parse(uuid, request.params.id));
     return reply.status(204).send();
   });
 

@@ -26,6 +26,8 @@ export interface AuthRouteOptions {
   db: Database;
   auth: AuthConfig;
   cookieSecure: boolean;
+  /** Per-IP requests per minute on login endpoints (default 20). */
+  rateLimitPerMinute?: number;
   /** Where to send the user after successful login. */
   webBaseUrl?: string;
   botUsername?: string;
@@ -54,7 +56,7 @@ export function authRoutes(app: FastifyInstance, opts: AuthRouteOptions): void {
   // One-time /web link (TZ §26). Valid 15 min, single use, then a 30-day session.
   app.get<{ Querystring: { token?: string } }>(
     '/auth/web',
-    { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
+    { config: { rateLimit: { max: opts.rateLimitPerMinute ?? 20, timeWindow: '1 minute' } } },
     async (request, reply) => {
       const result = await consumeLoginToken(opts.db, opts.auth, request.query.token ?? '');
       if (!result.ok) {
@@ -80,7 +82,7 @@ export function authRoutes(app: FastifyInstance, opts: AuthRouteOptions): void {
 
   // Telegram Login Widget: one-tap sign-up / login on the website.
   // No phone or email is ever requested (TZ §14).
-  app.post('/auth/telegram', { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (request, reply) => {
+  app.post('/auth/telegram', { config: { rateLimit: { max: opts.rateLimitPerMinute ?? 20, timeWindow: '1 minute' } } }, async (request, reply) => {
     if (request.headers['x-hamyon-csrf'] !== '1') throw new AppError('forbidden');
     const body = (request.body ?? {}) as Record<string, unknown>;
     const data = verifyTelegramLogin(opts.botToken, body);

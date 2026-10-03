@@ -107,3 +107,12 @@ describe('recurring payments', () => {
     await rejectsWith(h.db.insert(s.recurringPayments).values({ ...base, amount: 0 }), 'recurring_amount_positive');
   });
 });
+
+describe('goals', () => {
+  it('positive target, saved never negative, contributions non-zero', async () => {
+    const [g] = await h.db.insert(s.goals).values({ walletId, userId, name: 'X', targetAmount: 100 }).returning();
+    await rejectsWith(h.db.insert(s.goals).values({ walletId, userId, name: 'Y', targetAmount: 0 }), 'goals_target_positive');
+    await rejectsWith(h.db.insert(s.goals).values({ walletId, userId, name: 'Z', targetAmount: 10, savedAmount: -1 }), 'goals_saved_non_negative');
+    await rejectsWith(h.db.insert(s.goalContributions).values({ goalId: g!.id, amount: 0 }), 'goal_contributions_non_zero');
+  });
+});

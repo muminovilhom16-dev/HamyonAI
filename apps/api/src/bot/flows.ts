@@ -51,6 +51,7 @@ import {
 import type { BotContext, BotServices } from './context';
 import { answerBudgetAmount, budgetAlertLines } from './budgets';
 import { answerRecurringText } from './recurring';
+import { answerGoalAmount, answerGoalText, tryGoalShortcut } from './goals';
 import { b, esc, i } from './html';
 import { answerCounterparty, continueDebt, debtPayloadFrom, isDebtPayload, replyDebtCard, renderDebtCard, type PendingDebtPayload } from './debts';
 import { afterFirstTransaction } from './onboarding';
@@ -241,6 +242,11 @@ export async function processText(ctx: BotContext, s: BotServices, text: string,
         return;
       }
     }
+    if (awaiting.kind === 'goal_text') {
+      await answerGoalText(ctx, s, awaiting.id, text);
+      return;
+    }
+    if (awaiting.kind === 'goal_amount' && (await answerGoalAmount(ctx, s, awaiting.id, awaiting.payload, text))) return;
     if (awaiting.kind === 'recurring_text' && !text.startsWith('/')) {
       await answerRecurringText(ctx, s, awaiting.id, text);
       return;
@@ -266,6 +272,9 @@ export async function processText(ctx: BotContext, s: BotServices, text: string,
       await cancelAwaitingReplies(s.db, user.id, s.now());
     }
   }
+
+  // "maqsadga 200 ming": savings, never an expense.
+  if (await tryGoalShortcut(ctx, s, text)) return;
 
   const categories = await listWalletCategories(s.db, ctx.walletId!, user.language);
   const ai = s.ai && (await aiWithinBudget(s, user)) ? s.ai : null;

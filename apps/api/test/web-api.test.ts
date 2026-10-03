@@ -4,7 +4,8 @@ import { schema } from '@hamyon/db';
 import { createHarness, type Harness } from './harness';
 
 let H: Harness;
-beforeAll(async () => { H = await createHarness(); });
+// Many logins and API calls per minute in this file: lift the per-IP rate limits.
+beforeAll(async () => { H = await createHarness({ RATE_LIMIT_MAX_PER_MINUTE: '5000', AUTH_RATE_LIMIT_PER_MINUTE: '500' }); });
 afterAll(async () => H?.close());
 beforeEach(() => {
   H.reset();
@@ -212,6 +213,25 @@ describe('recurring API', () => {
     expect((await api(b.cookie, 'DELETE', `/api/recurring/${r.id}`)).statusCode).toBe(403);
     expect((await api(b.cookie, 'POST', '/api/recurring', { note: 'X', amount: 1, categoryId: telecom.id, dayOfMonth: 1 })).statusCode).toBe(400);
     expect((await api(a.cookie, 'DELETE', `/api/recurring/${r.id}`)).statusCode).toBe(204);
+  });
+});
+
+describe('goals API', () => {
+  it('creates with per-month plan, contributes, prevents overdraw; isolation', async () => {
+    const a = await login();
+    const b = await login();
+    // Test clock: 5 Oct 2026 → target 31 Mar 2027 leaves 6 months.
+    const [g] = (await api(a.cookie, 'POST', '/api/goals', { name: 'Telefon', targetAmount: 6_000_000, targetDate: '2027-03-31' })).json();
+    expect(g).toMatchObject({ name: 'Telefon', savedAmount: 0, perMonth: 1_000_000, completed: false });
+    const after = (await api(a.cookie, 'POST', `/api/goals/${g.id}/contributions`, { amount: 3_000_000 })).json();
+    expect(after[0]).toMatchObject({ savedAmount: 3_000_000, perMonth: 500_000 });
+    expect((await api(a.cookie, 'POST', `/api/goals/${g.id}/contributions`, { amount: -4_000_000 })).statusCode).toBe(400);
+    expect((await api(a.cookie, 'POST', `/api/goals/${g.id}/contributions`, { amount: 0 })).statusCode).toBe(400);
+    expect((await api(b.cookie, 'POST', `/api/goals/${g.id}/contributions`, { amount: 1 })).statusCode).toBe(403);
+    expect((await api(b.cookie, 'DELETE', `/api/goals/${g.id}`)).statusCode).toBe(403);
+    // Savings never show up as spending.
+    expect((await api(a.cookie, 'GET', '/api/transactions')).json().items).toEqual([]);
+    expect((await api(a.cookie, 'DELETE', `/api/goals/${g.id}`)).statusCode).toBe(204);
   });
 });
 

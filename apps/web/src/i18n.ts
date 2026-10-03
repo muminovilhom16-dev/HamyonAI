@@ -134,6 +134,18 @@ const M = {
   everyMonth: { uz_latn: 'har oy {day}-sana', uz_cyrl: 'ҳар ой {day}-сана', ru: 'каждое {day}-е число' },
   next: { uz_latn: 'keyingisi', uz_cyrl: 'кейингиси', ru: 'следующий' },
   dayOfMonth: { uz_latn: 'Sana', uz_cyrl: 'Сана', ru: 'Число' },
+  goals: { uz_latn: 'Maqsadlar', uz_cyrl: 'Мақсадлар', ru: 'Цели' },
+  goalsEmpty: {
+    uz_latn: 'Masalan: telefon uchun 5 mln yig‘ish. Jamg‘arma xarajat hisoblanmaydi.',
+    uz_cyrl: 'Масалан: телефон учун 5 млн йиғиш. Жамғарма харажат ҳисобланмайди.',
+    ru: 'Например: накопить 5 млн на телефон. Накопления не считаются расходами.',
+  },
+  goalNameHint: { uz_latn: 'Maqsad, masalan: Telefon', uz_cyrl: 'Мақсад, масалан: Телефон', ru: 'Цель, например: Телефон' },
+  targetDate: { uz_latn: 'Muddat (ixtiyoriy)', uz_cyrl: 'Муддат (ихтиёрий)', ru: 'Срок (необязательно)' },
+  perMonth: { uz_latn: 'oyiga {amount}', uz_cyrl: 'ойига {amount}', ru: '{amount} в месяц' },
+  putIn: { uz_latn: "Qo'yish", uz_cyrl: 'Қўйиш', ru: 'Отложить' },
+  takeOut: { uz_latn: 'Olish', uz_cyrl: 'Олиш', ru: 'Снять' },
+  goalTooMuch: { uz_latn: 'Maqsadda buncha pul yo‘q', uz_cyrl: 'Мақсадда бунча пул йўқ', ru: 'В цели нет столько денег' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;

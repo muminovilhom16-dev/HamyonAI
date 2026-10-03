@@ -258,6 +258,50 @@ describe('budgets (/byudjet)', () => {
   });
 });
 
+describe('savings goals (/maqsad)', () => {
+  it('create, "maqsadga 2 mln" adds savings (not an expense), reaching the target congratulates', async () => {
+    const id = await newUser();
+    await H.send(id, '/maqsad');
+    expect(H.texts().at(-1)).toContain("Hali maqsad yo'q");
+    await H.tap(id, 'gl:new');
+    await H.send(id, 'telefon 5 mln');
+    expect(H.texts().at(-1)).toContain('telefon');
+    expect(H.texts().at(-1)).toContain("0 / 5 000 000 so'm");
+    H.reset();
+    await H.send(id, 'maqsadga 2 mln');
+    expect(H.texts()[0]).toContain("💰 telefon: +2 000 000 so'm qo'yildi");
+    expect(H.texts()[0]).toContain('40%');
+    expect(await txsOf(id)).toHaveLength(0); // savings are not expenses
+    H.reset();
+    await H.send(id, 'maqsadga 3 mln');
+    expect(H.texts()[0]).toContain('🎉');
+    H.reset();
+    await H.send(id, '/bugun');
+    expect(H.texts()[0]).toContain("hali yozuv yo'q");
+  });
+
+  it('several goals → picker; withdrawal with minus; cannot take more than saved', async () => {
+    const id = await newUser();
+    for (const g of ['mashina 100 mln', "ta'til 10 mln"]) {
+      await H.send(id, '/maqsad');
+      await H.tap(id, 'gl:new');
+      await H.send(id, g);
+    }
+    H.reset();
+    await H.send(id, 'maqsadga 500 ming');
+    expect(H.texts()[0]).toContain('Qaysi maqsadga?');
+    await H.tap(id, button(/ta'til/));
+    expect(H.texts().at(-1)).toContain("ta'til: +500 000 so'm");
+    await H.send(id, '/maqsad');
+    await H.tap(id, button(/💰 ta'til/));
+    await H.send(id, '-200 ming');
+    expect(H.texts().at(-1)).toContain("ta'til: 200 000 so'm olindi");
+    await H.tap(id, button(/💰 ta'til/));
+    await H.send(id, '-900 ming');
+    expect(H.texts().at(-1)).toContain("buncha pul yo'q");
+  });
+});
+
 describe('card editing, delete, undo', () => {
   it('category correction becomes a rule for the next message', async () => {
     const id = await newUser();

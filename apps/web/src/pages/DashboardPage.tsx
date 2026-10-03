@@ -4,6 +4,7 @@ import { api, type Dashboard, type Lang, type Tx } from '../api';
 import { Bars } from '../components/Bars';
 import { BudgetsCard } from '../components/BudgetsCard';
 import { RecurringCard } from '../components/RecurringCard';
+import { GoalsCard } from '../components/GoalsCard';
 import { Donut } from '../components/Donut';
 import { TxRow } from '../components/TxRow';
 import { day, money } from '../format';
@@ -122,6 +123,7 @@ export function DashboardPage({ lang, onSeeAll }: { lang: Lang; onSeeAll: () => 
             </div>
             <BudgetsCard lang={lang} />
             <RecurringCard lang={lang} />
+            <GoalsCard lang={lang} />
           </div>
         </div>
       )}

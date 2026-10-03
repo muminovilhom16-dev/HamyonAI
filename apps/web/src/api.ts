@@ -89,3 +89,8 @@ export interface Recurring {
   id: string; categoryId: string | null; categoryName: string | null; categoryIcon: string | null;
   amount: number; currency: Currency; note: string; dayOfMonth: number; nextDate: string;
 }
+
+export interface Goal {
+  id: string; name: string; targetAmount: number; currency: Currency; savedAmount: number;
+  targetDate: string | null; completed: boolean; perMonth: number | null;
+}

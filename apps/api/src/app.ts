@@ -127,6 +127,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     db: dbHandle.db,
     auth,
     cookieSecure: env.COOKIE_SECURE ?? env.NODE_ENV === 'production',
+    rateLimitPerMinute: env.AUTH_RATE_LIMIT_PER_MINUTE,
     botToken: env.TELEGRAM_BOT_TOKEN,
     userDefaults: { currency: env.DEFAULT_CURRENCY, timezone: env.DEFAULT_TIMEZONE, reminderTime: env.DEFAULT_REMINDER_TIME },
     ...(env.WEB_BASE_URL && { webBaseUrl: env.WEB_BASE_URL }),
