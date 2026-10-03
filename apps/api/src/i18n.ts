@@ -275,6 +275,11 @@ const messages = {
   goalTooMuch: { uz_latn: "Maqsadda buncha pul yo'q.", uz_cyrl: 'Мақсадда бунча пул йўқ.', ru: 'В цели нет столько денег.' },
   goalAddMoney: { uz_latn: "💰 {name}", uz_cyrl: '💰 {name}', ru: '💰 {name}' },
 
+  // ─── Insights ───
+  insightAvg: { uz_latn: '📅 Kuniga ~{amount}', uz_cyrl: '📅 Кунига ~{amount}', ru: '📅 В день ~{amount}' },
+  insightForecast: { uz_latn: 'oy oxiriga ~{amount}', uz_cyrl: 'ой охирига ~{amount}', ru: 'к концу месяца ~{amount}' },
+  insightChange: { uz_latn: "o'tgan oyga nisbatan {pct}", uz_cyrl: 'ўтган ойга нисбатан {pct}', ru: '{pct} к прошлому месяцу' },
+
   // ─── Proactive (TZ §32-33: short, never shaming) ───
   dailyReminder: {
     uz_latn: "Bugun hali yozuv yo'q. Xarajat bo'lgan bo'lsa, bitta xabar bilan yozing: «taksi 25 ming».",

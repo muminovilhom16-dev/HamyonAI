@@ -2,19 +2,30 @@ import { InlineKeyboard, type Bot } from 'grammy';
 import {
   addDays,
   listRecentTransactions,
+  monthInsights,
   listWalletCategories,
   localDate,
   periodRange,
   summarize,
+  type Language,
+  type MonthInsights,
   type Period,
 } from '@hamyon/core';
-import { formatDateLabel, formatMoney } from '../format';
-import { t, type MessageKey } from '../i18n';
+import { formatDateLabel, formatMoney, groupDigits } from '../format';
+import { t, tf, type MessageKey } from '../i18n';
 import type { BotContext, BotServices } from './context';
 import { b, esc } from './html';
 import { summaryLines } from './summary';
 
 const TITLES: Record<Period, MessageKey> = { day: 'reportDay', week: 'reportWeek', month: 'reportMonth' };
+
+/** "📅 Kuniga ~30 000 · oy oxiriga ~930 000 so'm · o'tgan oyga nisbatan +12%". */
+export function insightLine(lang: Language, i: MonthInsights): string {
+  const parts = [tf(lang, 'insightAvg', { amount: groupDigits(i.dailyAverageUzs) })];
+  if (i.forecastUzs !== null) parts.push(tf(lang, 'insightForecast', { amount: formatMoney(i.forecastUzs, 'UZS', lang) }));
+  if (i.changePct !== null && Math.abs(i.changePct) >= 5) parts.push(tf(lang, 'insightChange', { pct: `${i.changePct > 0 ? '+' : ''}${i.changePct}%` }));
+  return parts.join(' · ');
+}
 
 /** Short report, max 5 lines (TZ §33). Debts excluded. */
 async function report(ctx: BotContext, s: BotServices, period: Period) {
@@ -28,7 +39,10 @@ async function report(ctx: BotContext, s: BotServices, period: Period) {
     return;
   }
   const cats = await listWalletCategories(s.db, ctx.walletId!, lang);
-  await ctx.reply([title, '', ...summaryLines(lang, sum, cats)].join('\n'));
+  // Month: one pace line (average, forecast, vs last month) instead of a category line.
+  const insight = period === 'month' ? insightLine(lang, await monthInsights(s.db, { userId: user.id, walletId: ctx.walletId!, timeZone: user.timezone, now: s.now() })) : null;
+  const body = summaryLines(lang, sum, cats, insight ? 3 : 4);
+  await ctx.reply([title, '', ...body, ...(insight ? [insight] : [])].join('\n'));
 }
 
 export function registerReports(bot: Bot<BotContext>, s: BotServices): void {

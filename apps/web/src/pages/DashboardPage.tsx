@@ -107,6 +107,30 @@ export function DashboardPage({ lang, onSeeAll }: { lang: Lang; onSeeAll: () => 
         )}
       </div>
 
+      {data?.insights && data.expenseUzs > 0 && (
+        <div className="insights">
+          <div className="card insight">
+            <div className="k">{tr(lang, 'dailyAverage')}</div>
+            <div className="v">{money(data.insights.dailyAverageUzs, 'UZS', lang)}</div>
+          </div>
+          {data.insights.forecastUzs !== null && (
+            <div className="card insight">
+              <div className="k">{tr(lang, 'forecast')}</div>
+              <div className="v">~{money(data.insights.forecastUzs, 'UZS', lang)}</div>
+            </div>
+          )}
+          {data.insights.changePct !== null && (
+            <div className="card insight">
+              <div className="k">{tr(lang, 'vsLastMonth')}</div>
+              <div className={`v ${data.insights.changePct > 0 ? 'up' : 'down'}`}>
+                {data.insights.changePct > 0 ? '↑' : '↓'} {Math.abs(data.insights.changePct)}%
+              </div>
+              <div className="small muted num">{money(data.insights.prevSamePeriodUzs, 'UZS', lang)}</div>
+            </div>
+          )}
+        </div>
+      )}
+
       {data && (
         <div className="dash-grid two">
           <div className="card">

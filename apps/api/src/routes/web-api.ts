@@ -6,6 +6,7 @@ import {
   AppError,
   DEBT_TYPES,
   budgetStatus,
+  monthInsights,
   contributeToGoal,
   createGoal,
   listGoals,
@@ -195,10 +196,13 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
     } else {
       ({ startDate, endDate } = periodRange(q.period, opts.now(), user.timezone));
     }
-    return getDashboard(opts.db, {
+    const dashboard = await getDashboard(opts.db, {
       userId: user.id, walletId, startDate, endDate, timeZone: user.timezone, language: user.language,
       uncategorizedName: t(user.language, 'uncategorized'),
     });
+    // Pace of the current month (only meaningful for the month view).
+    const insights = q.period === 'month' ? await monthInsights(opts.db, { userId: user.id, walletId, timeZone: user.timezone, now: fin.now() }) : null;
+    return { ...dashboard, insights };
   });
 
   // ?all=1 includes hidden ones (category management); default is what pickers show.

@@ -52,6 +52,7 @@ export interface Dashboard {
   debts: { owedToMe: Array<{ currency: Currency; amount: number }>; iOwe: Array<{ currency: Currency; amount: number }> };
   byCategory: Array<{ categoryId: string | null; name: string; icon: string | null; totalUzs: number; percentTenths: number }>;
   daily: Array<{ date: string; expenseUzs: number; incomeUzs: number }>;
+  insights: { dailyAverageUzs: number; forecastUzs: number | null; prevSamePeriodUzs: number; changePct: number | null } | null;
 }
 
 export interface Tx {

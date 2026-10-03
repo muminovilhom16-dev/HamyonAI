@@ -389,6 +389,17 @@ describe('reports and lists', () => {
     expect(H.texts().at(-1)).toContain("hali yozuv yo'q");
   });
 
+  it('/oy adds a pace line and stays within 5 lines', async () => {
+    const id = await newUser();
+    await H.send(id, 'taksi 20 ming'); // clock: 1 Oct → no forecast yet
+    H.reset();
+    await H.send(id, '/oy');
+    const report = H.texts()[0]!;
+    expect(report).toContain("📅 Kuniga ~20 000");
+    expect(report).not.toContain('oy oxiriga');
+    expect(report.split('\n').filter(Boolean).length).toBeLessThanOrEqual(5);
+  });
+
   it('/hafta with no records says so', async () => {
     const id = await newUser();
     await H.send(id, '/hafta');

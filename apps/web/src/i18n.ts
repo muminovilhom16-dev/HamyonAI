@@ -146,6 +146,9 @@ const M = {
   putIn: { uz_latn: "Qo'yish", uz_cyrl: 'Қўйиш', ru: 'Отложить' },
   takeOut: { uz_latn: 'Olish', uz_cyrl: 'Олиш', ru: 'Снять' },
   goalTooMuch: { uz_latn: 'Maqsadda buncha pul yo‘q', uz_cyrl: 'Мақсадда бунча пул йўқ', ru: 'В цели нет столько денег' },
+  dailyAverage: { uz_latn: 'Kuniga o‘rtacha', uz_cyrl: 'Кунига ўртача', ru: 'В среднем в день' },
+  forecast: { uz_latn: 'Oy oxiriga prognoz', uz_cyrl: 'Ой охирига прогноз', ru: 'Прогноз на месяц' },
+  vsLastMonth: { uz_latn: 'O‘tgan oyning shu kunlariga nisbatan', uz_cyrl: 'Ўтган ойнинг шу кунларига нисбатан', ru: 'К тем же дням прошлого месяца' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;
