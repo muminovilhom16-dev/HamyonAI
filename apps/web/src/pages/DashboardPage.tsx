@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowDownLeft, ArrowUpRight, ChevronRight, TrendingDown, TrendingUp } from 'lucide-react';
 import { api, type Dashboard, type Lang, type Tx } from '../api';
 import { Bars } from '../components/Bars';
+import { BudgetsCard } from '../components/BudgetsCard';
 import { Donut } from '../components/Donut';
 import { TxRow } from '../components/TxRow';
 import { day, money } from '../format';
@@ -114,8 +115,11 @@ export function DashboardPage({ lang, onSeeAll }: { lang: Lang; onSeeAll: () => 
               <p className="empty">{tr(lang, 'noData')}</p>
             )}
           </div>
-          <div className="card">
-            <Bars daily={data.daily} lang={lang} />
+          <div className="stack">
+            <div className="card">
+              <Bars daily={data.daily} lang={lang} />
+            </div>
+            <BudgetsCard lang={lang} />
           </div>
         </div>
       )}

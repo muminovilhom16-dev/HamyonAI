@@ -114,6 +114,16 @@ const M = {
   rename: { uz_latn: 'Nomini o‘zgartirish', uz_cyrl: 'Номини ўзгартириш', ru: 'Переименовать' },
   hidden: { uz_latn: 'yashirin', uz_cyrl: 'яширин', ru: 'скрыта' },
   categoryExists: { uz_latn: 'Bunday kategoriya bor', uz_cyrl: 'Бундай категория бор', ru: 'Такая категория уже есть' },
+  budgets: { uz_latn: 'Oylik limitlar', uz_cyrl: 'Ойлик лимитлар', ru: 'Месячные лимиты' },
+  addLimit: { uz_latn: 'Limit', uz_cyrl: 'Лимит', ru: 'Лимит' },
+  budgetTotal: { uz_latn: 'Umumiy xarajat', uz_cyrl: 'Умумий харажат', ru: 'Все расходы' },
+  budgetsEmpty: {
+    uz_latn: "Kategoriya uchun oylik limit qo'ying — 80% va 100% da bot ogohlantiradi.",
+    uz_cyrl: 'Категория учун ойлик лимит қўйинг — 80% ва 100% да бот огоҳлантиради.',
+    ru: 'Задайте месячный лимит — бот предупредит на 80% и 100%.',
+  },
+  budgetLimitReached: { uz_latn: "Limit qo'yib bo'lmadi", uz_cyrl: 'Лимит қўйиб бўлмади', ru: 'Не удалось задать лимит' },
+  overLimit: { uz_latn: 'oshdi', uz_cyrl: 'ошди', ru: 'превышен' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;

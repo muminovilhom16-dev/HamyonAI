@@ -1,9 +1,13 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import type { PlanConfig } from '@hamyon/config';
 import { eq } from 'drizzle-orm';
 import {
   AppError,
   DEBT_TYPES,
+  budgetStatus,
+  removeBudget,
+  setBudget,
   createCategory,
   createTransaction,
   updateCategory,
@@ -44,6 +48,7 @@ export interface WebApiOptions {
   fx: ExchangeRateProvider | null;
   now: () => Date;
   deletionGraceDays: number;
+  plans: PlanConfig;
 }
 
 /** Custom header a cross-site form cannot send: CSRF guard for mutations. */
@@ -220,6 +225,28 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
       ...(body.icon !== undefined && { icon: body.icon }),
       ...(body.hidden !== undefined && { isHidden: body.hidden }),
     });
+    return reply.status(204).send();
+  });
+
+  // ─── Budgets (monthly limits) ───
+  app.get('/api/budgets', { preHandler: session }, async (request) => {
+    const { user, walletId } = await context(opts.db, request);
+    return budgetStatus(opts.db, { userId: user.id, walletId, timeZone: user.timezone, now: fin.now(), lang: user.language });
+  });
+
+  app.put('/api/budgets', { preHandler: session }, async (request) => {
+    const body = parse(
+      z.object({ categoryId: uuid.nullable(), amountUzs: z.number().int().positive().max(Number.MAX_SAFE_INTEGER) }).strict(),
+      request.body,
+    );
+    const { user, walletId } = await context(opts.db, request);
+    const plan = (user.plan in opts.plans ? user.plan : 'free') as keyof typeof opts.plans;
+    await setBudget(opts.db, { userId: user.id, walletId, categoryId: body.categoryId, amountUzs: body.amountUzs, maxBudgets: opts.plans[plan].budgets });
+    return budgetStatus(opts.db, { userId: user.id, walletId, timeZone: user.timezone, now: fin.now(), lang: user.language });
+  });
+
+  app.delete<{ Params: { id: string } }>('/api/budgets/:id', { preHandler: session }, async (request, reply) => {
+    await removeBudget(opts.db, request.auth!.userId, parse(uuid, request.params.id));
     return reply.status(204).send();
   });
 

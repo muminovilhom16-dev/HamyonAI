@@ -26,6 +26,14 @@ await new Promise((r) => tg.listen(0, r));
 const PORT = 3997;
 const base = `http://127.0.0.1:${PORT}`;
 const SECRET = 's'.repeat(40);
+// Bring the local database up to date first (same as the container's start command).
+{
+  const { execFileSync } = await import('node:child_process');
+  execFileSync('node', ['apps/api/dist/migrate.js'], {
+    env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://hamyon:hamyon@localhost:5432/hamyon' },
+    stdio: 'inherit',
+  });
+}
 const server = spawn('node', ['apps/api/dist/server.js'], {
   env: {
     ...process.env, NODE_ENV: 'development', LOG_LEVEL: 'warn', PORT: String(PORT),
@@ -53,7 +61,7 @@ const say = (text) =>
       ...(text.startsWith('/') && { entities: [{ type: 'bot_command', offset: 0, length: text.split(' ')[0].length }] }) } }),
   });
 for (const m of [
-  '/start', 'Korzinka 230 ming', 'taksi 25 ming', 'kecha taksi 18 ming', "o'tgan kuni kafe 120 ming", 'svet 120 ming',
+  '/start', '/byudjet oziq-ovqat 300 ming', '/byudjet umumiy 1,5 mln', 'Korzinka 230 ming', 'taksi 25 ming', 'kecha taksi 18 ming', "o'tgan kuni kafe 120 ming", 'svet 120 ming',
   'internet 99 ming', 'kecha dorixona 45 ming', 'kino 60 ming', 'kurtka 450 ming', 'non 5 ming, sut 12 ming',
   'Murod akaga 300 ming qarz berdim', 'Murod aka 100 ming qaytardi', 'Sardordan 1 mln qarz oldim',
   'oylik tushdi 6 mln', '/bugun', '/oy', '/oxirgi', '/qarzlar', '/sozlamalar', '/yordam', '/web',

@@ -17,6 +17,7 @@ export * from './finance/pending';
 export * from './finance/debts';
 export * from './finance/reminders';
 export * from './finance/limits';
+export * from './finance/budgets';
 export * from './finance/dashboard';
 export * from './finance/settings';
 export * from './finance/proactive';

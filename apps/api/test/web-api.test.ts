@@ -23,7 +23,7 @@ async function login(): Promise<{ tg: number; cookie: string }> {
   const res = await H.app.inject(`/auth/web?token=${encodeURIComponent(token)}`);
   return { tg, cookie: res.cookies.find((c) => c.name === 'hamyon_session')!.value };
 }
-const api = (cookie: string, method: 'GET' | 'PATCH' | 'DELETE' | 'POST', url: string, body?: object, csrf = true) =>
+const api = (cookie: string, method: 'GET' | 'PATCH' | 'DELETE' | 'POST' | 'PUT', url: string, body?: object, csrf = true) =>
   H.app.inject({ method, url, cookies: { hamyon_session: cookie }, headers: csrf ? { 'x-hamyon-csrf': '1' } : {}, ...(body && { payload: body }) });
 
 describe('auth & CSRF', () => {
@@ -178,6 +178,24 @@ describe('manual entry and categories from the web', () => {
 
     expect((await api(b.cookie, 'PATCH', `/api/categories/${cat.id}`, { name: 'hack' })).statusCode).toBe(403);
     expect((await api(b.cookie, 'POST', '/api/transactions', { type: 'expense', amount: 1, categoryId: cat.id, date: '2026-10-01' })).statusCode).toBe(400);
+  });
+});
+
+describe('budgets API', () => {
+  it('upserts, reports spending, deletes; foreign ids rejected', async () => {
+    const a = await login();
+    const b = await login();
+    await H.send(a.tg, 'taksi 40 ming');
+    const transport = (await api(a.cookie, 'GET', '/api/categories')).json().find((c: { name: string }) => c.name === 'Transport');
+    const put = await api(a.cookie, 'PUT', '/api/budgets', { categoryId: transport.id, amountUzs: 100_000 });
+    expect(put.statusCode).toBe(200);
+    expect(put.json()).toMatchObject([{ categoryId: transport.id, name: 'Transport', limitUzs: 100_000, spentUzs: 40_000 }]);
+    expect((await api(a.cookie, 'PUT', '/api/budgets', { categoryId: null, amountUzs: 1.5 })).statusCode).toBe(400);
+    const [budget] = (await api(a.cookie, 'GET', '/api/budgets')).json();
+    expect((await api(b.cookie, 'DELETE', `/api/budgets/${budget.id}`)).statusCode).toBe(403);
+    expect((await api(b.cookie, 'PUT', '/api/budgets', { categoryId: transport.id, amountUzs: 1 })).statusCode).toBe(400);
+    expect((await api(a.cookie, 'DELETE', `/api/budgets/${budget.id}`)).statusCode).toBe(204);
+    expect((await api(a.cookie, 'GET', '/api/budgets')).json()).toEqual([]);
   });
 });
 

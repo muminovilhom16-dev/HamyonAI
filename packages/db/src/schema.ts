@@ -358,6 +358,7 @@ export const pendingKindEnum = pgEnum('pending_kind', [
   'edit_amount',
   'ask_counterparty',
   'ask_debt_direction',
+  'budget_amount',
 ]);
 
 /**
@@ -379,3 +380,22 @@ export const pendingInputs = pgTable('pending_inputs', {
   resolvedAt: timestamp('resolved_at', { withTimezone: true }),
   createdAt: createdAt(),
 }, (t) => [index('pending_inputs_user_open_idx').on(t.userId, t.createdAt).where(sql`${t.resolvedAt} is null`)]);
+
+/**
+ * Monthly spending limit (TZ v1: budgets). `category_id` null = limit on all
+ * expenses. Amounts in so'm; months follow the user's time zone.
+ */
+export const budgets = pgTable('budgets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  walletId: uuid('wallet_id')
+    .notNull()
+    .references(() => wallets.id, { onDelete: 'cascade' }),
+  categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'cascade' }),
+  amountUzs: money('amount_uzs').notNull(),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+}, (t) => [
+  uniqueIndex('budgets_wallet_category_uq').on(t.walletId, t.categoryId).where(sql`${t.categoryId} is not null`),
+  uniqueIndex('budgets_wallet_total_uq').on(t.walletId).where(sql`${t.categoryId} is null`),
+  check('budgets_amount_positive', sql`${t.amountUzs} > 0`),
+]);

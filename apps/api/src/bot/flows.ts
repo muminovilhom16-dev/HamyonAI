@@ -49,6 +49,7 @@ import {
   type CardEnv,
 } from './cards';
 import type { BotContext, BotServices } from './context';
+import { answerBudgetAmount, budgetAlertLines } from './budgets';
 import { b, esc, i } from './html';
 import { answerCounterparty, continueDebt, debtPayloadFrom, isDebtPayload, replyDebtCard, renderDebtCard, type PendingDebtPayload } from './debts';
 import { afterFirstTransaction } from './onboarding';
@@ -105,7 +106,8 @@ async function saveAndShow(
     throw err;
   }
   const env = await envFor(s, user, ctx.walletId!);
-  const text = cardText(txFields(saved, env, user.timezone), env);
+  const alerts = await budgetAlertLines(s, user, saved);
+  const text = cardText(txFields(saved, env, user.timezone), env) + (alerts.length ? `\n\n${alerts.join('\n')}` : '');
   const reply_markup = txKeyboard(saved, env, user.timezone);
   if (opts.edit) await ctx.editMessageText(text, { reply_markup });
   else await ctx.reply(text, { reply_markup });
@@ -237,6 +239,10 @@ export async function processText(ctx: BotContext, s: BotServices, text: string,
         await continueAfterAmount(ctx, s, pending.id, { ...p, tx: { ...p.tx, amount } }, false);
         return;
       }
+    }
+    if (awaiting.kind === 'budget_amount' && amount !== null) {
+      await answerBudgetAmount(ctx, s, awaiting.id, awaiting.payload, amount);
+      return;
     }
     if (
       awaiting.kind === 'ask_counterparty' &&

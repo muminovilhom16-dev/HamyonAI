@@ -341,3 +341,22 @@ table.data td.r, table.data th.r { text-align: right; }
 .cat-icon-input { width: 52px; text-align: center; }
 .cat-name-input { flex: 1; min-width: 0; }
 .cat-icon-input:focus, .cat-name-input:focus { outline: none; border-color: var(--brand); background: var(--surface); }
+
+/* ─── Budgets ─── */
+.budget-list { display: grid; gap: 4px; }
+.budget { display: flex; gap: 12px; align-items: center; padding: 8px 0; }
+.budget .body { flex: 1; min-width: 0; }
+.budget .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+.budget .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.budget .pct { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.budget .pct.warn { color: #b25e00; }
+.budget .pct.over { color: var(--critical); }
+.budget .track { height: 8px; border-radius: 4px; background: var(--surface-2); margin: 6px 0 4px; overflow: hidden; }
+.budget .fill { height: 100%; border-radius: 4px; background: var(--brand); }
+.budget .fill.warn { background: #e39a1b; }
+.budget .fill.over { background: var(--critical); }
+@media (prefers-color-scheme: dark) { :root:where(:not([data-theme='light'])) .budget .pct.warn { color: #f0b44c; } }
+.budget-form { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
+@media (min-width: 600px) { .budget-form { grid-template-columns: 1.4fr 1fr auto; } .budget-form .error { grid-column: 1 / -1; } }
+.input { background: var(--surface-2); border: 1px solid transparent; border-radius: 12px; padding: 10px 12px; min-height: 44px; width: 100%; }
+.input:focus { outline: none; border-color: var(--brand); background: var(--surface); }

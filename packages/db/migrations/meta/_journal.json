@@ -22,6 +22,13 @@
       "when": 1790846565682,
       "tag": "0002_debts_soft_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791028682906,
+      "tag": "0003_budgets",
+      "breakpoints": true
     }
   ]
 }

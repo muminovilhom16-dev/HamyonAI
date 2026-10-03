@@ -24,6 +24,7 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
 export const api = {
   get: <T>(url: string) => request<T>('GET', url),
   patch: <T>(url: string, body: unknown) => request<T>('PATCH', url, body),
+  put: <T>(url: string, body: unknown) => request<T>('PUT', url, body),
   post: <T>(url: string, body?: unknown) => request<T>('POST', url, body ?? {}),
   del: (url: string) => request<void>('DELETE', url),
 };
@@ -81,3 +82,5 @@ export interface DebtGroup {
   nearestDue: string | null;
   debts: Array<{ id: string; total: number; remaining: number; dueDate: string | null; createdDate: string; payments: Array<{ amount: number; date: string }> }>;
 }
+
+export interface Budget { id: string; categoryId: string | null; name: string | null; icon: string | null; limitUzs: number; spentUzs: number }

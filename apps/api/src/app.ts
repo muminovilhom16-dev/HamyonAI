@@ -144,6 +144,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     fx: opts.fx !== undefined ? opts.fx : new CbuRateProvider(),
     now: opts.now ?? (() => new Date()),
     deletionGraceDays: env.ACCOUNT_DELETION_GRACE_DAYS,
+    plans: loadPlanConfig(env.PLAN_LIMITS_JSON),
   });
 
   return app;

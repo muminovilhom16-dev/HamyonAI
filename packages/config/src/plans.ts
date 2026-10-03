@@ -32,7 +32,7 @@ export const defaultPlanConfig: PlanConfig = {
     receiptsPerMonth: 10,
     bankImportsPerMonth: 30,
     activeDebts: 5,
-    budgets: 1,
+    budgets: 10,
     aiCostUzsPerMonth: 1000,
     familyMembers: null,
   },

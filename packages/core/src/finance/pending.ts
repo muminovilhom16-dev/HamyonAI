@@ -37,6 +37,9 @@ export async function getOpenPending(db: Database, userId: string, id: string, n
 }
 
 /** Latest open item waiting for a typed reply (amount), if any. */
+/** Pending kinds answered by the user's next text message (not by a button). */
+const AWAITING_REPLY_KINDS: Array<Pending['kind']> = ['ask_amount', 'edit_amount', 'ask_counterparty', 'budget_amount'];
+
 export async function latestAwaitingReply(db: Database, userId: string, now: Date = new Date()): Promise<Pending | null> {
   const [row] = await db
     .select()
@@ -44,7 +47,7 @@ export async function latestAwaitingReply(db: Database, userId: string, now: Dat
     .where(
       and(
         eq(pendingInputs.userId, userId),
-        inArray(pendingInputs.kind, ['ask_amount', 'edit_amount', 'ask_counterparty']),
+        inArray(pendingInputs.kind, AWAITING_REPLY_KINDS),
         isNull(pendingInputs.resolvedAt),
         gt(pendingInputs.expiresAt, now),
       ),
@@ -69,7 +72,7 @@ export async function cancelAwaitingReplies(db: Database, userId: string, now: D
   await db
     .update(pendingInputs)
     .set({ resolvedAt: now })
-    .where(and(eq(pendingInputs.userId, userId), inArray(pendingInputs.kind, ['ask_amount', 'edit_amount', 'ask_counterparty']), isNull(pendingInputs.resolvedAt)));
+    .where(and(eq(pendingInputs.userId, userId), inArray(pendingInputs.kind, AWAITING_REPLY_KINDS), isNull(pendingInputs.resolvedAt)));
 }
 
 export async function purgePending(db: Database, now: Date = new Date()): Promise<number> {

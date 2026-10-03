@@ -90,3 +90,11 @@ describe('money integrity constraints', () => {
     expect((err as { cause?: { constraint?: string } }).cause?.constraint).toBe('wallets_one_personal_per_user');
   });
 });
+
+describe('budgets', () => {
+  it('one total limit per wallet, positive amounts', async () => {
+    await h.db.insert(s.budgets).values({ walletId, amountUzs: 1_000_000 });
+    await rejectsWith(h.db.insert(s.budgets).values({ walletId, amountUzs: 2_000_000 }), 'budgets_wallet_total_uq');
+    await rejectsWith(h.db.insert(s.budgets).values({ walletId, amountUzs: 0 }), 'budgets_amount_positive');
+  });
+});

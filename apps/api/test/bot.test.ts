@@ -221,6 +221,43 @@ describe('AI budget (TZ §35)', () => {
   });
 });
 
+describe('budgets (/byudjet)', () => {
+  it('sets a limit by command, warns on the card at 80% and 100%', async () => {
+    const id = await newUser();
+    await H.send(id, '/byudjet oziq-ovqat 100 ming');
+    expect(H.texts().at(-1)).toContain('Oziq-ovqat');
+    expect(H.texts().at(-1)).toContain('0%');
+    H.reset();
+    await H.send(id, 'non 70 ming');
+    expect(H.texts()[0]).not.toContain('⚠️');
+    H.reset();
+    await H.send(id, 'sut 15 ming');
+    expect(H.texts()[0]).toContain("⚠️ Oziq-ovqat: limitning 85% ishlatildi (85 000 / 100 000 so'm)");
+    H.reset();
+    await H.send(id, "go'sht 20 ming");
+    expect(H.texts()[0]).toContain("🔴 Oziq-ovqat: oylik limit tugadi (105 000 / 100 000 so'm)");
+    H.reset();
+    await H.send(id, 'taksi 20 ming'); // other category: no alert
+    expect(H.texts()[0]).not.toMatch(/⚠️|🔴/);
+  });
+
+  it('button flow: add total limit by reply, then delete it', async () => {
+    const id = await newUser();
+    await H.send(id, '/byudjet');
+    expect(H.texts().at(-1)).toContain("Hali limit qo'yilmagan");
+    await H.tap(id, 'bg:add');
+    await H.tap(id, 'bg:c:all');
+    expect(H.texts().at(-1)).toContain('Umumiy xarajat uchun oylik limitni yozing');
+    H.reset();
+    await H.send(id, '3 mln');
+    expect(H.texts()[0]).toContain('Umumiy xarajat');
+    expect(H.texts()[0]).toContain("3 000 000 so'm");
+    expect(await txsOf(id)).toHaveLength(0); // the reply was a limit, not an expense
+    await H.tap(id, button(/^🗑/));
+    expect(H.texts().at(-1)).toContain("Hali limit qo'yilmagan");
+  });
+});
+
 describe('card editing, delete, undo', () => {
   it('category correction becomes a rule for the next message', async () => {
     const id = await newUser();
