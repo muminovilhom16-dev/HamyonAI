@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ReceiptText, Search, Trash2, X } from 'lucide-react';
-import { api, ApiError, type Category, type Lang, type Tx } from '../api';
+import { Plus, ReceiptText, Search, Trash2, X } from 'lucide-react';
+import { api, ApiError, type Category, type Currency, type Lang, type Tx } from '../api';
 import { DEBT_TYPES as DEBT, TxRow } from '../components/TxRow';
 import { day, group, money, parseAmountInput } from '../format';
 import { tr } from '../i18n';
 
-export function TransactionsPage({ lang }: { lang: Lang }) {
+export function TransactionsPage({ lang, currency }: { lang: Lang; currency: Currency }) {
   const [items, setItems] = useState<Tx[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [type, setType] = useState<'' | 'expense' | 'income'>('');
@@ -20,6 +20,7 @@ export function TransactionsPage({ lang }: { lang: Lang }) {
   }, [search]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [editing, setEditing] = useState<Tx | null>(null);
+  const [creating, setCreating] = useState(false);
   const [toast, setToast] = useState<Tx | null>(null);
   const [error, setError] = useState(false);
   const toastTimer = useRef<number | undefined>(undefined);
@@ -144,17 +145,23 @@ export function TransactionsPage({ lang }: { lang: Lang }) {
           {tr(lang, 'loadMore')}
         </button>
       )}
-      {editing && (
+      <button className="fab" onClick={() => setCreating(true)} aria-label={tr(lang, 'addRecord')}>
+        <Plus size={26} aria-hidden />
+      </button>
+      {(editing || creating) && (
         <EditSheet
           tx={editing}
           lang={lang}
-          categories={categories.filter((c) => c.kind === (editing.type === 'income' ? 'income' : 'expense'))}
-          onClose={() => setEditing(null)}
+          currency={currency}
+          categories={categories}
+          onClose={() => { setEditing(null); setCreating(false); }}
           onSaved={(tx) => {
-            setItems((prev) => prev.map((x) => (x.id === tx.id ? tx : x)));
+            if (creating) load();
+            else setItems((prev) => prev.map((x) => (x.id === tx.id ? tx : x)));
             setEditing(null);
+            setCreating(false);
           }}
-          onDelete={() => remove(editing)}
+          {...(editing && { onDelete: () => remove(editing) })}
         />
       )}
       {toast && (
@@ -167,37 +174,59 @@ export function TransactionsPage({ lang }: { lang: Lang }) {
   );
 }
 
+const todayIso = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/** Edit an existing record, or create one when `tx` is null. */
 function EditSheet(props: {
-  tx: Tx;
+  tx: Tx | null;
   lang: Lang;
+  currency: Currency;
   categories: Category[];
   onClose: () => void;
   onSaved: (tx: Tx) => void;
-  onDelete: () => void;
+  onDelete?: () => void;
 }) {
   const { tx, lang } = props;
-  const isDebt = DEBT.includes(tx.type);
-  const [amount, setAmount] = useState(group(tx.amount));
-  const [categoryId, setCategoryId] = useState(tx.categoryId ?? '');
-  const [date, setDate] = useState(tx.date);
-  const [note, setNote] = useState(tx.note ?? '');
+  const creating = tx === null;
+  const isDebt = !!tx && DEBT.includes(tx.type);
+  const [kind, setKind] = useState<'expense' | 'income'>(tx?.type === 'income' ? 'income' : 'expense');
+  const [amount, setAmount] = useState(tx ? group(tx.amount) : '');
+  const [categoryId, setCategoryId] = useState(tx?.categoryId ?? '');
+  const [date, setDate] = useState(tx?.date ?? todayIso());
+  const [note, setNote] = useState(tx?.note ?? '');
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const options = props.categories.filter((c) => c.kind === kind);
 
   const save = async () => {
+    const n = isDebt ? tx!.amount : parseAmountInput(amount);
+    if (n === null) return setErr(tr(lang, 'invalidAmount'));
+    if (creating) {
+      if (!categoryId) return setErr(tr(lang, 'pickCategory'));
+      setBusy(true);
+      try {
+        props.onSaved(await api.post<Tx>('/api/transactions', { type: kind, amount: n, categoryId, date, note: note.trim() || null }));
+      } catch (e) {
+        setErr(e instanceof ApiError && e.status === 400 ? tr(lang, 'invalidAmount') : tr(lang, 'error'));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     const patch: Record<string, unknown> = {};
     if (!isDebt) {
-      const n = parseAmountInput(amount);
-      if (n === null) return setErr(tr(lang, 'invalidAmount'));
-      if (n !== tx.amount) patch.amount = n;
-      if (categoryId && categoryId !== tx.categoryId) patch.categoryId = categoryId;
+      if (n !== tx!.amount) patch.amount = n;
+      if (categoryId && categoryId !== tx!.categoryId) patch.categoryId = categoryId;
     }
-    if (date !== tx.date) patch.date = date;
-    if (note !== (tx.note ?? '')) patch.note = note || null;
+    if (date !== tx!.date) patch.date = date;
+    if (note !== (tx!.note ?? '')) patch.note = note || null;
     if (Object.keys(patch).length === 0) return props.onClose();
     setBusy(true);
     try {
-      props.onSaved(await api.patch<Tx>(`/api/transactions/${tx.id}`, patch));
+      props.onSaved(await api.patch<Tx>(`/api/transactions/${tx!.id}`, patch));
     } catch (e) {
       setErr(e instanceof ApiError && e.status === 400 ? tr(lang, 'invalidAmount') : tr(lang, 'error'));
     } finally {
@@ -207,23 +236,30 @@ function EditSheet(props: {
 
   return (
     <div className="sheet-backdrop" onClick={props.onClose}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={tr(lang, 'edit')} onClick={(e) => e.stopPropagation()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={tr(lang, creating ? 'addRecord' : 'edit')} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
-          <h3>{tr(lang, 'edit')}</h3>
+          <h3>{tr(lang, creating ? 'addRecord' : 'edit')}</h3>
           <button className="icon-btn" onClick={props.onClose} aria-label={tr(lang, 'cancel')}><X size={18} /></button>
         </div>
         {err && <p className="error">{err}</p>}
+        {creating && (
+          <div className="segmented" role="group" style={{ marginBottom: 14 }}>
+            {(['expense', 'income'] as const).map((k) => (
+              <button key={k} aria-pressed={kind === k} onClick={() => { setKind(k); setCategoryId(''); }}>{tr(lang, k)}</button>
+            ))}
+          </div>
+        )}
         <div className="field">
-          <label htmlFor="amt">{tr(lang, 'amount')} ({tx.currency})</label>
-          <input id="amt" className="amount-input" inputMode="numeric" value={amount} disabled={isDebt} onChange={(e) => setAmount(e.target.value)} />
+          <label htmlFor="amt">{tr(lang, 'amount')} ({tx?.currency ?? props.currency})</label>
+          <input id="amt" className="amount-input" inputMode="numeric" autoFocus={creating} placeholder="25 000" value={amount} disabled={isDebt} onChange={(e) => setAmount(e.target.value)} />
           {isDebt && <span className="small muted">{tr(lang, 'debtAmountLocked')}</span>}
         </div>
         {!isDebt && (
           <div className="field">
             <label htmlFor="cat">{tr(lang, 'category')}</label>
             <select id="cat" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-              {!tx.categoryId && <option value="">{tr(lang, 'uncategorized')}</option>}
-              {props.categories.map((c) => (
+              {(!categoryId || (tx && !tx.categoryId)) && <option value="">{creating ? '—' : tr(lang, 'uncategorized')}</option>}
+              {options.map((c) => (
                 <option key={c.id} value={c.id}>{`${c.icon ?? ''} ${c.name}`.trim()}</option>
               ))}
             </select>
@@ -231,14 +267,14 @@ function EditSheet(props: {
         )}
         <div className="field">
           <label htmlFor="date">{tr(lang, 'date')}</label>
-          <input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <input id="date" type="date" max={todayIso()} value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
         <div className="field">
           <label htmlFor="note">{tr(lang, 'note')}</label>
           <input id="note" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} />
         </div>
         <div className="row">
-          <button className="btn danger" onClick={props.onDelete}><Trash2 size={16} aria-hidden />{tr(lang, 'delete')}</button>
+          {props.onDelete && <button className="btn danger" onClick={props.onDelete}><Trash2 size={16} aria-hidden />{tr(lang, 'delete')}</button>}
           <button className="btn" onClick={props.onClose}>{tr(lang, 'cancel')}</button>
           <button className="btn primary" disabled={busy} onClick={save}>{tr(lang, 'save')}</button>
         </div>

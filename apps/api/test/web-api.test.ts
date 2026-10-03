@@ -129,6 +129,58 @@ describe('transactions', () => {
   });
 });
 
+describe('manual entry and categories from the web', () => {
+  it('creates expense/income; validates kind, date and amount', async () => {
+    const { cookie } = await login();
+    const cats = (await api(cookie, 'GET', '/api/categories')).json() as Array<{ id: string; name: string; kind: string }>;
+    const food = cats.find((c) => c.name === 'Oziq-ovqat')!;
+    const salary = cats.find((c) => c.name === 'Oylik')!;
+    const today = '2026-10-01';
+    const ok = await api(cookie, 'POST', '/api/transactions', { type: 'expense', amount: 45_000, categoryId: food.id, date: today, note: 'Bozor' });
+    expect(ok.statusCode).toBe(201);
+    expect(ok.json()).toMatchObject({ type: 'expense', amount: 45_000, currency: 'UZS', categoryName: 'Oziq-ovqat', note: 'Bozor', source: 'web' });
+    expect((await api(cookie, 'POST', '/api/transactions', { type: 'income', amount: 6_000_000, categoryId: salary.id, date: today })).statusCode).toBe(201);
+
+    const bad = (body: object) => api(cookie, 'POST', '/api/transactions', { type: 'expense', amount: 1000, categoryId: food.id, date: today, ...body });
+    expect((await bad({ type: 'income' })).statusCode).toBe(400); // expense category for income
+    expect((await bad({ date: '2026-10-06' })).statusCode).toBe(400); // future (test clock: 5 Oct)
+    expect((await bad({ amount: 10.5 })).statusCode).toBe(400);
+    expect((await bad({ type: 'debt_given' })).statusCode).toBe(400);
+    expect((await api(cookie, 'POST', '/api/transactions', { type: 'expense', amount: 1, categoryId: food.id, date: today }, false)).statusCode).toBe(403);
+
+    const list = (await api(cookie, 'GET', '/api/transactions')).json().items;
+    expect(list.map((t: { amount: number }) => t.amount).sort()).toEqual([45_000, 6_000_000]);
+  });
+
+  it('adds, renames and hides categories; duplicates and foreign ids are rejected', async () => {
+    const a = await login();
+    const b = await login();
+    const created = await api(a.cookie, 'POST', '/api/categories', { name: '  Sport  zal ', kind: 'expense', icon: '🏋️' });
+    expect(created.statusCode).toBe(201);
+    const cat = created.json();
+    expect(cat).toMatchObject({ name: 'Sport zal', kind: 'expense', custom: true });
+    expect((await api(a.cookie, 'POST', '/api/categories', { name: 'sport ZAL', kind: 'expense' })).statusCode).toBe(400);
+    expect((await api(a.cookie, 'POST', '/api/categories', { name: 'Transport', kind: 'expense' })).statusCode).toBe(400);
+
+    // Usable for records right away, also from the bot.
+    expect((await api(a.cookie, 'POST', '/api/transactions', { type: 'expense', amount: 200_000, categoryId: cat.id, date: '2026-10-01' })).statusCode).toBe(201);
+
+    expect((await api(a.cookie, 'PATCH', `/api/categories/${cat.id}`, { name: 'Fitnes' })).statusCode).toBe(204);
+    const transport = (await api(a.cookie, 'GET', '/api/categories')).json().find((c: { name: string }) => c.name === 'Transport');
+    expect((await api(a.cookie, 'PATCH', `/api/categories/${transport.id}`, { hidden: true })).statusCode).toBe(204);
+    const visible = (await api(a.cookie, 'GET', '/api/categories')).json().map((c: { name: string }) => c.name);
+    expect(visible).toContain('Fitnes');
+    expect(visible).not.toContain('Transport');
+    const all = (await api(a.cookie, 'GET', '/api/categories?all=1')).json();
+    expect(all.find((c: { name: string }) => c.name === 'Transport')).toMatchObject({ hidden: true, custom: false });
+    // System name can be restored with null; a custom one cannot lose its name.
+    expect((await api(a.cookie, 'PATCH', `/api/categories/${cat.id}`, { name: null })).statusCode).toBe(400);
+
+    expect((await api(b.cookie, 'PATCH', `/api/categories/${cat.id}`, { name: 'hack' })).statusCode).toBe(403);
+    expect((await api(b.cookie, 'POST', '/api/transactions', { type: 'expense', amount: 1, categoryId: cat.id, date: '2026-10-01' })).statusCode).toBe(400);
+  });
+});
+
 describe('isolation between users (TZ §39)', () => {
   it("cannot read or change another user's data", async () => {
     const a = await login();

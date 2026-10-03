@@ -70,7 +70,7 @@ export interface Tx {
   source: string;
 }
 
-export interface Category { id: string; name: string; kind: 'expense' | 'income'; icon: string | null }
+export interface Category { id: string; name: string; kind: 'expense' | 'income'; icon: string | null; hidden?: boolean; custom?: boolean }
 
 export interface DebtGroup {
   counterparty: string;

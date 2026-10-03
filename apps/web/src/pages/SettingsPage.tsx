@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Bell, CalendarRange, Clock, Coins, Download, FileSpreadsheet, Globe, LogOut, Trash2, TriangleAlert } from 'lucide-react';
 import { api, type Lang, type Settings } from '../api';
 import { initials } from '../App';
+import { CategoryManager } from '../components/CategoryManager';
 import { day } from '../format';
 import { tr } from '../i18n';
 
@@ -131,6 +132,8 @@ export function SettingsPage({ settings, onChange }: { settings: Settings; onCha
           />
         </div>
       </div>
+
+      <CategoryManager lang={lang} />
 
       <div className="group-title">{tr(lang, 'exportTitle')}</div>
       <div className="group">

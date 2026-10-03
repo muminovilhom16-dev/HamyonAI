@@ -4,6 +4,9 @@ import { eq } from 'drizzle-orm';
 import {
   AppError,
   DEBT_TYPES,
+  createCategory,
+  createTransaction,
+  updateCategory,
   addDays,
   debtPaymentsOf,
   deleteDebtEvent,
@@ -186,10 +189,38 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
     });
   });
 
+  // ?all=1 includes hidden ones (category management); default is what pickers show.
   app.get('/api/categories', { preHandler: session }, async (request) => {
+    const q = parse(z.object({ all: z.enum(['0', '1']).optional() }), request.query);
     const { user, walletId } = await context(opts.db, request);
     const cats = await listWalletCategories(opts.db, walletId, user.language);
-    return cats.filter((c) => !c.isHidden).map((c) => ({ id: c.id, name: c.name, kind: c.kind, icon: c.icon }));
+    return cats
+      .filter((c) => q.all === '1' || !c.isHidden)
+      .map((c) => ({ id: c.id, name: c.name, kind: c.kind, icon: c.icon, hidden: c.isHidden, custom: c.key === c.id }));
+  });
+
+  app.post('/api/categories', { preHandler: session }, async (request, reply) => {
+    const body = parse(
+      z.object({ name: z.string().min(1).max(40), kind: z.enum(['expense', 'income']), icon: z.string().max(16).nullable().optional() }).strict(),
+      request.body,
+    );
+    const { user, walletId } = await context(opts.db, request);
+    const c = await createCategory(opts.db, user.id, walletId, { ...body, lang: user.language });
+    return reply.status(201).send({ id: c.id, name: c.name, kind: c.kind, icon: c.icon, hidden: false, custom: true });
+  });
+
+  app.patch<{ Params: { id: string } }>('/api/categories/:id', { preHandler: session }, async (request, reply) => {
+    const id = parse(uuid, request.params.id);
+    const body = parse(
+      z.object({ name: z.string().min(1).max(40).nullable().optional(), icon: z.string().max(16).nullable().optional(), hidden: z.boolean().optional() }).strict(),
+      request.body,
+    );
+    await updateCategory(opts.db, request.auth!.userId, id, {
+      ...(body.name !== undefined && { name: body.name }),
+      ...(body.icon !== undefined && { icon: body.icon }),
+      ...(body.hidden !== undefined && { isHidden: body.hidden }),
+    });
+    return reply.status(204).send();
   });
 
   app.get('/api/transactions', { preHandler: session }, async (request) => {
@@ -224,6 +255,44 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
       items: rows.map((r) => txDto(r, user.timezone, cats)),
       nextCursor: rows.length === q.limit ? encodeCursor(rows.at(-1)!) : null,
     };
+  });
+
+  // Manual entry from the web panel: expenses and income only (debts go through the bot's debt engine).
+  app.post('/api/transactions', { preHandler: session }, async (request, reply) => {
+    const body = parse(
+      z.object({
+        type: z.enum(['expense', 'income']),
+        amount: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+        currency: z.enum(['UZS', 'USD']).optional(),
+        categoryId: uuid,
+        date,
+        note: z.string().max(200).nullable().optional(),
+      }).strict(),
+      request.body,
+    );
+    const { user, walletId } = await context(opts.db, request);
+    if (body.date > localDate(fin.now(), user.timezone)) throw new AppError('validation', 'future date');
+    const cats = await listWalletCategories(opts.db, walletId, user.language);
+    const cat = cats.find((c) => c.id === body.categoryId);
+    if (!cat || cat.kind !== body.type) throw new AppError('validation', 'category');
+    const tx = await createTransaction(fin, {
+      walletId,
+      userId: user.id,
+      timeZone: user.timezone,
+      tx: {
+        type: body.type,
+        amount: body.amount,
+        currency: body.currency ?? user.currency,
+        category_id: cat.id,
+        note: body.note?.trim() || null,
+        counterparty: null,
+        date: body.date,
+        confidence: 1,
+      },
+      source: 'web',
+      rawInput: null,
+    });
+    return reply.status(201).send(txDto(tx, user.timezone, cats));
   });
 
   app.patch<{ Params: { id: string } }>('/api/transactions/:id', { preHandler: session }, async (request) => {

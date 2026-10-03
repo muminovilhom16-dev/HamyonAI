@@ -328,3 +328,16 @@ table.data td.r, table.data th.r { text-align: right; }
 .saved-pill { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 30; background: var(--text); color: var(--surface); padding: 8px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 600; }
 
 .center { min-height: 70vh; display: grid; place-items: center; text-align: center; }
+
+/* Floating "add" button: above the tab bar on phones, bottom-right on desktop. */
+.fab {
+  position: fixed; right: 18px; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 15;
+  width: 56px; height: 56px; border-radius: 18px; border: 0; display: grid; place-items: center;
+  background: var(--brand); color: var(--brand-ink); box-shadow: 0 8px 22px color-mix(in srgb, var(--brand) 40%, transparent);
+}
+.fab:hover { background: color-mix(in srgb, var(--brand) 88%, black); }
+@media (min-width: 900px) { .fab { bottom: 32px; right: 32px; } }
+.cat-icon-input, .cat-name-input { background: var(--surface-2); border: 1px solid transparent; border-radius: 10px; padding: 9px 10px; min-height: 42px; }
+.cat-icon-input { width: 52px; text-align: center; }
+.cat-name-input { flex: 1; min-width: 0; }
+.cat-icon-input:focus, .cat-name-input:focus { outline: none; border-color: var(--brand); background: var(--surface); }

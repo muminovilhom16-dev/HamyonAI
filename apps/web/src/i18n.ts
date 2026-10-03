@@ -102,6 +102,18 @@ const M = {
   period: { uz_latn: 'Davr', uz_cyrl: 'Давр', ru: 'Период' },
   search: { uz_latn: 'Qidirish', uz_cyrl: 'Қидириш', ru: 'Поиск' },
   searchHint: { uz_latn: 'Izoh, kategoriya yoki ism…', uz_cyrl: 'Изоҳ, категория ёки исм…', ru: 'Комментарий, категория или имя…' },
+  addRecord: { uz_latn: "Yozuv qo'shish", uz_cyrl: 'Ёзув қўшиш', ru: 'Добавить запись' },
+  pickCategory: { uz_latn: 'Kategoriyani tanlang', uz_cyrl: 'Категорияни танланг', ru: 'Выберите категорию' },
+  categories: { uz_latn: 'Kategoriyalar', uz_cyrl: 'Категориялар', ru: 'Категории' },
+  newCategory: { uz_latn: 'Yangi kategoriya', uz_cyrl: 'Янги категория', ru: 'Новая категория' },
+  categoryName: { uz_latn: 'Nomi', uz_cyrl: 'Номи', ru: 'Название' },
+  icon: { uz_latn: 'Belgi', uz_cyrl: 'Белги', ru: 'Значок' },
+  add: { uz_latn: "Qo'shish", uz_cyrl: 'Қўшиш', ru: 'Добавить' },
+  hide: { uz_latn: 'Yashirish', uz_cyrl: 'Яшириш', ru: 'Скрыть' },
+  show: { uz_latn: "Ko'rsatish", uz_cyrl: 'Кўрсатиш', ru: 'Показать' },
+  rename: { uz_latn: 'Nomini o‘zgartirish', uz_cyrl: 'Номини ўзгартириш', ru: 'Переименовать' },
+  hidden: { uz_latn: 'yashirin', uz_cyrl: 'яширин', ru: 'скрыта' },
+  categoryExists: { uz_latn: 'Bunday kategoriya bor', uz_cyrl: 'Бундай категория бор', ru: 'Такая категория уже есть' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;
