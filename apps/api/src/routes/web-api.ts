@@ -6,6 +6,9 @@ import {
   AppError,
   DEBT_TYPES,
   budgetStatus,
+  createRecurring,
+  listRecurring,
+  removeRecurring,
   removeBudget,
   setBudget,
   createCategory,
@@ -247,6 +250,33 @@ export function webApiRoutes(app: FastifyInstance, opts: WebApiOptions): void {
 
   app.delete<{ Params: { id: string } }>('/api/budgets/:id', { preHandler: session }, async (request, reply) => {
     await removeBudget(opts.db, request.auth!.userId, parse(uuid, request.params.id));
+    return reply.status(204).send();
+  });
+
+  // ─── Recurring payments ───
+  app.get('/api/recurring', { preHandler: session }, async (request) => {
+    const { user, walletId } = await context(opts.db, request);
+    return listRecurring(opts.db, { userId: user.id, walletId, timeZone: user.timezone, now: fin.now(), lang: user.language });
+  });
+
+  app.post('/api/recurring', { preHandler: session }, async (request, reply) => {
+    const body = parse(
+      z.object({
+        note: z.string().min(1).max(100),
+        amount: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+        currency: z.enum(['UZS', 'USD']).optional(),
+        categoryId: uuid.nullable(),
+        dayOfMonth: z.number().int().min(1).max(28),
+      }).strict(),
+      request.body,
+    );
+    const { user, walletId } = await context(opts.db, request);
+    await createRecurring(opts.db, { userId: user.id, walletId, ...body, currency: body.currency ?? user.currency });
+    return reply.status(201).send(await listRecurring(opts.db, { userId: user.id, walletId, timeZone: user.timezone, now: fin.now(), lang: user.language }));
+  });
+
+  app.delete<{ Params: { id: string } }>('/api/recurring/:id', { preHandler: session }, async (request, reply) => {
+    await removeRecurring(opts.db, request.auth!.userId, parse(uuid, request.params.id));
     return reply.status(204).send();
   });
 

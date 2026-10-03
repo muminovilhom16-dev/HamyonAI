@@ -84,3 +84,8 @@ export interface DebtGroup {
 }
 
 export interface Budget { id: string; categoryId: string | null; name: string | null; icon: string | null; limitUzs: number; spentUzs: number }
+
+export interface Recurring {
+  id: string; categoryId: string | null; categoryName: string | null; categoryIcon: string | null;
+  amount: number; currency: Currency; note: string; dayOfMonth: number; nextDate: string;
+}

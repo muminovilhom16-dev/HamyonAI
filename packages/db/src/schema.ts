@@ -59,6 +59,7 @@ export const reminderKindEnum = pgEnum('reminder_kind', [
   'debt_due',
   'reactivation',
   'budget_alert',
+  'recurring_due',
 ]);
 export const reminderStatusEnum = pgEnum('reminder_status', ['scheduled', 'sent', 'skipped', 'failed']);
 
@@ -359,6 +360,8 @@ export const pendingKindEnum = pgEnum('pending_kind', [
   'ask_counterparty',
   'ask_debt_direction',
   'budget_amount',
+  'recurring_text',
+  'recurring_day',
 ]);
 
 /**
@@ -398,4 +401,31 @@ export const budgets = pgTable('budgets', {
   uniqueIndex('budgets_wallet_category_uq').on(t.walletId, t.categoryId).where(sql`${t.categoryId} is not null`),
   uniqueIndex('budgets_wallet_total_uq').on(t.walletId).where(sql`${t.categoryId} is null`),
   check('budgets_amount_positive', sql`${t.amountUzs} > 0`),
+]);
+
+/**
+ * Regular payments (internet, kommunal, kredit, obunalar). On `day_of_month`
+ * the bot asks "paid?"; one tap records the expense. `last_handled_month`
+ * (YYYY-MM) makes paying/skipping idempotent per month.
+ */
+export const recurringPayments = pgTable('recurring_payments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  walletId: uuid('wallet_id')
+    .notNull()
+    .references(() => wallets.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
+  amount: money('amount').notNull(),
+  currency: currencyEnum('currency').notNull().default('UZS'),
+  note: text('note').notNull(),
+  dayOfMonth: integer('day_of_month').notNull(),
+  lastHandledMonth: text('last_handled_month'),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+}, (t) => [
+  index('recurring_wallet_idx').on(t.walletId),
+  check('recurring_day_range', sql`${t.dayOfMonth} between 1 and 28`),
+  check('recurring_amount_positive', sql`${t.amount} > 0`),
 ]);

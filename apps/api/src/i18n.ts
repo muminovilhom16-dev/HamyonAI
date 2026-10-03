@@ -102,11 +102,11 @@ const messages = {
   uncategorized: { uz_latn: 'Kategoriyasiz', uz_cyrl: 'Категориясиз', ru: 'Без категории' },
   help: {
     uz_latn:
-      "<b>📖 Qanday yozish kerak</b>\n\n💸 Xarajat: «taksi 25 ming», «non 5 ming, sut 12 ming», «telefon 2kk», «50$ kurtka»\n💰 Daromad: «oylik tushdi 6 mln», «+500 ming»\n🤝 Qarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi»\n\n<b>📊 Hisobotlar</b>\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/ochir — oxirgi yozuvni o'chirish\n/qarzlar — qarzlar\n/byudjet — oylik limitlar\n\n<b>⚙️ Boshqa</b>\n/web — web panel\n/sozlamalar — sozlamalar\n/yordam — yordam",
+      "<b>📖 Qanday yozish kerak</b>\n\n💸 Xarajat: «taksi 25 ming», «non 5 ming, sut 12 ming», «telefon 2kk», «50$ kurtka»\n💰 Daromad: «oylik tushdi 6 mln», «+500 ming»\n🤝 Qarz: «Murod akaga 300 ming qarz berdim», «Murod aka 100 ming qaytardi»\n\n<b>📊 Hisobotlar</b>\n/bugun — bugungi hisobot\n/hafta — haftalik\n/oy — oylik\n/oxirgi — oxirgi 20 ta yozuv\n/ochir — oxirgi yozuvni o'chirish\n/qarzlar — qarzlar\n/byudjet — oylik limitlar\n/obunalar — doimiy to'lovlar\n\n<b>⚙️ Boshqa</b>\n/web — web panel\n/sozlamalar — sozlamalar\n/yordam — yordam",
     uz_cyrl:
-      '<b>📖 Қандай ёзиш керак</b>\n\n💸 Харажат: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка»\n💰 Даромад: «ойлик тушди 6 млн», «+500 минг»\n🤝 Қарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди»\n\n<b>📊 Ҳисоботлар</b>\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/ochir — охирги ёзувни ўчириш\n/qarzlar — қарзлар\n/byudjet — ойлик лимитлар\n\n<b>⚙️ Бошқа</b>\n/web — веб панел\n/sozlamalar — созламалар\n/yordam — ёрдам',
+      '<b>📖 Қандай ёзиш керак</b>\n\n💸 Харажат: «такси 25 минг», «нон 5 минг, сут 12 минг», «50$ куртка»\n💰 Даромад: «ойлик тушди 6 млн», «+500 минг»\n🤝 Қарз: «Мурод акага 300 минг қарз бердим», «Мурод ака 100 минг қайтарди»\n\n<b>📊 Ҳисоботлар</b>\n/bugun — бугунги ҳисобот\n/hafta — ҳафталик\n/oy — ойлик\n/oxirgi — охирги 20 та ёзув\n/ochir — охирги ёзувни ўчириш\n/qarzlar — қарзлар\n/byudjet — ойлик лимитлар\n/obunalar — доимий тўловлар\n\n<b>⚙️ Бошқа</b>\n/web — веб панел\n/sozlamalar — созламалар\n/yordam — ёрдам',
     ru:
-      '<b>📖 Как записывать</b>\n\n💸 Расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка»\n💰 Доход: «зарплата 6 млн», «+500 тысяч»\n🤝 Долг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к»\n\n<b>📊 Отчёты</b>\n/bugun — за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/ochir — удалить последнюю запись\n/qarzlar — долги\n/byudjet — месячные лимиты\n\n<b>⚙️ Другое</b>\n/web — веб-панель\n/sozlamalar — настройки\n/yordam — помощь',
+      '<b>📖 Как записывать</b>\n\n💸 Расход: «такси 25 тысяч», «хлеб 5к, молоко 12к», «50$ куртка»\n💰 Доход: «зарплата 6 млн», «+500 тысяч»\n🤝 Долг: «дал в долг Мурод ака 300к», «Мурод ака вернул 100к»\n\n<b>📊 Отчёты</b>\n/bugun — за сегодня\n/hafta — за неделю\n/oy — за месяц\n/oxirgi — последние 20 записей\n/ochir — удалить последнюю запись\n/qarzlar — долги\n/byudjet — месячные лимиты\n/obunalar — регулярные платежи\n\n<b>⚙️ Другое</b>\n/web — веб-панель\n/sozlamalar — настройки\n/yordam — помощь',
   },
 
   // ─── Debts ───
@@ -211,6 +211,38 @@ const messages = {
   },
   budgetLeft: { uz_latn: 'qoldi', uz_cyrl: 'қолди', ru: 'осталось' },
   budgetOver: { uz_latn: 'oshib ketdi', uz_cyrl: 'ошиб кетди', ru: 'перерасход' },
+
+  // ─── Recurring payments ───
+  recurringTitle: { uz_latn: '🔁 Doimiy to‘lovlar', uz_cyrl: '🔁 Доимий тўловлар', ru: '🔁 Регулярные платежи' },
+  recurringEmpty: {
+    uz_latn: "Hali yo'q. Internet, kommunal, kredit kabi har oylik to'lovlarni qo'shing — to'lov kuni bot eslatadi va bir bosishda yozib qo'yadi.",
+    uz_cyrl: 'Ҳали йўқ. Интернет, коммунал, кредит каби ҳар ойлик тўловларни қўшинг — тўлов куни бот эслатади ва бир босишда ёзиб қўяди.',
+    ru: 'Пока нет. Добавьте ежемесячные платежи — интернет, коммуналка, кредит: в день оплаты бот напомнит и запишет в одно касание.',
+  },
+  recurringAdd: { uz_latn: "➕ Qo'shish", uz_cyrl: '➕ Қўшиш', ru: '➕ Добавить' },
+  recurringAskText: {
+    uz_latn: "To'lovni yozing, masalan: «internet 99 ming» yoki «kredit 1,2 mln».",
+    uz_cyrl: 'Тўловни ёзинг, масалан: «интернет 99 минг» ёки «кредит 1,2 млн».',
+    ru: 'Напишите платёж, например: «интернет 99 тысяч» или «кредит 1,2 млн».',
+  },
+  recurringAskDay: { uz_latn: '{name} — har oyning nechanchi sanasida?', uz_cyrl: '{name} — ҳар ойнинг нечанчи санасида?', ru: '{name} — какого числа каждого месяца?' },
+  recurringDay: { uz_latn: 'har oy {day}-sana', uz_cyrl: 'ҳар ой {day}-сана', ru: 'каждое {day}-е число' },
+  recurringNext: { uz_latn: 'keyingisi', uz_cyrl: 'кейингиси', ru: 'следующий' },
+  recurringDue: {
+    uz_latn: "🔁 Bugun to'lov kuni: {name} — <b>{amount}</b>",
+    uz_cyrl: '🔁 Бугун тўлов куни: {name} — <b>{amount}</b>',
+    ru: '🔁 Сегодня день оплаты: {name} — <b>{amount}</b>',
+  },
+  recurringPaid: { uz_latn: "✅ To'landi", uz_cyrl: '✅ Тўланди', ru: '✅ Оплачено' },
+  recurringSkip: { uz_latn: '⏭ Bu oy emas', uz_cyrl: '⏭ Бу ой эмас', ru: '⏭ Не в этом месяце' },
+  recurringSkipped: { uz_latn: "⏭ Bu oy o'tkazib yuborildi.", uz_cyrl: '⏭ Бу ой ўтказиб юборилди.', ru: '⏭ В этом месяце пропущено.' },
+  recurringAlready: { uz_latn: 'Bu oy allaqachon belgilangan', uz_cyrl: 'Бу ой аллақачон белгиланган', ru: 'Этот месяц уже отмечен' },
+  recurringNotUnderstood: {
+    uz_latn: "Nomi va summasini tushunmadim. Masalan: «internet 99 ming».",
+    uz_cyrl: 'Номи ва суммасини тушунмадим. Масалан: «интернет 99 минг».',
+    ru: 'Не понял название и сумму. Например: «интернет 99 тысяч».',
+  },
+  recurringTooMany: { uz_latn: "Doimiy to'lovlar soni chegaraga yetdi (30).", uz_cyrl: 'Доимий тўловлар сони чегарага етди (30).', ru: 'Достигнут предел регулярных платежей (30).' },
 
   // ─── Proactive (TZ §32-33: short, never shaming) ───
   dailyReminder: {

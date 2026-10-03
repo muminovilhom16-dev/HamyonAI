@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUpRight, ChevronRight, TrendingDown, TrendingUp } f
 import { api, type Dashboard, type Lang, type Tx } from '../api';
 import { Bars } from '../components/Bars';
 import { BudgetsCard } from '../components/BudgetsCard';
+import { RecurringCard } from '../components/RecurringCard';
 import { Donut } from '../components/Donut';
 import { TxRow } from '../components/TxRow';
 import { day, money } from '../format';
@@ -120,6 +121,7 @@ export function DashboardPage({ lang, onSeeAll }: { lang: Lang; onSeeAll: () => 
               <Bars daily={data.daily} lang={lang} />
             </div>
             <BudgetsCard lang={lang} />
+            <RecurringCard lang={lang} />
           </div>
         </div>
       )}

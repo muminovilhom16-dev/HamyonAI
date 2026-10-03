@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import type { BotContext, BotServices } from './context';
 import { esc, useHtmlParseMode } from './html';
 import { registerBudgets } from './budgets';
+import { registerRecurring } from './recurring';
 import { registerDebtFlows } from './debts';
 import { registerTransactionFlows } from './flows';
 import { registerVoice } from './voice';
@@ -104,6 +105,7 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
 
   registerDebtFlows(bot, deps);
   registerBudgets(bot, deps);
+  registerRecurring(bot, deps);
   registerVoice(bot, deps);
   registerTransactionFlows(bot, deps);
 

@@ -98,3 +98,12 @@ describe('budgets', () => {
     await rejectsWith(h.db.insert(s.budgets).values({ walletId, amountUzs: 0 }), 'budgets_amount_positive');
   });
 });
+
+describe('recurring payments', () => {
+  it('day of month 1–28, positive amount', async () => {
+    const base = { walletId, userId, amount: 1000, note: 'X', dayOfMonth: 5 };
+    await h.db.insert(s.recurringPayments).values(base);
+    await rejectsWith(h.db.insert(s.recurringPayments).values({ ...base, dayOfMonth: 29 }), 'recurring_day_range');
+    await rejectsWith(h.db.insert(s.recurringPayments).values({ ...base, amount: 0 }), 'recurring_amount_positive');
+  });
+});

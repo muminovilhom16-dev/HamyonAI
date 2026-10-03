@@ -199,6 +199,22 @@ describe('budgets API', () => {
   });
 });
 
+describe('recurring API', () => {
+  it('creates with validation, lists next date, deletes; isolation', async () => {
+    const a = await login();
+    const b = await login();
+    const telecom = (await api(a.cookie, 'GET', '/api/categories')).json().find((c: { name: string }) => c.name === 'Aloqa va internet');
+    const res = await api(a.cookie, 'POST', '/api/recurring', { note: 'Internet', amount: 99_000, categoryId: telecom.id, dayOfMonth: 10 });
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject([{ note: 'Internet', amount: 99_000, currency: 'UZS', dayOfMonth: 10, nextDate: '2026-10-10', categoryName: 'Aloqa va internet' }]);
+    expect((await api(a.cookie, 'POST', '/api/recurring', { note: 'X', amount: 1, categoryId: null, dayOfMonth: 31 })).statusCode).toBe(400);
+    const [r] = (await api(a.cookie, 'GET', '/api/recurring')).json();
+    expect((await api(b.cookie, 'DELETE', `/api/recurring/${r.id}`)).statusCode).toBe(403);
+    expect((await api(b.cookie, 'POST', '/api/recurring', { note: 'X', amount: 1, categoryId: telecom.id, dayOfMonth: 1 })).statusCode).toBe(400);
+    expect((await api(a.cookie, 'DELETE', `/api/recurring/${r.id}`)).statusCode).toBe(204);
+  });
+});
+
 describe('isolation between users (TZ §39)', () => {
   it("cannot read or change another user's data", async () => {
     const a = await login();

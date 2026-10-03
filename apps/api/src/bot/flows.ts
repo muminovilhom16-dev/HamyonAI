@@ -50,6 +50,7 @@ import {
 } from './cards';
 import type { BotContext, BotServices } from './context';
 import { answerBudgetAmount, budgetAlertLines } from './budgets';
+import { answerRecurringText } from './recurring';
 import { b, esc, i } from './html';
 import { answerCounterparty, continueDebt, debtPayloadFrom, isDebtPayload, replyDebtCard, renderDebtCard, type PendingDebtPayload } from './debts';
 import { afterFirstTransaction } from './onboarding';
@@ -239,6 +240,10 @@ export async function processText(ctx: BotContext, s: BotServices, text: string,
         await continueAfterAmount(ctx, s, pending.id, { ...p, tx: { ...p.tx, amount } }, false);
         return;
       }
+    }
+    if (awaiting.kind === 'recurring_text' && !text.startsWith('/')) {
+      await answerRecurringText(ctx, s, awaiting.id, text);
+      return;
     }
     if (awaiting.kind === 'budget_amount' && amount !== null) {
       await answerBudgetAmount(ctx, s, awaiting.id, awaiting.payload, amount);

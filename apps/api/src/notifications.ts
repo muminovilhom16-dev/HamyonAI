@@ -4,6 +4,7 @@ import {
   addDays,
   claimProactive,
   dailyReminderCandidates,
+  dueRecurring,
   listWalletCategories,
   markProactiveFailed,
   personalWalletId,
@@ -16,7 +17,7 @@ import {
   type ReminderKind,
 } from '@hamyon/core';
 import { schema, type Database } from '@hamyon/db';
-import { formatDay } from './format';
+import { formatDay, formatMoney } from './format';
 import { b } from './bot/html';
 import { summaryLines } from './bot/summary';
 import { t, tf } from './i18n';
@@ -29,6 +30,8 @@ export interface NotificationDeps {
   maxPerDay: number;
   weeklyReportTime: string;
   monthlyReportTime: string;
+  /** Local time when recurring payments due today are announced. */
+  recurringTime?: string;
   now?: () => Date;
   sendGapMs?: number;
 }
@@ -123,7 +126,19 @@ export async function runProactiveTick(deps: NotificationDeps): Promise<Stats> {
   // 1. Debts (money owed is the most actionable).
   stats.debt = await sendDebtReminders({ ...deps, now: () => now });
 
-  // 2. Daily reminder with the "no spending today" button.
+  // 2. Recurring payments due today: one tap records the expense.
+  for (const r of await dueRecurring(deps.db, now, deps.recurringTime ?? '10:00')) {
+    const month = r.localDate.slice(0, 7);
+    const c: ProactiveCandidate = { userId: r.userId, telegramId: r.telegramId, language: r.language, timeZone: r.timeZone, localDate: r.localDate, lastActiveDate: r.localDate };
+    await deliver(deps, c, 'recurring_due', `rec:${r.recurringId}:${month}`, () => ({
+      text: tf(r.language, 'recurringDue', { name: r.note, amount: formatMoney(r.amount, r.currency, r.language) }),
+      reply_markup: new InlineKeyboard()
+        .text(t(r.language, 'recurringPaid'), `rc:pay:${r.recurringId}:${month}`)
+        .text(t(r.language, 'recurringSkip'), `rc:skip:${r.recurringId}:${month}`),
+    }), stats, 'recurring', now);
+  }
+
+  // 3. Daily reminder with the "no spending today" button.
   for (const c of await dailyReminderCandidates(deps.db, now)) {
     await deliver(deps, c, 'daily', `daily:${c.localDate}`, (id) => ({
       text: t(c.language, 'dailyReminder'),
@@ -131,7 +146,7 @@ export async function runProactiveTick(deps: NotificationDeps): Promise<Stats> {
     }), stats, 'daily', now);
   }
 
-  // 3. Reports: weekly (Sunday evening) and monthly (1st, for the month just ended).
+  // 4. Reports: weekly (Sunday evening) and monthly (1st, for the month just ended).
   const weekly = await reportCandidates(deps.db, now, 'weekly', deps.weeklyReportTime);
   for (const c of weekly) {
     const end = c.localDate; // Sunday
@@ -156,7 +171,7 @@ export async function runProactiveTick(deps: NotificationDeps): Promise<Stats> {
     await deliver(deps, c, 'monthly_report', `monthly:${start.slice(0, 7)}`, () => ({ text }), stats, 'monthly', now);
   }
 
-  // 4. Reactivation after 3 and 7 quiet days, then silence.
+  // 5. Reactivation after 3 and 7 quiet days, then silence.
   for (const c of await reactivationCandidates(deps.db, now)) {
     await deliver(deps, c, 'reactivation', `react:${c.days}:${c.lastActiveDate}`, () => ({
       text: t(c.language, c.days === 3 ? 'reactivation3' : 'reactivation7'),

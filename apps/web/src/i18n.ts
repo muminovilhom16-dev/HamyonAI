@@ -124,6 +124,16 @@ const M = {
   },
   budgetLimitReached: { uz_latn: "Limit qo'yib bo'lmadi", uz_cyrl: 'Лимит қўйиб бўлмади', ru: 'Не удалось задать лимит' },
   overLimit: { uz_latn: 'oshdi', uz_cyrl: 'ошди', ru: 'превышен' },
+  recurring: { uz_latn: 'Doimiy to‘lovlar', uz_cyrl: 'Доимий тўловлар', ru: 'Регулярные платежи' },
+  recurringEmpty: {
+    uz_latn: 'Internet, kommunal, kredit — to‘lov kuni bot eslatadi va bir bosishda yozib qo‘yadi.',
+    uz_cyrl: 'Интернет, коммунал, кредит — тўлов куни бот эслатади ва бир босишда ёзиб қўяди.',
+    ru: 'Интернет, коммуналка, кредит — в день оплаты бот напомнит и запишет в одно касание.',
+  },
+  recurringNameHint: { uz_latn: 'Nomi, masalan: Internet', uz_cyrl: 'Номи, масалан: Интернет', ru: 'Название, например: Интернет' },
+  everyMonth: { uz_latn: 'har oy {day}-sana', uz_cyrl: 'ҳар ой {day}-сана', ru: 'каждое {day}-е число' },
+  next: { uz_latn: 'keyingisi', uz_cyrl: 'кейингиси', ru: 'следующий' },
+  dayOfMonth: { uz_latn: 'Sana', uz_cyrl: 'Сана', ru: 'Число' },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof M;

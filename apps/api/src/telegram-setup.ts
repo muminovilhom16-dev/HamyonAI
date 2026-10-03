@@ -10,6 +10,7 @@ const COMMANDS: Array<[string, string, string]> = [
   ['ochir', "Oxirgi yozuvni o'chirish", 'Удалить последнюю запись'],
   ['qarzlar', 'Qarzlar', 'Долги'],
   ['byudjet', 'Oylik limitlar', 'Месячные лимиты'],
+  ['obunalar', "Doimiy to'lovlar", 'Регулярные платежи'],
   ['eksport', 'Eksport (Excel/CSV)', 'Экспорт (Excel/CSV)'],
   ['sozlamalar', 'Sozlamalar', 'Настройки'],
   ['web', 'Web panel', 'Веб-панель'],

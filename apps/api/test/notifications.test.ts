@@ -128,3 +128,66 @@ describe('reactivation and the 2-per-day cap', () => {
     expect(texts[1]).toContain('Haftalik hisobot');
   });
 });
+
+describe('recurring payments (/obunalar)', () => {
+  const lastKb = () => H.lastKeyboard().flat();
+  it('set up in the bot, announced on the day at 10:00, recorded in one tap, idempotent', async () => {
+    const id = await newUser();
+    await sayAt(id, '2026-10-01T06:00:00Z', '/obunalar');
+    expect(htmlToPlain(H.texts().at(-1)!)).toContain("Hali yo'q");
+    await H.tap(id, 'rc:add');
+    await sayAt(id, '2026-10-01T06:01:00Z', 'internet 99 ming');
+    const day5 = lastKb().find((b) => b.text === '5')!;
+    await H.tap(id, day5.callback_data!);
+    const list = htmlToPlain(H.texts().at(-1)!);
+    expect(list).toContain("Internet — 99 000 so'm");
+    expect(list).toContain('har oy 5-sana · keyingisi: 5-oktabr');
+    expect(await H.h.db.select().from(schema.transactions).where(eq(schema.transactions.note, 'Internet'))).toHaveLength(0);
+
+    H.reset();
+    await tick('2026-10-04T05:00:00Z'); // day before: nothing
+    await tick('2026-10-05T04:59:00Z'); // 09:59 Tashkent: not yet
+    expect(proactiveTo(id).filter((m) => m.text.includes('Internet'))).toHaveLength(0);
+    await tick('2026-10-05T05:00:00Z'); // 10:00
+    await tick('2026-10-05T05:05:00Z'); // deduped
+    const due = proactiveTo(id).filter((m) => m.text.includes('Internet'));
+    expect(due).toHaveLength(1);
+    expect(htmlToPlain(due[0]!.text)).toBe("🔁 Bugun to'lov kuni: Internet — 99 000 so'm");
+    const [pay, skip] = due[0]!.kb.inline_keyboard[0];
+    expect(skip.text).toBe('⏭ Bu oy emas');
+
+    H.clock.now = new Date('2026-10-05T06:00:00Z');
+    await H.tap(id, pay.callback_data);
+    expect(H.texts().at(-1)).toContain("99 000 so'm");
+    await H.tap(id, pay.callback_data); // double tap
+    await H.tap(id, skip.callback_data);
+    const rows = await H.h.db.select().from(schema.transactions).where(eq(schema.transactions.note, 'Internet'));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ type: 'expense', amount: 99_000 });
+
+    // Next month it is due again; "skip" records nothing.
+    H.reset();
+    await tick('2026-11-05T05:00:00Z');
+    const nov = proactiveTo(id).filter((m) => m.text.includes('Internet'));
+    expect(nov).toHaveLength(1);
+    H.clock.now = new Date('2026-11-05T06:00:00Z');
+    await H.tap(id, nov[0]!.kb.inline_keyboard[0][1].callback_data);
+    expect(H.texts().at(-1)).toContain("o'tkazib yuborildi");
+    expect(await H.h.db.select().from(schema.transactions).where(eq(schema.transactions.note, 'Internet'))).toHaveLength(1);
+  });
+
+  it("another user's recurring buttons do nothing", async () => {
+    const owner = await newUser();
+    const attacker = await newUser();
+    await sayAt(owner, '2026-10-01T06:00:00Z', '/obunalar');
+    await H.tap(owner, 'rc:add');
+    await sayAt(owner, '2026-10-01T06:01:00Z', 'svet 120 ming');
+    await H.tap(owner, lastKb().find((b) => b.text === '7')!.callback_data!);
+    const del = lastKb().find((b) => b.text.startsWith('🗑'))!.callback_data!;
+    const id = del.split(':')[2];
+    await H.tap(attacker, `rc:pay:${id}:2026-10`);
+    await H.tap(attacker, del);
+    expect(await H.h.db.select().from(schema.recurringPayments).where(eq(schema.recurringPayments.id, id!))).toHaveLength(1);
+    expect(await H.h.db.select().from(schema.transactions).where(eq(schema.transactions.note, 'Svet'))).toHaveLength(0);
+  });
+});
