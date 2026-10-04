@@ -22,13 +22,20 @@ Chromium boshqa joyda bo'lsa: `CHROMIUM_PATH=/yo'l/chromium`.
 Barcha yozuvlar `promo.html` ichida (`<div class="scene">` bloklari va `MSGS` ro'yxati).
 Brauzerda `promo.html` ni ochib, konsolda `render(10)` deb istalgan soniyani ko'rish mumkin.
 
+## Ovoz effektlari
+
+Video ichida sintez qilingan ovoz effektlari bor (`sfx.mjs`): whoosh, pop, klaviatura,
+tanga, bildirishnoma, qo'ng'iroq va h.k. — barchasi animatsiya vaqtiga moslangan, litsenziyasiz.
+Effektlarsiz video: `--no-sfx`. Faqat ovozni yaratish: `node marketing/promo/sfx.mjs`.
+
 ## Musiqa qo'shish
 
-Video ovozsiz. Musiqa qo'shish uchun (25 soniyaga qirqib, oxirida so'nadi):
+Effektlarni saqlab, orqa fonga musiqa qo'shish (musiqa pastroq, oxirida so'nadi):
 
 ```bash
-ffmpeg -i hamyon-promo-9x16.mp4 -i musiqa.mp3 -map 0:v -map 1:a -c:v copy -c:a aac \
-  -af "afade=t=out:st=23:d=2" -shortest hamyon-promo-music.mp4
+ffmpeg -i hamyon-promo-9x16.mp4 -i musiqa.mp3 -filter_complex \
+  "[1:a]volume=0.35,afade=t=out:st=23:d=2[m];[0:a][m]amix=inputs=2:duration=first:normalize=0[a]" \
+  -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k hamyon-promo-music.mp4
 ```
 
-Yoki CapCut / Instagram / TikTok ichida tayyor musiqani qo'shing.
+Yoki CapCut / Instagram / TikTok ichida musiqani past ovozda qo'shing.

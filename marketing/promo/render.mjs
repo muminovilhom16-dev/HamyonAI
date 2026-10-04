@@ -1,13 +1,14 @@
 // Renders promo.html to an MP4: every frame is drawn by window.render(t) in
 // headless Chromium and piped as JPEG to ffmpeg (no frame files on disk).
 //
-//   node marketing/promo/render.mjs [--bot hamyonchai_bot] [--fps 30] [--out file.mp4]
+//   node marketing/promo/render.mjs [--bot hamyonchai_bot] [--fps 30] [--out file.mp4] [--no-sfx]
 //   node marketing/promo/render.mjs --stills 1,4,8.6,10,14,17.8,20.8,24   # PNG previews
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { writeSfx } from './sfx.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const arg = (name, def) => {
@@ -34,9 +35,12 @@ if (stills) {
   }
   console.log(`stills → ${dir}`);
 } else {
+  // Sound effects are synthesized in sfx.mjs and muxed as AAC.
+  const sfx = process.argv.includes('--no-sfx') ? null : writeSfx(`${here}/sfx.wav`);
   const ffmpeg = spawn('ffmpeg', [
     '-y', '-loglevel', 'error',
     '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-',
+    ...(sfx ? ['-i', sfx, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []),
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
     '-r', String(fps), out,
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
