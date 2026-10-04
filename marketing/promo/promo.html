@@ -258,14 +258,21 @@
     <div class="h1" id="cta1" style="margin-top:60px;font-size:120px">Hamyon <span class="gold">AI</span></div>
     <div class="cap" id="cta2" style="margin-top:34px;max-width:900px;font-weight:650;color:rgba(255,255,255,.9)">Xarajatni yozing —<br />qolganini hamyon hisoblaydi</div>
     <div id="cta3" style="margin-top:90px"><div class="btn">✈️ Telegramda bepul boshlash<div class="shine" id="shine"></div></div></div>
-    <div class="sub" id="cta4" style="margin-top:50px;font-size:52px;font-weight:750;color:var(--gold-2)">@BOT</div>
+    <div id="cta4" style="margin-top:56px;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="display:flex;align-items:center;gap:18px;padding:22px 44px;border-radius:999px;background:rgba(255,255,255,.08);border:2px solid rgba(232,200,90,.45);font-size:56px;font-weight:750;color:var(--gold-2)">
+        <span style="font-size:46px">🔗</span><span id="ctaLink" style="text-decoration:underline;text-underline-offset:10px;text-decoration-thickness:4px">t.me/BOT</span>
+      </div>
+      <div id="ctaHandle" style="font-size:40px;font-weight:650;color:rgba(255,255,255,.75)">@BOT</div>
+    </div>
   </div>
 </div>
 
 <script>
   const DURATION = 25;
   const params = new URLSearchParams(location.search);
-  document.getElementById('cta4').textContent = '@' + (params.get('bot') || 'HamyonAI_bot').replace(/^@/, '');
+  const BOT = (params.get('bot') || 'hamyonchai_bot').replace(/^@/, '');
+  document.getElementById('ctaLink').textContent = 't.me/' + BOT;
+  document.getElementById('ctaHandle').textContent = '@' + BOT;
 
   // ─── Easing & helpers (pure functions of time) ───
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));

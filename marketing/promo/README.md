@@ -6,11 +6,11 @@ Video `promo.html` animatsiyasidan kadrma-kadr yaratiladi (Chromium + ffmpeg, be
 
 ```bash
 pnpm install            # bir marta (playwright-core va shrift uchun)
-node marketing/promo/render.mjs --bot SizningBot_bot
+node marketing/promo/render.mjs --bot hamyonchai_bot
 # natija: marketing/promo/hamyon-promo-9x16.mp4 (1080×1920, 30 fps, H.264)
 ```
 
-- `--bot` — videoning oxirida ko'rinadigan bot @username (@ belgisisiz).
+- `--bot` — videoning oxirida ko'rinadigan bot username (@ belgisisiz; standart: hamyonchai_bot).
 - `--fps 60` — silliqroq video.
 - `--out fayl.mp4` — boshqa nom.
 - `--stills 1,8.5,24 --dir rasmlar` — faqat tanlangan soniyalardagi PNG kadrlar (tez tekshirish uchun).

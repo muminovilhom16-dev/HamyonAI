@@ -1,7 +1,7 @@
 // Renders promo.html to an MP4: every frame is drawn by window.render(t) in
 // headless Chromium and piped as JPEG to ffmpeg (no frame files on disk).
 //
-//   node marketing/promo/render.mjs [--bot HamyonAI_bot] [--fps 30] [--out file.mp4]
+//   node marketing/promo/render.mjs [--bot hamyonchai_bot] [--fps 30] [--out file.mp4]
 //   node marketing/promo/render.mjs --stills 1,4,8.6,10,14,17.8,20.8,24   # PNG previews
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -15,7 +15,7 @@ const arg = (name, def) => {
   return i > 0 ? process.argv[i + 1] : def;
 };
 const fps = Number(arg('fps', '30'));
-const bot = arg('bot', process.env.BOT_USERNAME ?? 'HamyonAI_bot');
+const bot = arg('bot', process.env.BOT_USERNAME ?? 'hamyonchai_bot');
 const out = resolve(arg('out', `${here}/hamyon-promo-9x16.mp4`));
 const stills = arg('stills', null);
 
