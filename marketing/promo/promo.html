@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<title>Hamyon AI — promo</title>
+<style>
+  @font-face {
+    font-family: 'Inter';
+    src: url('../../apps/web/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2');
+    font-weight: 100 900;
+  }
+  @font-face {
+    font-family: 'Inter';
+    src: url('../../apps/web/node_modules/@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2') format('woff2');
+    font-weight: 100 900;
+    unicode-range: U+0100-024F, U+02BB-02BC, U+2018-2019;
+  }
+  :root {
+    --brand: #0e7c66; --brand-deep: #06231d; --brand-2: #0b3d33; --mint: #5fd0b0;
+    --gold: #c9a227; --gold-2: #e8c95a; --ink: #0f1729; --paper: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--brand-deep); }
+  body { font-family: 'Inter', 'Noto Color Emoji', sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; }
+  .layer { position: absolute; inset: 0; will-change: transform, opacity; }
+  .center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+
+  /* Background */
+  #bg { background: radial-gradient(120% 80% at 50% 0%, #0e5a4a 0%, #0a3a31 45%, #052019 100%); }
+  .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; }
+  .particle { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: rgba(232, 201, 90, .7); }
+  .coin {
+    position: absolute; width: 120px; height: 120px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff3c4, #e8c95a 40%, #b48a17 100%);
+    box-shadow: inset 0 -8px 0 rgba(0,0,0,.15), 0 20px 40px rgba(0,0,0,.35);
+    display: grid; place-items: center; color: #7a5c06; font-weight: 900; font-size: 54px;
+  }
+
+  /* Type */
+  .h1 { font-size: 132px; font-weight: 850; letter-spacing: -0.035em; line-height: 1.02; }
+  .h2 { font-size: 84px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.08; }
+  .cap { font-size: 58px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.12; text-align: center; }
+  .sub { font-size: 40px; font-weight: 500; color: rgba(255,255,255,.78); }
+  .gold { color: var(--gold-2); }
+  .word { display: inline-block; margin: 0 14px; }
+  .strike { position: relative; display: inline-block; }
+  .strike i { position: absolute; left: -8px; right: -8px; top: 54%; height: 12px; border-radius: 6px; background: var(--gold-2); transform-origin: left center; }
+
+  /* Logo */
+  .mark {
+    width: 260px; height: 260px; border-radius: 72px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #f3d873, var(--gold) 60%, #a07a10);
+    color: #1a1405; font-weight: 900; font-size: 170px; box-shadow: 0 40px 90px rgba(0,0,0,.45), inset 0 4px 0 rgba(255,255,255,.4);
+  }
+  .ring { position: absolute; border-radius: 50%; border: 6px solid var(--gold-2); }
+
+  /* Phone */
+  #phone {
+    position: absolute; left: 150px; top: 430px; width: 780px; height: 1560px; border-radius: 96px;
+    background: #0b0f14; padding: 22px; box-shadow: 0 60px 140px rgba(0,0,0,.55), 0 0 0 3px rgba(255,255,255,.08);
+  }
+  #screen { position: relative; width: 100%; height: 100%; border-radius: 76px; overflow: hidden; background: #cfe3d6; }
+  #screen::before { content: ''; position: absolute; inset: 0; background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0 6px, transparent 7px) 0 0 / 90px 90px,
+    linear-gradient(160deg, #b9d9c4, #d9eadf 60%, #c6e0cf); opacity: .9; }
+  .tg-head { position: absolute; left: 0; right: 0; top: 0; height: 190px; background: #ffffff; display: flex; align-items: flex-end; padding: 0 40px 26px; gap: 22px; color: var(--ink); z-index: 3; box-shadow: 0 2px 0 rgba(0,0,0,.06); }
+  .tg-ava { width: 92px; height: 92px; border-radius: 50%; background: linear-gradient(135deg, #f3d873, var(--gold)); display: grid; place-items: center; font-weight: 900; font-size: 52px; color: #1a1405; }
+  .tg-name { font-size: 38px; font-weight: 750; }
+  .tg-status { font-size: 28px; color: #5d8a7c; font-weight: 500; }
+  .tg-input { position: absolute; left: 0; right: 0; bottom: 0; height: 132px; background: #fff; display: flex; align-items: center; padding: 0 36px; gap: 18px; z-index: 3; color: var(--ink); font-size: 36px; }
+  .tg-input .field { flex: 1; color: #94a3a0; }
+  .tg-input .field.typing { color: var(--ink); }
+  .tg-send { width: 82px; height: 82px; border-radius: 50%; background: var(--brand); display: grid; place-items: center; }
+  .caret { display: inline-block; width: 3px; height: 40px; background: var(--brand); vertical-align: -6px; margin-left: 3px; }
+  #msgs { position: absolute; left: 0; right: 0; top: 190px; bottom: 132px; z-index: 2; }
+  .msg { position: absolute; left: 30px; right: 30px; transform-origin: left bottom; }
+  .msg.me { transform-origin: right bottom; }
+  .bubble { display: inline-block; max-width: 90%; border-radius: 34px; padding: 22px 30px; font-size: 36px; line-height: 1.35; color: var(--ink); box-shadow: 0 2px 2px rgba(0,0,0,.08); background: #fff; }
+  .me .bubble { background: #e3fbd2; float: right; border-bottom-right-radius: 10px; }
+  .bot .bubble { border-bottom-left-radius: 10px; }
+  .bubble b { font-weight: 800; }
+  .kb { display: flex; gap: 8px; margin-top: 8px; clear: both; }
+  .kb span { flex: 1; text-align: center; background: rgba(36, 79, 66, .55); color: #fff; border-radius: 18px; padding: 16px 6px; font-size: 28px; font-weight: 600; white-space: nowrap; }
+  .meta { color: #6b7a77; font-size: 30px; }
+  .bars { font-size: 32px; letter-spacing: 1px; color: var(--brand); }
+  .replykb { position: absolute; left: 0; right: 0; bottom: 132px; padding: 14px 16px 18px; background: #eef3f1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; z-index: 3; }
+  .replykb span { background: #fff; border-radius: 18px; text-align: center; padding: 22px 6px; font-size: 30px; font-weight: 650; color: var(--ink); box-shadow: 0 2px 0 rgba(0,0,0,.08); position: relative; overflow: hidden; }
+  .ripple { position: absolute; border-radius: 50%; background: rgba(14,124,102,.35); }
+
+  /* Feature cards */
+  .fcard {
+    position: absolute; width: 470px; height: 560px; border-radius: 48px; padding: 44px 40px; color: var(--ink);
+    background: #fff; box-shadow: 0 40px 80px rgba(0,0,0,.35);
+  }
+  .fcard .ico { width: 104px; height: 104px; border-radius: 30px; display: grid; place-items: center; font-size: 58px; background: #e5f3ef; }
+  .fcard h3 { font-size: 46px; font-weight: 800; letter-spacing: -0.02em; margin: 28px 0 10px; line-height: 1.08; }
+  .fcard p { font-size: 30px; color: #4b5565; line-height: 1.35; }
+  .track { height: 26px; border-radius: 13px; background: #eef1f4; overflow: hidden; margin-top: 30px; }
+  .fill { height: 100%; border-radius: 13px; background: var(--brand); width: 0; }
+  .pill { display: inline-block; margin-top: 26px; padding: 18px 30px; border-radius: 22px; background: var(--brand); color: #fff; font-weight: 750; font-size: 32px; position: relative; overflow: hidden; }
+
+  /* Dashboard */
+  #dash { position: absolute; left: 90px; top: 560px; width: 900px; height: 1180px; border-radius: 60px; background: #f3f5f8; padding: 44px; color: var(--ink); box-shadow: 0 70px 140px rgba(0,0,0,.5); }
+  .hero { border-radius: 44px; padding: 44px; color: #fff; background: linear-gradient(135deg, var(--brand), #0a4f43); }
+  .hero .lbl { font-size: 30px; opacity: .8; }
+  .hero .val { font-size: 92px; font-weight: 850; letter-spacing: -0.03em; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .chips { display: flex; gap: 18px; margin-top: 28px; }
+  .chips div { flex: 1; background: rgba(255,255,255,.14); border-radius: 26px; padding: 20px 24px; font-size: 26px; }
+  .chips b { display: block; font-size: 36px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .dash-row { display: flex; gap: 28px; margin-top: 30px; }
+  .panel { flex: 1; background: #fff; border-radius: 40px; padding: 30px; height: 520px; box-shadow: 0 6px 24px rgba(16,24,40,.06); }
+  .panel h4 { font-size: 32px; font-weight: 750; margin-bottom: 20px; }
+
+  /* CTA */
+  .btn {
+    display: inline-flex; align-items: center; gap: 22px; padding: 40px 66px; border-radius: 999px; font-size: 52px; font-weight: 800;
+    background: linear-gradient(135deg, #f3d873, var(--gold)); color: #1a1405; box-shadow: 0 30px 70px rgba(201,162,39,.45); position: relative; overflow: hidden;
+  }
+  .shine { position: absolute; top: -40%; bottom: -40%; width: 160px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); transform: rotate(18deg); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="bg">
+    <div class="blob" id="blob1" style="width:900px;height:900px;background:#14a184;"></div>
+    <div class="blob" id="blob2" style="width:760px;height:760px;background:#c9a227;opacity:.28"></div>
+    <div class="blob" id="blob3" style="width:700px;height:700px;background:#0e7c66;"></div>
+    <div id="particles"></div>
+  </div>
+
+  <!-- 1. Hook -->
+  <div class="layer center" id="s1">
+    <div id="coins"></div>
+    <div class="h1" style="max-width:940px">
+      <span class="word" id="w1">Pul</span><span class="word" id="w2">qayerga</span><br />
+      <span class="word gold" id="w3">ketyapti?</span>
+    </div>
+    <div id="uline" class="abs" style="height:14px;border-radius:7px;background:var(--gold-2);width:560px;top:1080px;left:260px;transform-origin:left center"></div>
+  </div>
+
+  <!-- 2. Pain -->
+  <div class="layer center" id="s2" style="gap:30px">
+    <div id="icons"></div>
+    <div class="h2"><span class="strike" id="p1">Jadval yo‘q.<i></i></span></div>
+    <div class="h2"><span class="strike" id="p2">Murakkab ilova yo‘q.<i></i></span></div>
+    <div class="h2"><span class="strike" id="p3">Formalar yo‘q.<i></i></span></div>
+    <div class="sub" id="p4" style="margin-top:40px;font-size:50px;color:#fff;font-weight:700">Faqat <span class="gold">bitta xabar</span>.</div>
+  </div>
+
+  <!-- 3. Brand -->
+  <div class="layer center" id="s3">
+    <div class="ring" id="r1"></div><div class="ring" id="r2"></div>
+    <div class="mark" id="mark">H</div>
+    <div class="h1" id="brand" style="margin-top:70px;font-size:140px">Hamyon <span class="gold">AI</span></div>
+    <div class="sub" id="tagline" style="margin-top:24px;font-size:46px">Telegramdagi o‘zbekcha aqlli hamyon</div>
+  </div>
+
+  <!-- 4–5. Chat demo -->
+  <div class="layer" id="s4">
+    <div class="cap abs" id="cap1" style="left:80px;right:80px;top:150px">Bitta xabar — <span class="gold">hammasi hisoblandi</span></div>
+    <div class="cap abs" id="cap2" style="left:80px;right:80px;top:150px">Kunlik, haftalik va <span class="gold">oylik hisobot</span></div>
+    <div id="phone">
+      <div id="screen">
+        <div class="tg-head">
+          <div class="tg-ava">H</div>
+          <div><div class="tg-name">Hamyon AI</div><div class="tg-status">bot</div></div>
+        </div>
+        <div id="msgs">
+          <div class="msg me" id="m1"><div class="bubble">taksi 25 ming</div></div>
+          <div class="msg bot" id="m2">
+            <div class="bubble">🚕 <b>25 000 so'm</b><br />Transport · Bugun<br /><span class="meta">📝 Taksi</span></div>
+            <div class="kb"><span>🚕 Transport</span><span>✏️ 25 000</span><span>📅 Bugun</span></div>
+          </div>
+          <div class="msg me" id="m3"><div class="bubble">non 5 ming, sut 12 ming</div></div>
+          <div class="msg bot" id="m4"><div class="bubble">🛒 <b>5 000 so'm</b><br />Oziq-ovqat · Bugun · <span class="meta">📝 Non</span></div></div>
+          <div class="msg bot" id="m5"><div class="bubble">🛒 <b>12 000 so'm</b><br />Oziq-ovqat · Bugun · <span class="meta">📝 Sut</span></div></div>
+          <div class="msg me" id="m6"><div class="bubble">📊 Bugun</div></div>
+          <div class="msg bot" id="m7">
+            <div class="bubble" style="min-width:600px">
+              <b>📊 Bugungi hisobot</b><br /><br />
+              💸 Xarajat: <b id="rep-total">0 so'm</b><br />
+              🚕 Transport <span class="bars" id="bar1"></span> <b>60%</b><br />
+              🛒 Oziq-ovqat <span class="bars" id="bar2"></span> <b>40%</b>
+            </div>
+          </div>
+        </div>
+        <div class="replykb" id="replykb">
+          <span id="kb-today">📊 Bugun</span><span>📅 Hafta</span><span>🗓 Oy</span>
+          <span>🤝 Qarzlar</span><span>🎯 Limitlar</span><span>🏦 Maqsadlar</span>
+        </div>
+        <div class="tg-input">
+          <div class="field" id="typing">Masalan: taksi 25 ming</div>
+          <div class="tg-send"><svg width="40" height="40" viewBox="0 0 24 24" fill="#fff"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Features -->
+  <div class="layer" id="s6">
+    <div class="cap abs" id="cap3" style="left:80px;right:80px;top:170px">Va yana <span class="gold">ko‘p narsa</span></div>
+    <div class="fcard" id="fA" style="left:50px;top:400px">
+      <div class="ico">🎯</div><h3>Oylik limitlar</h3><p>Oziq-ovqat · 300 000 so'm</p>
+      <div class="track"><div class="fill" id="fillA"></div></div>
+      <p id="warnA" style="margin-top:22px;font-weight:800;color:#b25e00;font-size:34px">⚠️ 82% ishlatildi</p>
+    </div>
+    <div class="fcard" id="fB" style="left:560px;top:400px">
+      <div class="ico" id="bell">🔔</div><h3>Qarz eslatmalari</h3><p>Murod aka · <b>300 000 so'm</b></p>
+      <p style="margin-top:22px;font-size:32px;font-weight:700;color:var(--brand)">⏰ Muddat: bugun</p>
+      <p style="margin-top:12px;font-size:28px">Qarzdorga ham eslatma boradi</p>
+    </div>
+    <div class="fcard" id="fC" style="left:50px;top:1010px">
+      <div class="ico">🔁</div><h3>Doimiy to‘lovlar</h3><p>Internet · 99 000 so'm<br />Bugun to'lov kuni</p>
+      <div class="pill" id="pillC">✅ To'landi<span class="ripple" id="rippleC"></span></div>
+    </div>
+    <div class="fcard" id="fD" style="left:560px;top:1010px">
+      <div class="ico">🏦</div><h3>Jamg‘arma maqsadi</h3><p>Telefon · 5 000 000 so'm</p>
+      <svg width="190" height="190" viewBox="0 0 200 200" style="margin-top:14px">
+        <circle cx="100" cy="100" r="78" fill="none" stroke="#eef1f4" stroke-width="22" />
+        <circle id="ringD" cx="100" cy="100" r="78" fill="none" stroke="#0e7c66" stroke-width="22" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="0 999" />
+        <text id="ringDtxt" x="100" y="114" text-anchor="middle" font-size="44" font-weight="800" fill="#0f1729">0%</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 7. Web panel -->
+  <div class="layer" id="s7" style="perspective:2200px">
+    <div class="cap abs" id="cap4" style="left:80px;right:80px;top:170px">Grafiklar — <span class="gold">telefonda ham,<br />kompyuterda ham</span></div>
+    <div id="dash">
+      <div class="hero">
+        <div class="lbl">Balans · Oktabr</div>
+        <div class="val" id="bal">0 so'm</div>
+        <div class="chips"><div>Xarajat<b id="exp">0</b></div><div>Daromad<b id="inc">0</b></div></div>
+      </div>
+      <div class="dash-row">
+        <div class="panel">
+          <h4>Kategoriyalar</h4>
+          <svg width="340" height="340" viewBox="0 0 200 200" style="display:block;margin:10px auto 0">
+            <g transform="rotate(-90 100 100)" id="donut"></g>
+            <text x="100" y="96" text-anchor="middle" font-size="16" fill="#4b5565">Xarajat</text>
+            <text x="100" y="122" text-anchor="middle" font-size="26" font-weight="800" fill="#0f1729">1,2 mln</text>
+          </svg>
+        </div>
+        <div class="panel">
+          <h4>Kunlik xarajat</h4>
+          <svg width="340" height="380" viewBox="0 0 340 380" id="barsSvg"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. CTA -->
+  <div class="layer center" id="s8">
+    <div class="ring" id="r3"></div>
+    <div class="mark" id="mark2" style="width:220px;height:220px;font-size:140px;border-radius:62px">H</div>
+    <div class="h1" id="cta1" style="margin-top:60px;font-size:120px">Hamyon <span class="gold">AI</span></div>
+    <div class="cap" id="cta2" style="margin-top:34px;max-width:900px;font-weight:650;color:rgba(255,255,255,.9)">Xarajatni yozing —<br />qolganini hamyon hisoblaydi</div>
+    <div id="cta3" style="margin-top:90px"><div class="btn">✈️ Telegramda bepul boshlash<div class="shine" id="shine"></div></div></div>
+    <div class="sub" id="cta4" style="margin-top:50px;font-size:52px;font-weight:750;color:var(--gold-2)">@BOT</div>
+  </div>
+</div>
+
+<script>
+  const DURATION = 25;
+  const params = new URLSearchParams(location.search);
+  document.getElementById('cta4').textContent = '@' + (params.get('bot') || 'HamyonAI_bot').replace(/^@/, '');
+
+  // ─── Easing & helpers (pure functions of time) ───
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, p) => a + (b - a) * p;
+  const prog = (t, start, dur) => clamp((t - start) / dur);
+  const easeOutCubic = (p) => 1 - Math.pow(1 - p, 3);
+  const easeInCubic = (p) => p * p * p;
+  const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  const easeOutExpo = (p) => (p === 1 ? 1 : 1 - Math.pow(2, -10 * p));
+  const easeOutBack = (p) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+  const spring = (p) => 1 - Math.exp(-6 * p) * Math.cos(10 * p);
+  const $ = (id) => document.getElementById(id);
+  function set(el, { o, x = 0, y = 0, s = 1, r = 0, blur = 0, rx = 0, ry = 0 } = {}) {
+    if (typeof el === 'string') el = $(el);
+    if (o !== undefined) el.style.opacity = o;
+    el.style.transform = `translate(${x}px, ${y}px) rotateX(${rx}deg) rotateY(${ry}deg) rotate(${r}deg) scale(${s})`;
+    el.style.filter = blur > 0.05 ? `blur(${blur}px)` : 'none';
+  }
+  /** Scene visibility with soft in/out edges. */
+  const sceneAlpha = (t, a, b, fin = 0.35, fout = 0.35) => clamp(Math.min((t - a) / fin, (b - t) / fout));
+  const som = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  // ─── Static decoration (deterministic) ───
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  const particles = [];
+  for (let i = 0; i < 46; i++) {
+    const d = document.createElement('div');
+    d.className = 'particle';
+    const size = 4 + rnd(i) * 10;
+    d.style.width = d.style.height = size + 'px';
+    $('particles').appendChild(d);
+    particles.push({ el: d, x: rnd(i + 1) * 1080, y: rnd(i + 2) * 1920, sp: 18 + rnd(i + 3) * 40, ph: rnd(i + 4) * 6.28, a: 0.25 + rnd(i + 5) * 0.6 });
+  }
+  const coins = [];
+  [[110, 300, -20], [860, 380, 25], [180, 1500, 15], [820, 1420, -30], [520, 210, 10]].forEach(([x, y, r], i) => {
+    const c = document.createElement('div');
+    c.className = 'coin';
+    c.textContent = 'S';
+    c.style.left = x + 'px'; c.style.top = y + 'px';
+    $('coins').appendChild(c);
+    coins.push({ el: c, x, y, r, i });
+  });
+  const icons = [];
+  ['🧾', '📊', '📝', '🗂', '💵', '🧮'].forEach((e, i) => {
+    const d = document.createElement('div');
+    d.className = 'abs'; d.style.fontSize = '120px'; d.textContent = e;
+    d.style.left = 540 - 60 + 'px'; d.style.top = 960 - 60 + 'px';
+    $('icons').appendChild(d);
+    icons.push({ el: d, ang: (i / 6) * Math.PI * 2 + 0.4, dist: 520 + rnd(i + 9) * 160, spin: (rnd(i + 11) - 0.5) * 500 });
+  });
+
+  // Donut + bars for the dashboard
+  const donutData = [[0.38, '#2a78d6'], [0.21, '#eb6834'], [0.1, '#1baf7a'], [0.1, '#eda100'], [0.09, '#e87ba4'], [0.12, '#b9b8b2']];
+  const C = 2 * Math.PI * 70;
+  const donutEls = donutData.map(([, color]) => {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', 100); c.setAttribute('cy', 100); c.setAttribute('r', 70);
+    c.setAttribute('fill', 'none'); c.setAttribute('stroke', color); c.setAttribute('stroke-width', 26);
+    $('donut').appendChild(c);
+    return c;
+  });
+  const barVals = [0.35, 0.6, 0.25, 0.8, 0.45, 0.95, 0.55, 0.7, 0.3, 0.65];
+  const barEls = barVals.map((v, i) => {
+    const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    r.setAttribute('x', 12 + i * 32); r.setAttribute('width', 22); r.setAttribute('rx', 6); r.setAttribute('fill', '#0e7c66');
+    $('barsSvg').appendChild(r);
+    return r;
+  });
+
+  // Chat messages: bottom-anchored stack; each grows in at its time.
+  const MSGS = [
+    { id: 'm1', at: 8.55, h: 104 },
+    { id: 'm2', at: 9.0, h: 268 },
+    { id: 'm3', at: 9.95, h: 104 },
+    { id: 'm4', at: 10.4, h: 150 },
+    { id: 'm5', at: 10.75, h: 150 },
+    { id: 'm6', at: 12.75, h: 104 },
+    { id: 'm7', at: 13.05, h: 330 },
+  ];
+  const GAP = 18;
+
+  // ─── Frame ───
+  window.render = function (t) {
+    // Background drift
+    set('blob1', { x: 80 + Math.sin(t * 0.35) * 160, y: -200 + Math.cos(t * 0.3) * 120 });
+    set('blob2', { x: 520 + Math.cos(t * 0.28) * 180, y: 1200 + Math.sin(t * 0.4) * 160 });
+    set('blob3', { x: -260 + Math.sin(t * 0.22 + 1) * 140, y: 760 + Math.cos(t * 0.33) * 200 });
+    for (const p of particles) {
+      const y = ((p.y - t * p.sp) % 1920 + 1920) % 1920;
+      set(p.el, { o: p.a * (0.6 + 0.4 * Math.sin(t * 2 + p.ph)), x: p.x + Math.sin(t * 0.8 + p.ph) * 30, y });
+    }
+
+    // 1. Hook (0–2.6)
+    const a1 = sceneAlpha(t, 0, 2.6, 0.01, 0.35);
+    $('s1').style.opacity = a1;
+    ['w1', 'w2', 'w3'].forEach((id, i) => {
+      const p = prog(t, 0.15 + i * 0.28, 0.6);
+      set(id, { o: p, y: lerp(90, 0, easeOutBack(p)), blur: lerp(18, 0, easeOutCubic(p)), s: lerp(0.9, 1, easeOutCubic(p)) });
+    });
+    set('uline', { o: 1, s: 1 }); $('uline').style.transform = `scaleX(${easeOutExpo(prog(t, 1.1, 0.6))})`;
+    for (const c of coins) {
+      const p = easeOutBack(prog(t, 0.1 + c.i * 0.12, 0.8));
+      set(c.el, { o: p, y: lerp(160, 0, p) + Math.sin(t * 1.6 + c.i) * 18, r: c.r + Math.sin(t + c.i) * 10, s: p });
+    }
+    if (t > 2.1) set('s1', { o: a1, s: lerp(1, 1.12, easeInCubic(prog(t, 2.1, 0.5))) });
+
+    // 2. Pain (2.5–5.1)
+    $('s2').style.opacity = sceneAlpha(t, 2.5, 5.1, 0.3, 0.35);
+    ['p1', 'p2', 'p3'].forEach((id, i) => {
+      const p = prog(t, 2.6 + i * 0.3, 0.45);
+      set(id, { o: p, x: lerp(-60, 0, easeOutExpo(p)) });
+      const st = $(id).querySelector('i');
+      st.style.transform = `scaleX(${easeOutExpo(prog(t, 3.3 + i * 0.25, 0.4))})`;
+    });
+    const p4 = prog(t, 4.1, 0.5);
+    set('p4', { o: p4, y: lerp(40, 0, easeOutBack(p4)) });
+    for (const ic of icons) {
+      const p = easeOutExpo(prog(t, 2.55, 1.6));
+      set(ic.el, { o: (1 - prog(t, 3.6, 0.8)) * 0.85, x: Math.cos(ic.ang) * ic.dist * p, y: Math.sin(ic.ang) * ic.dist * p, r: ic.spin * p, s: lerp(0.3, 1.1, p) });
+    }
+
+    // 3. Brand (5–7.1)
+    $('s3').style.opacity = sceneAlpha(t, 5.0, 7.1, 0.2, 0.3);
+    const pm = prog(t, 5.05, 0.7);
+    set('mark', { o: pm, s: easeOutBack(pm) * (1 + 0.03 * Math.sin(t * 3)), r: lerp(-25, 0, easeOutBack(pm)) });
+    [['r1', 5.2], ['r2', 5.45]].forEach(([id, st]) => {
+      const p = prog(t, st, 1.1);
+      const d = lerp(260, 900, easeOutCubic(p));
+      const el = $(id);
+      el.style.width = el.style.height = d + 'px';
+      el.style.left = 540 - d / 2 + 'px'; el.style.top = 760 - d / 2 + 'px';
+      el.style.opacity = (1 - p) * (p > 0 ? 0.9 : 0);
+    });
+    const pb = prog(t, 5.5, 0.6), pt = prog(t, 5.85, 0.6);
+    set('brand', { o: pb, y: lerp(60, 0, easeOutBack(pb)), blur: lerp(14, 0, pb) });
+    set('tagline', { o: pt, y: lerp(40, 0, easeOutCubic(pt)) });
+
+    // 4–5. Chat (7–15.6)
+    const a4 = sceneAlpha(t, 7.0, 15.6, 0.3, 0.4);
+    $('s4').style.opacity = a4;
+    const pin = easeOutExpo(prog(t, 7.0, 0.8));
+    const pout = easeInCubic(prog(t, 15.1, 0.5));
+    set('phone', { y: lerp(900, 0, pin) + lerp(0, 900, pout), s: lerp(0.92, 1, pin), r: lerp(4, 0, pin) });
+    const c1in = prog(t, 7.3, 0.5), c1out = prog(t, 11.9, 0.35);
+    set('cap1', { o: c1in * (1 - c1out), y: lerp(40, 0, easeOutBack(c1in)) - 30 * c1out });
+    const c2in = prog(t, 12.2, 0.5);
+    set('cap2', { o: c2in, y: lerp(40, 0, easeOutBack(c2in)) });
+    // Typing in the input bar, then sending.
+    const typed = (text, a, b) => text.slice(0, Math.round(text.length * prog(t, a, b - a)));
+    let field = 'Masalan: taksi 25 ming', typing = false;
+    if (t >= 7.7 && t < 8.55) { field = typed('taksi 25 ming', 7.7, 8.4); typing = true; }
+    else if (t >= 9.3 && t < 9.95) { field = typed('non 5 ming, sut 12 ming', 9.3, 9.85); typing = true; }
+    $('typing').className = 'field' + (typing ? ' typing' : '');
+    $('typing').innerHTML = typing ? field.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '<span class="caret"></span>' : field;
+    // Reply keyboard and the tap on "Bugun"
+    const kbIn = easeOutCubic(prog(t, 11.6, 0.45));
+    const kbH = 260;
+    set('replykb', { o: kbIn, y: lerp(kbH, 0, kbIn) });
+    const tap = prog(t, 12.35, 0.45);
+    const today = $('kb-today');
+    let rip = today.querySelector('.ripple');
+    if (!rip) { rip = document.createElement('span'); rip.className = 'ripple'; today.appendChild(rip); }
+    const rd = lerp(0, 420, easeOutCubic(tap));
+    rip.style.width = rip.style.height = rd + 'px';
+    rip.style.left = 150 - rd / 2 + 'px'; rip.style.top = 40 - rd / 2 + 'px';
+    rip.style.opacity = tap > 0 && tap < 1 ? 1 - tap : 0;
+    set(today, { s: 1 - 0.06 * Math.sin(Math.PI * tap) });
+    // Message stack
+    const bottomPad = 20 + kbH * kbIn;
+    let offset = bottomPad;
+    for (let i = MSGS.length - 1; i >= 0; i--) {
+      const m = MSGS[i];
+      const p = prog(t, m.at, 0.45);
+      const el = $(m.id);
+      el.style.bottom = offset + 'px';
+      set(el, { o: clamp(p * 2), s: lerp(0.6, 1, easeOutBack(p)), y: lerp(30, 0, easeOutCubic(p)) });
+      offset += (m.h + GAP) * easeOutCubic(p);
+    }
+    // Report contents
+    const rp = prog(t, 13.3, 1.0);
+    $('rep-total').textContent = som(42000 * easeOutExpo(rp)) + " so'm";
+    const bars = (frac) => { const n = Math.round(5 * frac); return '▰'.repeat(n) + '▱'.repeat(5 - n); };
+    $('bar1').textContent = bars(0.6 * easeOutCubic(prog(t, 13.5, 0.8)));
+    $('bar2').textContent = bars(0.4 * easeOutCubic(prog(t, 13.7, 0.8)));
+
+    // 6. Features (15.5–19.6)
+    $('s6').style.opacity = sceneAlpha(t, 15.5, 19.6, 0.3, 0.4);
+    const c3 = prog(t, 15.6, 0.5);
+    set('cap3', { o: c3, y: lerp(40, 0, easeOutBack(c3)) });
+    [['fA', 15.75, -1], ['fB', 15.95, 1], ['fC', 16.15, -1], ['fD', 16.35, 1]].forEach(([id, st, dir]) => {
+      const p = prog(t, st, 0.65);
+      const out = easeInCubic(prog(t, 19.15, 0.4));
+      set(id, { o: clamp(p * 1.8), s: lerp(0.6, 1, easeOutBack(p)) - 0.1 * out, r: lerp(8 * dir, 0, easeOutBack(p)), y: lerp(160, 0, easeOutExpo(p)) + 120 * out });
+    });
+    const fa = easeInOut(prog(t, 16.4, 1.1));
+    $('fillA').style.width = 82 * fa + '%';
+    $('fillA').style.background = fa > 0.97 ? '#e39a1b' : '#0e7c66';
+    const wa = prog(t, 17.5, 0.5);
+    set('warnA', { o: wa, x: Math.sin(t * 50) * 8 * (1 - wa) * (wa > 0 ? 1 : 0) });
+    set('bell', { r: Math.sin(t * 14) * 18 * Math.max(0, Math.sin(Math.PI * prog(t, 16.6, 1.6))) });
+    const pc = prog(t, 17.6, 0.6);
+    const rc = $('rippleC'); const d = lerp(0, 600, easeOutCubic(pc));
+    rc.style.width = rc.style.height = d + 'px'; rc.style.left = 140 - d / 2 + 'px'; rc.style.top = 40 - d / 2 + 'px';
+    rc.style.opacity = pc > 0 && pc < 1 ? 0.9 * (1 - pc) : 0;
+    set('pillC', { s: 1 - 0.08 * Math.sin(Math.PI * pc) });
+    const rg = easeInOut(prog(t, 16.8, 1.3));
+    $('ringD').setAttribute('stroke-dasharray', `${2 * Math.PI * 78 * 0.64 * rg} 999`);
+    $('ringDtxt').textContent = Math.round(64 * rg) + '%';
+
+    // 7. Web panel (19.5–22.1)
+    $('s7').style.opacity = sceneAlpha(t, 19.5, 22.1, 0.3, 0.35);
+    const c4 = prog(t, 19.6, 0.5);
+    set('cap4', { o: c4, y: lerp(40, 0, easeOutBack(c4)) });
+    const pd = easeOutExpo(prog(t, 19.6, 0.9));
+    set('dash', { o: pd, y: lerp(500, 40, pd) + Math.sin(t * 1.2) * 8, rx: lerp(28, 10, pd), ry: lerp(-20, -8, pd) + Math.sin(t * 0.8) * 2, r: lerp(-4, -1, pd) });
+    const cnt = easeOutExpo(prog(t, 20.0, 1.2));
+    $('bal').textContent = som(4816000 * cnt) + " so'm";
+    $('exp').textContent = som(1184000 * cnt);
+    $('inc').textContent = som(6000000 * cnt);
+    let acc = 0;
+    const dp = easeInOut(prog(t, 20.1, 1.1));
+    donutData.forEach(([v], i) => {
+      const len = Math.max(0, v * C * dp - 2);
+      donutEls[i].setAttribute('stroke-dasharray', `${len} ${C}`);
+      donutEls[i].setAttribute('stroke-dashoffset', -acc * dp);
+      acc += v * C;
+    });
+    barVals.forEach((v, i) => {
+      const p = easeOutBack(prog(t, 20.2 + i * 0.07, 0.6));
+      const h = 330 * v * p;
+      barEls[i].setAttribute('y', 350 - h); barEls[i].setAttribute('height', Math.max(0, h));
+    });
+
+    // 8. CTA (22–25)
+    $('s8').style.opacity = sceneAlpha(t, 22.0, 25.5, 0.35, 0.3);
+    const pm2 = prog(t, 22.1, 0.7);
+    set('mark2', { o: pm2, s: easeOutBack(pm2), r: lerp(20, 0, easeOutBack(pm2)) });
+    const p3 = prog(t, 22.2, 1.2), d3 = lerp(220, 1100, easeOutCubic(p3));
+    const r3 = $('r3'); r3.style.width = r3.style.height = d3 + 'px'; r3.style.left = 540 - d3 / 2 + 'px'; r3.style.top = 600 - d3 / 2 + 'px';
+    r3.style.opacity = p3 > 0 ? (1 - p3) * 0.8 : 0;
+    [['cta1', 22.4], ['cta2', 22.65], ['cta3', 22.95], ['cta4', 23.2]].forEach(([id, st]) => {
+      const p = prog(t, st, 0.55);
+      set(id, { o: p, y: lerp(50, 0, easeOutBack(p)), blur: lerp(10, 0, p) });
+    });
+    if (t > 23.5) set('cta3', { o: 1, s: 1 + 0.035 * Math.sin((t - 23.5) * 6) });
+    $('shine').style.left = lerp(-300, 1200, easeInOut(prog(t, 23.6, 0.9))) + 'px';
+  };
+  window.DURATION = DURATION;
+  window.render(0);
+</script>
+</body>
+</html>
