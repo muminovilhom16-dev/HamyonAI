@@ -1,26 +1,8 @@
 import type { Api, RawApi } from 'grammy';
 import type { Env } from '@hamyon/config';
 
-/** Command menu: [command, uz label, ru label]. */
-const COMMANDS: Array<[string, string, string]> = [
-  ['bugun', 'Bugungi hisobot', 'Отчёт за сегодня'],
-  ['hafta', 'Haftalik hisobot', 'Отчёт за неделю'],
-  ['oy', 'Oylik hisobot', 'Отчёт за месяц'],
-  ['oxirgi', 'Oxirgi yozuvlar', 'Последние записи'],
-  ['ochir', "Oxirgi yozuvni o'chirish", 'Удалить последнюю запись'],
-  ['qarzlar', 'Qarzlar', 'Долги'],
-  ['byudjet', 'Oylik limitlar', 'Месячные лимиты'],
-  ['obunalar', "Doimiy to'lovlar", 'Регулярные платежи'],
-  ['maqsad', "Jamg'arma maqsadlari", 'Цели накоплений'],
-  ['hisoblar', 'Karta va naqd qoldiqlari', 'Остатки на счетах'],
-  ['eksport', 'Eksport (Excel/CSV)', 'Экспорт (Excel/CSV)'],
-  ['sozlamalar', 'Sozlamalar', 'Настройки'],
-  ['web', 'Web panel', 'Веб-панель'],
-  ['yordam', 'Yordam', 'Помощь'],
-];
-
 /**
- * Registers the webhook (with the secret token) and the command menu.
+ * Registers the webhook (with the secret token) and clears the "/" command list.
  * Idempotent: safe on every startup.
  */
 export async function setupTelegram(api: Api<RawApi>, env: Pick<Env, 'PUBLIC_BASE_URL' | 'TELEGRAM_WEBHOOK_PATH' | 'TELEGRAM_WEBHOOK_SECRET'>): Promise<string> {
@@ -33,7 +15,9 @@ export async function setupTelegram(api: Api<RawApi>, env: Pick<Env, 'PUBLIC_BAS
     allowed_updates: ['message', 'edited_message', 'callback_query'],
     max_connections: 40,
   });
-  await api.setMyCommands(COMMANDS.map(([command, uz]) => ({ command, description: uz })));
-  await api.setMyCommands(COMMANDS.map(([command, , ru]) => ({ command, description: ru })), { language_code: 'ru' });
+  // The bot is driven by the reply-keyboard menu (bot/menu.ts), so the "/" command
+  // list is removed; typed commands still work.
+  await api.deleteMyCommands();
+  await api.deleteMyCommands({ language_code: 'ru' });
   return url;
 }

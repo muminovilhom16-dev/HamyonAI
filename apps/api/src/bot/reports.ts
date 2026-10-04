@@ -15,6 +15,7 @@ import { formatDateLabel, formatMoney, groupDigits } from '../format';
 import { t, tf, type MessageKey } from '../i18n';
 import type { BotContext, BotServices } from './context';
 import { b, esc } from './html';
+import { sendMenu } from './menu';
 import { summaryLines } from './summary';
 
 const TITLES: Record<Period, MessageKey> = { day: 'reportDay', week: 'reportWeek', month: 'reportMonth' };
@@ -86,6 +87,5 @@ export function registerReports(bot: Bot<BotContext>, s: BotServices): void {
     await ctx.reply(`${b(t(lang, 'recentTitle'))}\n${lines.join('\n')}`, { reply_markup: kb });
   });
 
-  bot.command('yordam', (ctx) => ctx.reply(t(ctx.user!.language, 'help')));
-  bot.command('help', (ctx) => ctx.reply(t(ctx.user!.language, 'help')));
+  bot.command(['yordam', 'help'], (ctx) => sendMenu(ctx, s, t(ctx.user!.language, 'help')));
 }

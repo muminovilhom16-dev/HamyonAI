@@ -37,7 +37,7 @@ describe('queue (TZ §43)', () => {
   it('voice: immediate "Qabul qilindi", then the worker transcribes and saves', async () => {
     const id = 990_001;
     await H.send(id, '/start');
-    await H.h.db.update(schema.users).set({ onboardingStep: null, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, id));
+    await H.h.db.update(schema.users).set({ onboardingStep: null, menuVersion: 1, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, id));
     H.reset();
     let calls = 0;
     H.speech.current = {

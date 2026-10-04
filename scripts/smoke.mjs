@@ -27,13 +27,19 @@ const tgPort = tg.address().port;
 const PORT = 3999;
 const AUTH = 'Zm9vYmFy+/=' + 'a'.repeat(40);
 const SECRET = PAAS ? createHash('sha256').update(`${AUTH}:telegram-webhook`).digest('hex') : 's'.repeat(40);
+const DB_URL = process.env.DATABASE_URL ?? 'postgres://hamyon:hamyon@localhost:5432/hamyon';
+// Same order as the container: migrations, then the server.
+{
+  const { execFileSync } = await import('node:child_process');
+  execFileSync('node', ['apps/api/dist/migrate.js'], { env: { ...process.env, DATABASE_URL: DB_URL }, stdio: 'ignore' });
+}
 const server = spawn('node', ['apps/api/dist/server.js'], {
   env: {
     ...process.env,
     NODE_ENV: 'production',
     PORT: String(PORT),
     LOG_LEVEL: 'info',
-    DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://hamyon:hamyon@localhost:5432/hamyon',
+    DATABASE_URL: DB_URL,
     TELEGRAM_BOT_TOKEN: '123456:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
     TELEGRAM_API_ROOT: `http://127.0.0.1:${tgPort}`,
     ...(PAAS
@@ -96,7 +102,7 @@ if (PAAS) {
   if (!hook) fail('webhook was not auto-registered');
   if (hook.body.url !== 'https://hamyon-ai.onrender.com/telegram/webhook') fail(`wrong webhook url ${hook.body.url}`);
   if (hook.body.secret_token !== SECRET) fail('webhook secret mismatch');
-  if (!sent.some((x) => x.method === 'setMyCommands')) fail('command menu not set');
+  if (!sent.some((x) => x.method === 'deleteMyCommands')) fail('command list not cleared');
 }
 
 server.kill('SIGTERM');

@@ -30,7 +30,7 @@ let nextUser = 70_000;
 async function newUser(lang?: 'ru') {
   const id = nextUser++;
   await H.send(id, '/start');
-  await H.h.db.update(schema.users).set({ onboardingStep: null, onboardingCompletedAt: new Date(), ...(lang && { language: lang }) }).where(eq(schema.users.telegramId, id));
+  await H.h.db.update(schema.users).set({ onboardingStep: null, menuVersion: 1, onboardingCompletedAt: new Date(), ...(lang && { language: lang }) }).where(eq(schema.users.telegramId, id));
   H.reset();
   return id;
 }

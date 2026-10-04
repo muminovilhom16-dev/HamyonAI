@@ -4,6 +4,7 @@ import { schema } from '@hamyon/db';
 import { markNoSpendingToday, optOutOfDebtorReminders, type Language } from '@hamyon/core';
 import { t } from '../i18n';
 import type { BotContext, BotServices } from './context';
+import { sendMenu } from './menu';
 
 /**
  * TZ §14: /start → language → currency → example → first transaction →
@@ -57,7 +58,7 @@ export function registerOnboarding(bot: Bot<BotContext>, s: BotServices): void {
     const user = ctx.user!;
     await s.db.insert(schema.analyticsEvents).values({ userId: user.id, name: 'start' });
     if (user.onboardingCompletedAt) {
-      await ctx.reply(t(user.language, 'welcomeBack'));
+      await sendMenu(ctx, s, t(user.language, 'welcomeBack'));
       return;
     }
     await setUser(s, ctx, { onboardingStep: 'language' });
@@ -73,6 +74,7 @@ export function registerOnboarding(bot: Bot<BotContext>, s: BotServices): void {
     await ctx.answerCallbackQuery();
     if (done) {
       await ctx.editMessageText(t(lang, 'settingsSaved'));
+      await sendMenu(ctx, s); // button labels follow the new language
       return;
     }
     await ctx.editMessageText(t(lang, 'askCurrency'), {
@@ -102,5 +104,6 @@ export function registerOnboarding(bot: Bot<BotContext>, s: BotServices): void {
     if (first) await s.db.insert(schema.analyticsEvents).values({ userId: ctx.user!.id, name: 'onboarding_completed' });
     await ctx.answerCallbackQuery();
     await ctx.editMessageText(t(ctx.user!.language, first ? 'onboardingDone' : 'settingsSaved'));
+    if (first) await sendMenu(ctx, s);
   });
 }

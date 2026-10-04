@@ -8,6 +8,7 @@ import { registerBudgets } from './budgets';
 import { registerRecurring } from './recurring';
 import { registerGoals } from './goals';
 import { registerAccounts } from './accounts';
+import { registerMenu, sendMenu } from './menu';
 import { registerDebtFlows } from './debts';
 import { registerTransactionFlows } from './flows';
 import { registerVoice } from './voice';
@@ -87,6 +88,8 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
     await next();
   });
 
+  // Reply-keyboard buttons → commands; sends the keyboard once to users who lack it.
+  registerMenu(bot, deps);
   registerOnboarding(bot, deps);
   registerSettings(bot, deps);
   registerReports(bot, deps);
@@ -115,7 +118,7 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
   registerTransactionFlows(bot, deps);
 
   // Unknown commands → help.
-  bot.on('message:text', (ctx) => ctx.reply(t(ctx.user!.language, 'help')));
+  bot.on('message:text', (ctx) => sendMenu(ctx, deps, t(ctx.user!.language, 'help')));
 
   return bot;
 }

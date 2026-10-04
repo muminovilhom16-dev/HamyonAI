@@ -17,7 +17,7 @@ let nextUser = 90_000;
 async function login(): Promise<{ tg: number; cookie: string }> {
   const tg = nextUser++;
   await H.send(tg, '/start');
-  await H.h.db.update(schema.users).set({ onboardingStep: null, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, tg));
+  await H.h.db.update(schema.users).set({ onboardingStep: null, menuVersion: 1, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, tg));
   H.reset();
   await H.send(tg, '/web');
   const token = decodeURIComponent(/token=(\S+)/.exec(H.texts().at(-1)!)![1]!);

@@ -15,7 +15,7 @@ async function newUser(createdAt = '2026-09-20T05:00:00Z') {
   const id = next++;
   H.clock.now = new Date(createdAt);
   await H.send(id, '/start');
-  await H.h.db.update(schema.users).set({ onboardingStep: null, onboardingCompletedAt: new Date(createdAt) }).where(eq(schema.users.telegramId, id));
+  await H.h.db.update(schema.users).set({ onboardingStep: null, menuVersion: 1, onboardingCompletedAt: new Date(createdAt) }).where(eq(schema.users.telegramId, id));
   return id;
 }
 /** Sends a bot message as if at `iso`. */

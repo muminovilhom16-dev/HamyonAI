@@ -18,7 +18,7 @@ async function newUser(): Promise<number> {
   const id = nextUser++;
   // Skip onboarding for flow tests.
   await H.send(id, '/start');
-  await H.h.db.update(schema.users).set({ onboardingStep: null, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, id));
+  await H.h.db.update(schema.users).set({ onboardingStep: null, menuVersion: 1, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, id));
   H.reset();
   return id;
 }
@@ -343,6 +343,62 @@ describe('accounts (/hisoblar)', () => {
     H.reset();
     await H.send(id, 'мақсадга 100 минг');
     expect(H.texts()[0]).toContain("+100 000 so'm");
+  });
+});
+
+describe('reply-keyboard menu', () => {
+  const lastReplyKeyboard = () =>
+    [...H.calls].reverse().find((c) => c.payload.reply_markup?.keyboard)?.payload.reply_markup as { keyboard: Array<Array<{ text: string }>>; is_persistent: boolean } | undefined;
+
+  it('buttons run their commands and never become expenses (all languages)', async () => {
+    const id = await newUser();
+    await H.send(id, 'taksi 20 ming');
+    H.reset();
+    await H.send(id, '📊 Bugun');
+    expect(H.texts()[0]).toContain('Bugungi hisobot');
+    await H.send(id, '🤝 Qarzlar');
+    expect(H.texts().at(-1)).toContain('Qarzlar');
+    await H.send(id, '🎯 Limitlar');
+    expect(H.texts().at(-1)).toContain('Byudjet');
+    await H.send(id, '🗓 Ой'); // Cyrillic label
+    expect(H.texts().at(-1)).toContain('Oylik hisobot');
+    await H.send(id, '📅 Неделя'); // Russian label
+    expect(H.texts().at(-1)).toContain('Haftalik hisobot');
+    expect(await txsOf(id)).toHaveLength(1);
+  });
+
+  it('onboarding ends with the keyboard; /start and help show it again', async () => {
+    const id = 990_001;
+    await H.send(id, '/start');
+    await H.tap(id, 'ob:l:uz_latn');
+    await H.tap(id, 'ob:c:UZS');
+    await H.send(id, 'taksi 15 ming');
+    await H.tap(id, 'ob:r:2100');
+    const kb = lastReplyKeyboard()!;
+    expect(kb.is_persistent).toBe(true);
+    expect(kb.keyboard.flat().map((b) => b.text)).toEqual([
+      '📊 Bugun', '📅 Hafta', '🗓 Oy', '🧾 Oxirgi yozuvlar', '🤝 Qarzlar', '🎯 Limitlar', "🔁 To'lovlar", '🏦 Maqsadlar',
+      '💳 Hisoblar', '🌐 Web panel', '⚙️ Sozlamalar', '❓ Yordam',
+    ]);
+    H.reset();
+    await H.send(id, '/start');
+    expect(lastReplyKeyboard()).toBeTruthy();
+    H.reset();
+    await H.send(id, '❓ Yordam');
+    expect(H.texts()[0]).toContain('Qanday yozish kerak');
+    expect(lastReplyKeyboard()).toBeTruthy();
+  });
+
+  it('existing users get the menu once, after their next message', async () => {
+    const id = await newUser();
+    await H.h.db.update(schema.users).set({ menuVersion: 0 }).where(eq(schema.users.telegramId, id));
+    H.reset();
+    await H.send(id, 'taksi 20 ming');
+    expect(H.texts()).toHaveLength(2);
+    expect(H.texts()[1]).toContain('Menyu pastda');
+    H.reset();
+    await H.send(id, 'non 5 ming');
+    expect(H.texts()).toHaveLength(1);
   });
 });
 

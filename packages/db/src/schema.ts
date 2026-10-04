@@ -76,6 +76,8 @@ export const users = pgTable('users', {
   username: text('username'),
   /** Debtor-side opt-out of reminders sent on behalf of other users' debts. */
   debtRemindersFromOthers: boolean('debt_reminders_from_others').notNull().default(true),
+  /** Version of the reply-keyboard menu this user has been sent (re-sent when it changes). */
+  menuVersion: integer('menu_version').notNull().default(0),
   language: languageEnum('language').notNull().default('uz_latn'),
   currency: currencyEnum('currency').notNull().default('UZS'),
   timezone: text('timezone').notNull().default('Asia/Tashkent'),

@@ -21,7 +21,7 @@ let next = 200_000;
 async function user() {
   const id = next++;
   await H.send(id, '/start');
-  await H.h.db.update(schema.users).set({ onboardingStep: null, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, id));
+  await H.h.db.update(schema.users).set({ onboardingStep: null, menuVersion: 1, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, id));
   H.reset();
   return id;
 }

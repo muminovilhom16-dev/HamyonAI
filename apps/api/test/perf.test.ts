@@ -11,7 +11,7 @@ describe('TZ §46 latency (rule path, local DB, no AI)', () => {
   it('text messages: p95 well under 3 s', async () => {
     const id = 300_000;
     await H.send(id, '/start');
-    await H.h.db.update(schema.users).set({ onboardingStep: null, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, id));
+    await H.h.db.update(schema.users).set({ onboardingStep: null, menuVersion: 1, onboardingCompletedAt: new Date() }).where(eq(schema.users.telegramId, id));
     const msgs = ['taksi 25 ming', 'non 5 ming, sut 12 ming', "bozordan go'sht oldim yuz ellik ming", 'oylik tushdi 6 mln', 'kofe 28k'];
     const times: number[] = [];
     for (let i = 0; i < 200; i++) {
