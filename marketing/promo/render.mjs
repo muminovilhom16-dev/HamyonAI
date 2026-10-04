@@ -1,10 +1,10 @@
 // Renders promo.html to an MP4: every frame is drawn by window.render(t) in
 // headless Chromium and piped as JPEG to ffmpeg (no frame files on disk).
 //
-//   node marketing/promo/render.mjs [--bot hamyonchai_bot] [--fps 30] [--out file.mp4] [--no-sfx]
+//   node marketing/promo/render.mjs [--bot hamyonchai_bot] [--fps 30] [--out file.mp4] [--no-sfx] [--no-voice]
 //   node marketing/promo/render.mjs --stills 1,4,8.6,10,14,17.8,20.8,24   # PNG previews
-import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -35,12 +35,11 @@ if (stills) {
   }
   console.log(`stills → ${dir}`);
 } else {
-  // Sound effects are synthesized in sfx.mjs and muxed as AAC.
-  const sfx = process.argv.includes('--no-sfx') ? null : writeSfx(`${here}/sfx.wav`);
+  const audio = mixAudio();
   const ffmpeg = spawn('ffmpeg', [
     '-y', '-loglevel', 'error',
     '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-',
-    ...(sfx ? ['-i', sfx, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []),
+    ...(audio ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []),
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
     '-r', String(fps), out,
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
@@ -56,3 +55,25 @@ if (stills) {
   console.log(`video → ${out}`);
 }
 await browser.close();
+
+/**
+ * Soundtrack: synthesized effects (sfx.mjs) plus, when narration.wav exists
+ * (narration.py), the voice-over. Under the voice the effects are lowered and
+ * ducked further so every word stays clear. Returns the WAV path, or null.
+ */
+function mixAudio() {
+  const sfx = process.argv.includes('--no-sfx') ? null : writeSfx(`${here}/sfx.wav`);
+  const voice = process.argv.includes('--no-voice') || !existsSync(`${here}/narration.wav`) ? null : `${here}/narration.wav`;
+  if (!sfx || !voice) return sfx ?? voice;
+  const mixed = `${here}/audio.wav`;
+  const graph = [
+    '[1:a]asplit[key][vox]',
+    '[0:a]volume=0.35[fx]',
+    '[fx][key]sidechaincompress=threshold=0.02:ratio=6:attack=15:release=350[duck]',
+    '[duck][vox]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[a]',
+  ].join(';');
+  const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', sfx, '-i', voice, '-filter_complex', graph, '-map', '[a]', '-c:a', 'pcm_s16le', mixed], { stdio: 'inherit' });
+  if (r.status !== 0) throw new Error('audio mix failed');
+  console.log('audio: effects + narration');
+  return mixed;
+}

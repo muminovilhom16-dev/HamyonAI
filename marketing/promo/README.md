@@ -28,6 +28,21 @@ Video ichida sintez qilingan ovoz effektlari bor (`sfx.mjs`): whoosh, pop, klavi
 tanga, bildirishnoma, qo'ng'iroq va h.k. — barchasi animatsiya vaqtiga moslangan, litsenziyasiz.
 Effektlarsiz video: `--no-sfx`. Faqat ovozni yaratish: `node marketing/promo/sfx.mjs`.
 
+## Narrator (o'zbekcha erkak ovozi)
+
+Matn va vaqtlar `narration.py` ichidagi `LINES` ro'yxatida. Ovoz — Microsoft "Sardor"
+(uz-UZ-SardorNeural, bepul). Internetda `speech.platform.bing.com` ochiq bo'lishi kerak.
+
+```bash
+pip install edge-tts
+python3 marketing/promo/narration.py     # → marketing/promo/narration.wav
+node marketing/promo/render.mjs          # narration.wav bo'lsa, avtomatik qo'shiladi
+```
+
+Mikslashda effektlar pasaytiriladi va ovoz paytida yana pastlaydi (ducking), yakuniy
+balandlik -14 LUFS (Instagram/TikTok standarti). Ovozsiz: `--no-voice`.
+Proksi orqali ishlansa: `SSL_CERT_FILE=/yo'l/ca.crt python3 marketing/promo/narration.py`.
+
 ## Musiqa qo'shish
 
 Effektlarni saqlab, orqa fonga musiqa qo'shish (musiqa pastroq, oxirida so'nadi):
