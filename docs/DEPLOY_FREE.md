@@ -48,19 +48,17 @@ Natijada bot ishlaydi va sayt manzili shunday bo'ladi:
 2. Kartochka chiqsa — **hammasi ishlayapti!** 🎉
 3. Botga `/web` yozing → havolani bosing → web panel ochiladi.
 
-> Bot birinchi xabarga 30–60 soniya javob bermasa — bu normal: bepul server
-> «uxlab» qolgan edi. 5-qadam buni hal qiladi.
+## 5-qadam. Bot «uxlab qolmasligi» — avtomatik
 
-## 5-qadam. Bot «uxlab qolmasligi» uchun (3 daqiqa)
+Bepul Render 15 daqiqa jim qolsa uxlaydi va keyingi xabarga 30–60 soniya kech javob beradi.
+Endi bot o'zini o'zi uyg'oq tutadi: har 10 daqiqada o'z `/health` manziliga murojaat qiladi
+(Render'da avtomatik yoqilgan, hech narsa sozlash shart emas). Bazani (Neon) esa bezovta
+qilmaydi — eslatmalar har 15 daqiqada tekshiriladi, oraliqda baza uxlab, bepul limitni tejaydi.
 
-Bepul Render 15 daqiqa jim qolsa uxlaydi; uxlaganda eslatmalar ham ketmaydi.
-
-1. **https://cron-job.org** → **Sign up** (bepul).
-2. **Create cronjob**:
-   - Title: `Hamyon`
-   - URL: `https://hamyon-ai.onrender.com/health` (o'zingizning manzil)
-   - Schedule: **Every 10 minutes**
-3. **Create** — tamom.
+- Render bepul limiti: oyiga 750 soat — bitta xizmat uchun 24/7 yetadi. Yana bepul xizmat
+  qo'shsangiz, soatlar bo'linadi.
+- Avvalgi cron-job.org sozlamasi zaxira sifatida qolishi mumkin, zarari yo'q.
+- O'chirish kerak bo'lsa: Render → Environment → `KEEP_ALIVE` = `false`.
 
 ## 6-qadam (ixtiyoriy). Saytda «Telegram bilan kirish» tugmasi
 

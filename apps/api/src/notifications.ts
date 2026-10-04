@@ -181,7 +181,23 @@ export async function runProactiveTick(deps: NotificationDeps): Promise<Stats> {
 }
 
 /** In-process fallback scheduler (used when no Redis queue is configured). */
-export function scheduleNotifications(deps: NotificationDeps, intervalMs = 60_000): () => void {
+/**
+ * Milliseconds until the next wall-clock slot (:00/:15/:30/:45 for 15) plus
+ * `offsetMs`. Slots divide the hour, so they line up with WINDOW_SECONDS.
+ */
+export function msUntilNextSlot(now: Date, slotMinutes = 15, offsetMs = 5_000): number {
+  const slot = slotMinutes * 60_000;
+  const t = now.getTime();
+  const next = Math.floor((t - offsetMs) / slot) * slot + slot + offsetMs;
+  return next - t;
+}
+
+/**
+ * In-process scheduler: one tick per 15-minute slot. Every due check uses a
+ * 15-minute window (WINDOW_SECONDS) or a day plus dedupe, so nothing is missed,
+ * and between ticks the database is idle long enough to scale to zero (Neon free).
+ */
+export function scheduleNotifications(deps: NotificationDeps, slotMinutes = 15): () => void {
   let running = false;
   const tick = async () => {
     if (running) return;
@@ -196,7 +212,18 @@ export function scheduleNotifications(deps: NotificationDeps, intervalMs = 60_00
       running = false;
     }
   };
-  const timer = setInterval(() => void tick(), intervalMs);
-  timer.unref();
-  return () => clearInterval(timer);
+  let timer: NodeJS.Timeout;
+  let stopped = false;
+  const arm = () => {
+    if (stopped) return;
+    timer = setTimeout(() => {
+      void tick().finally(arm);
+    }, msUntilNextSlot(new Date(), slotMinutes));
+    timer.unref();
+  };
+  arm();
+  return () => {
+    stopped = true;
+    clearTimeout(timer);
+  };
 }

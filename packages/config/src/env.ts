@@ -61,6 +61,8 @@ export const envSchema = z.object({
   MONTHLY_REPORT_TIME: hhmm.default('10:00'),
   /** Register the Telegram webhook + command menu on startup (PaaS without a shell). */
   AUTO_SET_WEBHOOK: bool.default(false),
+  // Self-ping /health so a free PaaS instance never spins down (on by default on Render).
+  KEEP_ALIVE: bool.default(false),
   /** Run queue workers / scheduler in this process (set false on API-only replicas). */
   RUN_WORKERS: bool.default(true),
   /** Days between an account deletion request and permanent removal (TZ §40: ≤30 incl. backups). */
@@ -103,7 +105,8 @@ const empty = (v: string | undefined) => v === undefined || v.trim() === '';
  * - PUBLIC_BASE_URL from RENDER_EXTERNAL_URL (Render sets it automatically);
  * - WEB_BASE_URL = PUBLIC_BASE_URL + "/app" (same-origin panel);
  * - TELEGRAM_WEBHOOK_SECRET derived from AUTH_TOKEN_SECRET (platform-generated
- *   secrets may contain characters Telegram does not accept).
+ *   secrets may contain characters Telegram does not accept);
+ * - KEEP_ALIVE on Render (free instances sleep after 15 idle minutes).
  */
 export function withPlatformDefaults(source: Record<string, string | undefined>): Record<string, string | undefined> {
   const out = { ...source };
@@ -123,6 +126,7 @@ export function withPlatformDefaults(source: Record<string, string | undefined>)
     if (m) out.DATABASE_URL = m[0];
   }
   if (empty(out.PUBLIC_BASE_URL) && !empty(out.RENDER_EXTERNAL_URL)) out.PUBLIC_BASE_URL = out.RENDER_EXTERNAL_URL!.replace(/\/+$/, '');
+  if (empty(out.KEEP_ALIVE) && !empty(out.RENDER_EXTERNAL_URL)) out.KEEP_ALIVE = 'true';
   if (empty(out.WEB_BASE_URL) && !empty(out.PUBLIC_BASE_URL)) out.WEB_BASE_URL = `${out.PUBLIC_BASE_URL!.replace(/\/+$/, '')}/app`;
   if (empty(out.TELEGRAM_WEBHOOK_SECRET) && !empty(out.AUTH_TOKEN_SECRET)) {
     out.TELEGRAM_WEBHOOK_SECRET = createHash('sha256').update(`${out.AUTH_TOKEN_SECRET}:telegram-webhook`).digest('hex');

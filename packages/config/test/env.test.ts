@@ -73,6 +73,13 @@ describe('platform defaults (free PaaS deploy)', () => {
     expect(loadEnv({ ...min, NODE_ENV: 'production', RENDER_EXTERNAL_URL: 'https://hamyon-ai.onrender.com' }).TELEGRAM_WEBHOOK_SECRET).toBe(env.TELEGRAM_WEBHOOK_SECRET);
   });
 
+  it('keeps the instance awake on Render unless turned off', () => {
+    const render = { ...min, NODE_ENV: 'production', RENDER_EXTERNAL_URL: 'https://hamyon-ai.onrender.com' };
+    expect(loadEnv(render).KEEP_ALIVE).toBe(true);
+    expect(loadEnv({ ...render, KEEP_ALIVE: 'false' }).KEEP_ALIVE).toBe(false);
+    expect(loadEnv(base).KEEP_ALIVE).toBe(false);
+  });
+
   it('explicit values win', () => {
     const env = loadEnv({ ...base, PUBLIC_BASE_URL: 'https://a.uz', RENDER_EXTERNAL_URL: 'https://b.onrender.com' });
     expect(env.PUBLIC_BASE_URL).toBe('https://a.uz');

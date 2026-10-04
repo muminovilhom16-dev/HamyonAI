@@ -1,6 +1,7 @@
 import { EnvValidationError, loadEnv } from '@hamyon/config';
 import { createDb } from '@hamyon/db';
 import { buildApp } from './app';
+import { startKeepAlive } from './keep-alive';
 import { scheduleMaintenance } from './maintenance';
 import { runProactiveTick, scheduleNotifications } from './notifications';
 import { startWorkers } from './queue';
@@ -37,9 +38,11 @@ async function main(): Promise<void> {
     stopReminders = scheduleNotifications(notifyDeps);
   }
 
+  let stopKeepAlive = () => {};
   const shutdown = async (signal: string) => {
     app.log.info({ signal }, 'shutting down');
     try {
+      stopKeepAlive();
       stopMaintenance();
       await stopReminders();
       await app.close();
@@ -52,6 +55,10 @@ async function main(): Promise<void> {
   process.once('SIGINT', () => void shutdown('SIGINT'));
 
   await app.listen({ host: env.HOST, port: env.PORT });
+
+  if (env.KEEP_ALIVE && env.PUBLIC_BASE_URL?.startsWith('https://')) {
+    stopKeepAlive = startKeepAlive({ baseUrl: env.PUBLIC_BASE_URL, log: app.log });
+  }
 
   // PaaS without a shell (e.g. Render free): register the webhook ourselves.
   if (env.AUTO_SET_WEBHOOK) {
