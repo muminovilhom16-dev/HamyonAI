@@ -4,6 +4,7 @@ import { schema } from '@hamyon/db';
 import { markNoSpendingToday, optOutOfDebtorReminders, type Language } from '@hamyon/core';
 import { t } from '../i18n';
 import type { BotContext, BotServices } from './context';
+import { sendGuideVideo } from './guide';
 import { sendMenu } from './menu';
 
 /**
@@ -62,6 +63,8 @@ export function registerOnboarding(bot: Bot<BotContext>, s: BotServices): void {
       return;
     }
     await setUser(s, ctx, { onboardingStep: 'language' });
+    // New users see the 1-minute how-to video first, then the language picker.
+    await sendGuideVideo(ctx, s);
     const kb = new InlineKeyboard();
     for (const [code, label] of LANGS) kb.text(label, `ob:l:${code}`);
     await ctx.reply(t(user.language, 'welcome'), { reply_markup: kb });

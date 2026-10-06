@@ -17,7 +17,9 @@ const tg = http.createServer((req, res) => {
     if (method === 'getMe') {
       return res.end(JSON.stringify({ ok: true, result: { id: 1, is_bot: true, first_name: 'Hamyon AI', username: 'HamyonSmokeBot' } }));
     }
-    sent.push({ method, body: JSON.parse(body || '{}') });
+    // File uploads (sendVideo) arrive as multipart; only JSON bodies are parsed.
+    const json = (req.headers['content-type'] ?? '').includes('json');
+    sent.push({ method, body: json ? JSON.parse(body || '{}') : { multipart: true, chat_id: Number(/name="chat_id"\r\n\r\n(\d+)/.exec(body)?.[1]) } });
     res.end(JSON.stringify({ ok: true, result: { message_id: 1, date: 0, chat: { id: 1, type: 'private' } } }));
   });
 });
@@ -85,7 +87,8 @@ const res = await fetch(`${base}/telegram/webhook`, {
   body: JSON.stringify(update),
 });
 if (res.status !== 200) fail(`webhook returned ${res.status}`);
-if (!sent.some((s) => s.method === 'sendMessage' && s.body.chat_id === 900000001)) fail('no sendMessage to Telegram');
+if (!sent.some((s) => s.method === 'sendMessage' && s.body.chat_id === 900000001)) fail(`no sendMessage to Telegram; got ${JSON.stringify(sent.map((s) => s.method))}`);
+if (!sent.some((s) => s.method === 'sendVideo' && s.body.chat_id === 900000001)) fail('how-to video not sent on /start');
 
 const unauth = await fetch(`${base}/telegram/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
 if (unauth.status !== 401) fail(`unauthenticated webhook returned ${unauth.status}`);

@@ -431,6 +431,17 @@ const messages = {
     uz_cyrl: 'Веб панелга кириш ҳаволаси (15 дақиқа амал қилади, бир марта ишлайди):',
     ru: 'Ссылка для входа в веб-панель (действует 15 минут, одноразовая):',
   },
+  guideCaption: {
+    uz_latn: '🎬 1 daqiqalik video qo‘llanma: botdan qanday foydalanish va web panelni ochish.',
+    uz_cyrl: '🎬 1 дақиқалик видео қўлланма: ботдан қандай фойдаланиш ва веб панелни очиш.',
+    ru: '🎬 Видео-инструкция за 1 минуту: как пользоваться ботом и открыть веб-панель (на узбекском).',
+  },
+  guideOffer: {
+    uz_latn: 'Video qo‘llanmani yana ko‘rmoqchimisiz?',
+    uz_cyrl: 'Видео қўлланмани яна кўрмоқчимисиз?',
+    ru: 'Хотите посмотреть видео-инструкцию?',
+  },
+  guideButton: { uz_latn: '🎬 Video qo‘llanma', uz_cyrl: '🎬 Видео қўлланма', ru: '🎬 Видео-инструкция' },
   webLinkButton: { uz_latn: 'Web panelni ochish', uz_cyrl: 'Веб панелни очиш', ru: 'Открыть веб-панель' },
   webUnavailable: { uz_latn: 'Web panel hozircha mavjud emas.', uz_cyrl: 'Веб панел ҳозирча мавжуд эмас.', ru: 'Веб-панель пока недоступна.' },
   linkExpiredTitle: { uz_latn: 'Havola muddati tugadi.', uz_cyrl: 'Ҳавола муддати тугади.', ru: 'Срок действия ссылки истёк.' },

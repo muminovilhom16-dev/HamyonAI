@@ -27,6 +27,7 @@ WORKDIR /app
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/apps/api/package.json ./package.json
 COPY --from=build /app/apps/api/dist ./dist
+COPY --from=build /app/apps/api/assets ./assets
 COPY --from=build /app/apps/web/dist ./web
 ENV WEB_STATIC_DIR=/app/web
 USER node

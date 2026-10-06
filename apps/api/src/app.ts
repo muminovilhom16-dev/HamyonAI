@@ -21,6 +21,7 @@ import { webApiRoutes } from './routes/web-api';
 import fastifyStatic from '@fastify/static';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -109,6 +110,10 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     confidenceThreshold: env.AI_CONFIDENCE_THRESHOLD,
     aiDailyBudgetUsd: env.AI_DAILY_BUDGET_USD,
     now: opts.now ?? (() => new Date()),
+    // Resolves to apps/api/assets both from src/ (tests) and the dist/ bundle (/app/assets in Docker).
+    guideVideo: env.GUIDE_VIDEO
+      ? { path: fileURLToPath(new URL('../assets/guide.mp4', import.meta.url)), thumbnail: fileURLToPath(new URL('../assets/guide-thumb.jpg', import.meta.url)) }
+      : null,
     defaults: { currency: env.DEFAULT_CURRENCY, timezone: env.DEFAULT_TIMEZONE, reminderTime: env.DEFAULT_REMINDER_TIME },
     ...(env.PUBLIC_BASE_URL && {
       webLoginUrl: (token: string) => `${env.PUBLIC_BASE_URL}/auth/web?token=${encodeURIComponent(token)}`,

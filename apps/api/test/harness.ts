@@ -17,6 +17,8 @@ const BASE_ENV = {
   AUTH_TOKEN_SECRET: 'a'.repeat(40),
   PUBLIC_BASE_URL: 'https://api.hamyon.test',
   WEB_BASE_URL: 'https://app.hamyon.test',
+  // Most tests are about text flows; guide.test.ts turns the video on.
+  GUIDE_VIDEO: 'false',
 };
 export const env = loadEnv(BASE_ENV);
 
@@ -27,6 +29,8 @@ export interface Harness {
   h: DbHandle;
   calls: ApiCall[];
   failChatIds: Set<number>;
+  /** Telegram methods that fail for everyone (e.g. 'sendVideo'). */
+  failMethods: Set<string>;
   clock: { now: Date };
   ai: { current: AIProvider | null };
   speech: { current: SpeechProvider | null };
@@ -49,6 +53,7 @@ export async function createHarness(envOverrides: Record<string, string> = {}): 
   const h = createDb(testDatabaseUrl());
   const calls: ApiCall[] = [];
   const failChatIds = new Set<number>();
+  const failMethods = new Set<string>();
   const clock = { now: new Date('2026-10-01T10:00:00Z') };
   const ai: { current: AIProvider | null } = { current: null };
   const aiProxy: AIProvider = {
@@ -79,6 +84,7 @@ export async function createHarness(envOverrides: Record<string, string> = {}): 
         const p = payload as Record<string, any>;
         calls.push({ method, payload: p });
         if (method === 'getFile') return { ok: true, result: { file_id: 'f', file_unique_id: 'u', file_path: 'voice/file_1.oga' } } as never;
+        if (failMethods.has(method)) throw new Error(`telegram ${method} failed`);
         if (failChatIds.has(p.chat_id)) throw new Error('telegram down: secret internal detail');
         return { ok: true, result: { message_id: calls.length, date: 0, chat: { id: p.chat_id, type: 'private' }, text: p.text } } as never;
       });
@@ -99,7 +105,7 @@ export async function createHarness(envOverrides: Record<string, string> = {}): 
   const from = (id: number, lang = 'uz') => ({ id, is_bot: false, first_name: 'Ali', username: `user${id}`, language_code: lang });
 
   return {
-    app, h, calls, failChatIds, clock, ai, speech,
+    app, h, calls, failChatIds, failMethods, clock, ai, speech,
     send(fromId, text, opts = {}) {
       const cmd = text.startsWith('/') ? [{ type: 'bot_command', offset: 0, length: text.split(' ')[0]!.length }] : undefined;
       return post({
@@ -134,7 +140,7 @@ export async function createHarness(envOverrides: Record<string, string> = {}): 
       const last = [...calls].reverse().find((c) => c.payload.reply_markup?.inline_keyboard);
       return last?.payload.reply_markup.inline_keyboard ?? [];
     },
-    reset() { calls.length = 0; failChatIds.clear(); },
+    reset() { calls.length = 0; failChatIds.clear(); failMethods.clear(); },
     async close() { await app.close(); await h.close(); },
   };
 }

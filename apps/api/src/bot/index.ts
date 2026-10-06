@@ -8,6 +8,7 @@ import { registerBudgets } from './budgets';
 import { registerRecurring } from './recurring';
 import { registerGoals } from './goals';
 import { registerAccounts } from './accounts';
+import { registerGuide } from './guide';
 import { registerMenu, sendMenu } from './menu';
 import { registerDebtFlows } from './debts';
 import { registerTransactionFlows } from './flows';
@@ -91,6 +92,7 @@ export function createBot(deps: BotDeps): Bot<BotContext> {
   // Reply-keyboard buttons → commands; sends the keyboard once to users who lack it.
   registerMenu(bot, deps);
   registerOnboarding(bot, deps);
+  registerGuide(bot, deps);
   registerSettings(bot, deps);
   registerReports(bot, deps);
 

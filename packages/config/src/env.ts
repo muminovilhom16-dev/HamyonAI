@@ -63,6 +63,8 @@ export const envSchema = z.object({
   AUTO_SET_WEBHOOK: bool.default(false),
   // Self-ping /health so a free PaaS instance never spins down (on by default on Render).
   KEEP_ALIVE: bool.default(false),
+  /** Send the 1-minute how-to video to new users on /start. */
+  GUIDE_VIDEO: bool.default(true),
   /** Run queue workers / scheduler in this process (set false on API-only replicas). */
   RUN_WORKERS: bool.default(true),
   /** Days between an account deletion request and permanent removal (TZ §40: ≤30 incl. backups). */

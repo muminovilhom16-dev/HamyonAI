@@ -29,4 +29,6 @@ export interface BotServices {
   aiDailyBudgetUsd: number;
   now: () => Date;
   webLoginUrl?: (token: string) => string;
+  /** How-to video sent on the first /start (null: off). fileId is cached after the first upload. */
+  guideVideo?: { path: string; thumbnail: string; fileId?: string } | null;
 }
