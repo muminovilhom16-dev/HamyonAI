@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<title>Hamyon AI — qo'llanma</title>
+<style>
+  @font-face {
+    font-family: 'Inter';
+    src: url('../../apps/web/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2');
+    font-weight: 100 900;
+  }
+  @font-face {
+    font-family: 'Inter';
+    src: url('../../apps/web/node_modules/@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2') format('woff2');
+    font-weight: 100 900;
+    unicode-range: U+0100-024F, U+02BB-02BC, U+2018-2019;
+  }
+  :root {
+    --brand: #0e7c66; --brand-deep: #06231d; --gold: #c9a227; --gold-2: #e8c95a; --ink: #0f1729;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--brand-deep); }
+  body { font-family: 'Inter', 'Noto Color Emoji', sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .layer { position: absolute; inset: 0; }
+  .center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .gold { color: var(--gold-2); }
+
+  #bg { background: radial-gradient(120% 80% at 50% 0%, #0e5a4a 0%, #0a3a31 45%, #052019 100%); }
+  .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .5; }
+  .particle { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: rgba(232, 201, 90, .7); }
+
+  .mark {
+    width: 200px; height: 200px; border-radius: 56px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #f3d873, var(--gold) 60%, #a07a10);
+    color: #1a1405; font-weight: 900; font-size: 130px; box-shadow: 0 30px 70px rgba(0,0,0,.45), inset 0 4px 0 rgba(255,255,255,.4);
+  }
+  .h1 { font-size: 104px; font-weight: 850; letter-spacing: -0.035em; line-height: 1.02; }
+  .h2 { font-size: 66px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+
+  /* Intro chips */
+  .chip { display: flex; align-items: center; gap: 24px; width: 640px; padding: 22px 30px; border-radius: 30px; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.12); font-size: 40px; font-weight: 700; margin-top: 16px; }
+  .chip i { font-style: normal; width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; background: var(--gold-2); color: #1a1405; font-weight: 900; }
+
+  /* Header: progress + caption */
+  #head { position: absolute; left: 0; right: 0; top: 0; height: 470px; }
+  #bar { position: absolute; left: 70px; right: 70px; top: 86px; display: flex; gap: 12px; }
+  #bar div { flex: 1; height: 12px; border-radius: 6px; background: rgba(255,255,255,.16); overflow: hidden; }
+  #bar b { display: block; height: 100%; width: 0; background: var(--gold-2); border-radius: 6px; }
+  #steplbl { position: absolute; left: 70px; right: 70px; top: 140px; font-size: 32px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--gold-2); text-align: center; }
+  .cap { position: absolute; left: 60px; right: 60px; top: 205px; font-size: 56px; font-weight: 750; line-height: 1.15; letter-spacing: -0.02em; text-align: center; }
+  .cap b { color: var(--gold-2); font-weight: 850; }
+
+  /* Phone */
+  #phone { position: absolute; left: 220px; top: 480px; width: 640px; height: 1404px; border-radius: 84px; background: #0b0f14; padding: 20px; box-shadow: 0 60px 140px rgba(0,0,0,.55), 0 0 0 3px rgba(255,255,255,.08); }
+  #screen { position: relative; width: 600px; height: 1364px; border-radius: 66px; overflow: hidden; background: #cfe3d6; }
+  #tg { position: absolute; inset: 0; }
+  #tg::before { content: ''; position: absolute; inset: 0; background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0 5px, transparent 6px) 0 0 / 80px 80px,
+    linear-gradient(160deg, #b9d9c4, #d9eadf 60%, #c6e0cf); }
+  .tg-head { position: absolute; left: 0; right: 0; top: 0; height: 140px; background: #fff; display: flex; align-items: flex-end; padding: 0 30px 20px; gap: 18px; color: var(--ink); z-index: 3; box-shadow: 0 2px 0 rgba(0,0,0,.06); }
+  .tg-ava { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #f3d873, var(--gold)); display: grid; place-items: center; font-weight: 900; font-size: 40px; color: #1a1405; flex: none; }
+  .tg-name { font-size: 30px; font-weight: 750; }
+  .tg-status { font-size: 22px; color: #5d8a7c; font-weight: 500; }
+  .tg-input { position: absolute; left: 0; right: 0; bottom: 0; height: 100px; background: #fff; display: flex; align-items: center; padding: 0 26px; gap: 14px; z-index: 4; color: var(--ink); font-size: 28px; }
+  .tg-input .field { flex: 1; color: #94a3a0; white-space: nowrap; overflow: hidden; }
+  .tg-input .field.typing { color: var(--ink); }
+  .tg-send { width: 64px; height: 64px; border-radius: 50%; background: var(--brand); display: grid; place-items: center; flex: none; }
+  .caret { display: inline-block; width: 3px; height: 32px; background: var(--brand); vertical-align: -5px; margin-left: 2px; }
+  #startbar { position: absolute; left: 0; right: 0; bottom: 0; height: 100px; background: #fff; z-index: 5; display: grid; place-items: center; color: #2a8bd8; font-size: 32px; font-weight: 800; letter-spacing: .08em; }
+  #empty { position: absolute; left: 60px; right: 60px; top: 420px; z-index: 2; background: rgba(255,255,255,.92); border-radius: 36px; padding: 40px; text-align: center; color: var(--ink); }
+  #empty .tg-ava { width: 130px; height: 130px; font-size: 72px; margin: 0 auto 20px; }
+  #empty h3 { font-size: 36px; font-weight: 800; }
+  #empty p { font-size: 24px; color: #5b6b68; margin-top: 10px; line-height: 1.35; }
+  #msgs { position: absolute; left: 0; right: 0; top: 140px; bottom: 0; z-index: 2; overflow: hidden; }
+  .msg { position: absolute; left: 22px; right: 22px; transform-origin: left bottom; }
+  .msg.me { transform-origin: right bottom; }
+  .bubble { display: inline-block; max-width: 88%; border-radius: 26px; padding: 16px 22px; font-size: 27px; line-height: 1.36; color: var(--ink); box-shadow: 0 2px 2px rgba(0,0,0,.08); background: #fff; }
+  .me .bubble { background: #e3fbd2; float: right; border-bottom-right-radius: 8px; }
+  .bot .bubble { border-bottom-left-radius: 8px; }
+  .bubble b { font-weight: 800; }
+  .kbr { display: flex; gap: 6px; margin-top: 6px; clear: both; max-width: 88%; }
+  .kbr span { flex: 1; text-align: center; background: rgba(36, 79, 66, .55); color: #fff; border-radius: 14px; padding: 13px 6px; font-size: 22px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #replykb { position: absolute; left: 0; right: 0; bottom: 100px; padding: 12px 12px 14px; background: #eef3f1; z-index: 3; }
+  #replykb .row { display: flex; gap: 8px; margin-top: 8px; }
+  #replykb .row:first-child { margin-top: 0; }
+  #replykb span { flex: 1; background: #fff; border-radius: 14px; text-align: center; padding: 18px 4px; font-size: 23px; font-weight: 650; color: var(--ink); box-shadow: 0 2px 0 rgba(0,0,0,.08); white-space: nowrap; }
+
+  /* Browser */
+  #web { position: absolute; inset: 0; background: #f3f5f8; overflow: hidden; }
+  .addr { position: absolute; left: 0; right: 0; top: 0; height: 64px; background: #eceff1; z-index: 5; display: flex; align-items: center; justify-content: center; padding-top: 14px; }
+  .addr div { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 16px; padding: 7px 22px; font-size: 21px; color: #3b4652; }
+  #page { position: absolute; left: 0; right: 0; top: 64px; bottom: 0; overflow: hidden; }
+  #page img { position: absolute; left: 0; top: 0; width: 600px; }
+  #page img#nav { top: auto; bottom: 0; z-index: 3; }
+  #page img#sheet { z-index: 4; }
+
+  /* Touch + highlight */
+  #fx { position: absolute; inset: 0; pointer-events: none; z-index: 50; }
+  .finger { position: absolute; width: 74px; height: 74px; margin: -37px 0 0 -37px; border-radius: 50%; background: rgba(255,255,255,.55); border: 4px solid rgba(255,255,255,.95); box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+  .ripple { position: absolute; border-radius: 50%; border: 6px solid var(--gold-2); }
+  .hl { position: absolute; border-radius: 20px; border: 5px solid var(--gold-2); box-shadow: 0 0 0 9999px rgba(0,0,0,0), 0 0 30px rgba(232,201,90,.7); }
+
+  /* Tips + outro */
+  .tip { display: flex; align-items: center; gap: 30px; width: 900px; padding: 40px 44px; border-radius: 44px; background: #fff; color: var(--ink); box-shadow: 0 40px 80px rgba(0,0,0,.35); margin-top: 34px; text-align: left; }
+  .tip i { font-style: normal; flex: none; width: 112px; height: 112px; border-radius: 32px; background: #e5f3ef; display: grid; place-items: center; font-size: 60px; }
+  .tip p { font-size: 38px; font-weight: 650; line-height: 1.25; }
+  .tip p b { color: var(--brand); }
+  .pill { display: inline-flex; align-items: center; gap: 18px; padding: 34px 60px; border-radius: 999px; font-size: 50px; font-weight: 800; background: linear-gradient(135deg, #f3d873, var(--gold)); color: #1a1405; box-shadow: 0 30px 70px rgba(201,162,39,.45); position: relative; overflow: hidden; }
+  .shine { position: absolute; top: -40%; bottom: -40%; width: 160px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); transform: rotate(18deg); }
+</style>
+<script src="assets/bot.js"></script>
+<script src="assets/targets.js"></script>
+<script src="timeline.js"></script>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="bg">
+    <div class="blob" id="blob1" style="width:900px;height:900px;background:#14a184;"></div>
+    <div class="blob" id="blob2" style="width:760px;height:760px;background:#c9a227;opacity:.25"></div>
+    <div class="blob" id="blob3" style="width:700px;height:700px;background:#0e7c66;"></div>
+    <div id="particles"></div>
+  </div>
+
+  <div class="layer center" id="intro">
+    <div class="mark" id="i-mark">H</div>
+    <div class="h1" id="i-title" style="margin-top:40px">Hamyon <span class="gold">AI</span></div>
+    <div class="h2" id="i-sub" style="margin-top:18px;font-size:58px;color:rgba(255,255,255,.9)">1 daqiqada qo‘llanma</div>
+    <div id="i-chips" style="margin-top:50px"></div>
+  </div>
+
+  <div id="head">
+    <div id="bar"></div>
+    <div id="steplbl"></div>
+    <div class="cap" id="capA"></div>
+    <div class="cap" id="capB"></div>
+  </div>
+
+  <div id="phone">
+    <div id="screen">
+      <div id="tg">
+        <div class="tg-head">
+          <div class="tg-ava">H</div>
+          <div><div class="tg-name">Hamyon AI</div><div class="tg-status">bot</div></div>
+        </div>
+        <div id="empty">
+          <div class="tg-ava">H</div>
+          <h3>Hamyon AI</h3>
+          <p>Telegramdagi o‘zbekcha aqlli hamyon. Xarajatni yozing — qolganini bot hisoblaydi.</p>
+        </div>
+        <div id="msgs"></div>
+        <div id="replykb"></div>
+        <div class="tg-input">
+          <div class="field" id="field">Xabar</div>
+          <div class="tg-send"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M3 20.5 21 12 3 3.5l.01 6.6L15 12 3.01 13.9z"/></svg></div>
+        </div>
+        <div id="startbar">START</div>
+      </div>
+      <div id="web">
+        <div class="addr"><div>🔒 hamyon-ai.onrender.com/app</div></div>
+        <div id="page"><img id="pgA" /><img id="pgB" /><img id="nav" /><img id="sheet" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer center" id="tips">
+    <div class="h2" id="t-title">Yodda tuting</div>
+    <div class="tip" id="tip1"><i>⏱</i><p>Havola tugasa — menyudagi <b>🌐 Web panel</b> tugmasini qayta bosing</p></div>
+    <div class="tip" id="tip2"><i>🔒</i><p>Karta raqami, parol yoki SMS kod <b>hech qachon so‘ralmaydi</b></p></div>
+    <div class="tip" id="tip3"><i>❓</i><p>Savol bo‘lsa — menyudagi <b>Yordam</b> tugmasi</p></div>
+  </div>
+
+  <div class="layer center" id="outro">
+    <div class="mark" id="o-mark" style="width:230px;height:230px;font-size:150px;border-radius:64px">H</div>
+    <div class="h1" id="o-title" style="margin-top:50px">Hoziroq <span class="gold">boshlang!</span></div>
+    <div id="o-pill" style="margin-top:80px"><div class="pill">✈️ t.me/hamyonchai_bot<div class="shine" id="shine"></div></div></div>
+  </div>
+
+  <div id="fx"></div>
+</div>
+
+<script>
+  const TL = window.TL, BOT = window.BOT, TG = window.TARGETS;
+  const DURATION = TL.duration;
+  const $ = (id) => document.getElementById(id);
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const lerp = (a, b, p) => a + (b - a) * p;
+  const prog = (t, start, dur) => clamp((t - start) / dur);
+  const easeOutCubic = (p) => 1 - Math.pow(1 - p, 3);
+  const easeInCubic = (p) => p * p * p;
+  const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  const easeOutExpo = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
+  const easeOutBack = (p) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+  function set(el, o) {
+    if (typeof el === 'string') el = $(el);
+    const tr = `translate(${o.x || 0}px, ${o.y || 0}px) scale(${o.s ?? 1}) rotate(${o.r || 0}deg)`;
+    el.style.transform = tr;
+    if (o.o !== undefined) el.style.opacity = o.o;
+    el.style.filter = o.blur ? `blur(${o.blur}px)` : '';
+  }
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  const EV = TL.events;
+  const ofType = (type) => EV.filter((e) => e.type === type);
+  const lastOf = (type, t) => { let r = null; for (const e of EV) if (e.type === type && e.t <= t) r = e; return r; };
+  const prevOf = (type, e) => { let r = null; for (const x of EV) { if (x === e) break; if (x.type === type) r = x; } return r; };
+
+  // ── Background ──────────────────────────────────────────────────────
+  const rnd = (i) => { const x = Math.sin(i * 9301 + 49297) * 233280; return x - Math.floor(x); };
+  const parts = [];
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    $('particles').appendChild(p);
+    parts.push({ el: p, x: rnd(i) * 1080, y0: rnd(i + 99) * 1920, v: 20 + rnd(i + 7) * 50, a: 0.2 + rnd(i + 3) * 0.6, ph: rnd(i + 5) * 6 });
+  }
+
+  // ── Intro chips + progress bar ──────────────────────────────────────
+  TL.steps.forEach((name, i) => {
+    $('i-chips').insertAdjacentHTML('beforeend', `<div class="chip" id="chip${i}"><i>${i + 1}</i>${name}</div>`);
+    $('bar').insertAdjacentHTML('beforeend', '<div><b></b></div>');
+  });
+  const stepEvents = ofType('caption').filter((e) => e.step);
+  const stepStart = (n) => stepEvents.find((e) => e.step === n).t;
+  const stepEnd = (n) => (n < TL.steps.length ? stepStart(n + 1) : ofType('tips')[0].t);
+
+  // ── Chat messages, built from the real captured bot replies ─────────
+  const reply = ([step, i]) => {
+    const s = BOT.find((x) => x.name === step);
+    if (!s || !s.replies[i]) throw new Error(`missing capture ${step}[${i}] — run capture.mjs`);
+    return s.replies[i];
+  };
+  const kbHtml = (rows) => rows.map((r) => `<div class="kbr">${r.map((b) => `<span>${esc(b)}</span>`).join('')}</div>`).join('');
+  const botHtml = (r, extraButton) => {
+    const rows = r.inline.map((row) => row.map((b) => b.text));
+    if (extraButton) rows.push([extraButton]);
+    return `<div class="bubble">${r.text.replace(/\n/g, '<br>')}</div>${kbHtml(rows)}`;
+  };
+  const MSGS = [];
+  for (const e of EV) {
+    if (e.type === 'send') MSGS.push({ id: e.id, at: e.t, me: true, versions: [{ at: e.t, html: `<div class="bubble">${esc(e.text)}</div>` }] });
+    if (e.type === 'bot') MSGS.push({ id: e.id, at: e.t, me: false, versions: [{ at: e.t, html: botHtml(reply(e.from), e.button) }] });
+    if (e.type === 'edit') MSGS.find((m) => m.id === e.id).versions.push({ at: e.t, html: botHtml(reply(e.from)) });
+  }
+  for (const m of MSGS) {
+    m.el = document.createElement('div');
+    m.el.className = `msg ${m.me ? 'me' : 'bot'}`;
+    $('msgs').appendChild(m.el);
+    m.shown = null;
+  }
+  const msgById = (id) => MSGS.find((m) => m.id === id);
+  // Reply keyboard: the real menu the bot sends after onboarding.
+  const menu = reply(['reminder', 1]).keyboard;
+  $('replykb').innerHTML = menu.map((r) => `<div class="row">${r.map((b) => `<span>${esc(b)}</span>`).join('')}</div>`).join('');
+
+  // ── Web panel images ────────────────────────────────────────────────
+  const S = 600 / 390; // screen px per CSS px of the captured page
+  const img = (name) => `assets/${name}.png`;
+  for (const n of ['dashboard', 'records', 'debts', 'settings', 'record-add', 'debt-add', 'nav-1', 'nav-2', 'nav-3', 'nav-4']) {
+    const i = new Image(); i.src = img(n); // warm the cache
+  }
+
+  // ── Element lookup for taps and highlights (stage coordinates) ──────
+  const stageRect = () => $('stage').getBoundingClientRect();
+  function rectOf(target) {
+    let el = null;
+    if (target.start) el = $('startbar');
+    else if (target.msg) {
+      const spans = [...msgById(target.msg).el.querySelectorAll('.kbr span')].filter((s) => s.textContent === target.btn);
+      el = target.last ? spans.at(-1) : spans[0];
+    } else if (target.kb) el = [...$('replykb').querySelectorAll('span')].find((s) => s.textContent === target.kb);
+    else if (target.web) {
+      const g = TG[target.web];
+      const sr = $('screen').getBoundingClientRect(), st = stageRect();
+      const cx = sr.left - st.left + g.x * 600, cy = sr.top - st.top + 64 + g.y * S;
+      const w = g.w * 600, h = g.h * S;
+      return { x: cx - w / 2, y: cy - h / 2, w, h };
+    }
+    if (!el) return null;
+    const r = el.getBoundingClientRect(), st = stageRect();
+    return { x: r.left - st.left, y: r.top - st.top, w: r.width, h: r.height };
+  }
+
+  // ── Frame ───────────────────────────────────────────────────────────
+  let lastField = null, lastCap = {}, lastStepLbl = null;
+  window.render = function render(t) {
+    // Background drift
+    set('blob1', { x: -200 + Math.sin(t * 0.25) * 120, y: -150 + Math.cos(t * 0.2) * 80 });
+    set('blob2', { x: 520 + Math.cos(t * 0.22) * 140, y: 1150 + Math.sin(t * 0.3) * 100 });
+    set('blob3', { x: -260 + Math.sin(t * 0.18 + 2) * 100, y: 900 + Math.cos(t * 0.25) * 120 });
+    for (const p of parts) {
+      const y = ((p.y0 - t * p.v) % 1920 + 1920) % 1920;
+      set(p.el, { o: p.a * (0.6 + 0.4 * Math.sin(t * 2 + p.ph)), x: p.x + Math.sin(t * 0.8 + p.ph) * 30, y });
+    }
+
+    // Intro (0–3.2)
+    const inOut = 1 - easeInCubic(prog(t, 2.8, 0.45));
+    $('intro').style.opacity = inOut;
+    const pm = prog(t, 0.1, 0.7);
+    set('i-mark', { o: pm, s: easeOutBack(pm) * inOut + (1 - inOut) * 0.8, r: lerp(-20, 0, easeOutBack(pm)) });
+    [['i-title', 0.35], ['i-sub', 0.6]].forEach(([id, st]) => { const p = prog(t, st, 0.5); set(id, { o: p, y: lerp(50, 0, easeOutBack(p)), blur: lerp(10, 0, p) }); });
+    TL.steps.forEach((_, i) => { const p = prog(t, 1.0 + i * 0.2, 0.45); set(`chip${i}`, { o: p, x: lerp(-80, 0, easeOutExpo(p)) }); });
+
+    // Header (steps)
+    const headA = prog(t, 3.1, 0.4) * (1 - prog(t, 51.6, 0.4));
+    $('head').style.opacity = headA;
+    const curStep = (lastOf('caption', t) && stepEvents.filter((e) => e.t <= t).at(-1)?.step) || 1;
+    [...$('bar').querySelectorAll('b')].forEach((b, i) => {
+      const n = i + 1;
+      const f = n < curStep ? 1 : n > curStep ? 0 : clamp((t - stepStart(n)) / (stepEnd(n) - stepStart(n)));
+      b.style.width = `${f * 100}%`;
+    });
+    const lbl = `${curStep}-qadam · ${TL.steps[curStep - 1]}`;
+    if (lbl !== lastStepLbl) { $('steplbl').textContent = lbl; lastStepLbl = lbl; }
+    const se = stepEvents.filter((e) => e.t <= t).at(-1);
+    const lp = se ? prog(t, se.t, 0.4) : 0;
+    set('steplbl', { o: lp, y: lerp(20, 0, easeOutCubic(lp)) });
+    // Caption crossfade
+    const cur = lastOf('caption', t), prev = cur && prevOf('caption', cur);
+    const cp = cur ? prog(t, cur.t, 0.5) : 0;
+    const setCap = (id, html) => { if (lastCap[id] !== html) { $(id).innerHTML = html; lastCap[id] = html; } };
+    setCap('capA', cur ? cur.text : '');
+    setCap('capB', prev && cp < 1 ? prev.text : '');
+    // Old line leaves first, then the new one comes in (never two legible lines at once).
+    const inP = clamp((cp - 0.35) / 0.65), outP = clamp(cp / 0.35);
+    set('capA', { o: inP, y: lerp(36, 0, easeOutCubic(inP)), blur: lerp(6, 0, inP) });
+    set('capB', { o: 1 - outP, y: lerp(0, -36, easeInCubic(outP)) });
+
+    // Phone in/out
+    const pIn = easeOutExpo(prog(t, 3.0, 0.8)), pOut = easeInCubic(prog(t, 51.6, 0.5));
+    set('phone', { y: lerp(1500, 0, pIn) + lerp(0, 1500, pOut), s: lerp(0.94, 1, pIn), r: lerp(3, 0, pIn) });
+    $('phone').style.opacity = t < 2.9 || t > 52.3 ? 0 : 1;
+
+    // Screen mode: start → chat → web
+    const ph = lastOf('phone', t) ?? { mode: 'start', t: 0 };
+    const chatP = ph.mode === 'start' ? 0 : ph.mode === 'chat' ? prog(t, ph.t, 0.3) : 1;
+    $('startbar').style.opacity = 1 - chatP;
+    $('empty').style.opacity = 1 - chatP;
+    const webE = ofType('phone').find((e) => e.mode === 'web');
+    const wp = easeInOut(prog(t, webE.t, 0.55));
+    set('tg', { o: 1 - wp * 0.6, s: 1 - 0.08 * wp, x: -120 * wp });
+    set('web', { x: lerp(620, 0, wp) });
+    $('tg').style.visibility = wp >= 1 ? 'hidden' : 'visible';
+    $('web').style.visibility = wp <= 0 ? 'hidden' : 'visible';
+
+    // Typing field
+    const ty = lastOf('type', t);
+    let field = 'Xabar', typing = false;
+    if (ty && t < ty.end + 0.12) {
+      const n = Math.round(ty.text.length * prog(t, ty.t, ty.end - ty.t));
+      field = esc(ty.text.slice(0, n)) + '<span class="caret"></span>';
+      typing = true;
+    }
+    if (field !== lastField) { $('field').innerHTML = field; $('field').className = 'field' + (typing ? ' typing' : ''); lastField = field; }
+
+    // Reply keyboard
+    const ke = lastOf('kb', t);
+    const kp = ke ? easeOutCubic(prog(t, ke.t, 0.35)) : 0;
+    const kbShown = ke ? (ke.show ? kp : 1 - kp) : 0;
+    const kbH = $('replykb').offsetHeight;
+    set('replykb', { y: lerp(kbH + 100, 0, kbShown) });
+    $('replykb').style.opacity = kbShown > 0 ? 1 : 0;
+
+    // Messages: bottom-anchored stack
+    const GAP = 14, bottomPad = 100 + kbH * kbShown + 14;
+    const live = MSGS.filter((m) => t >= m.at);
+    for (const m of MSGS) {
+      const v = m.versions.filter((x) => x.at <= t).at(-1);
+      const html = v ? v.html : m.versions[0].html;
+      if (m.shown !== html) { m.el.innerHTML = html; m.shown = html; }
+      m.v = v;
+    }
+    let y = 0;
+    const pos = {};
+    for (let i = live.length - 1; i >= 0; i--) {
+      const m = live[i];
+      const p = prog(t, m.at, 0.4);
+      pos[m.id] = { bottom: y, top: y + m.el.offsetHeight };
+      y += (m.el.offsetHeight + GAP) * easeOutCubic(p);
+    }
+    // Scroll so a message is fully visible (follows it while it grows).
+    const sc = lastOf('scroll', t);
+    const areaH = 1364 - 140 - bottomPad;
+    const need = (id) => (id && pos[id] ? Math.max(0, pos[id].top - areaH + 18) : 0);
+    let shift = 0;
+    if (sc) {
+      const before = prevOf('scroll', sc);
+      const from = before ? need(before.target) : 0;
+      shift = lerp(from, need(sc.target), easeInOut(prog(t, sc.t, sc.end - sc.t)));
+    }
+    for (const m of MSGS) {
+      if (t < m.at) { m.el.style.opacity = 0; continue; }
+      const p = prog(t, m.at, 0.4);
+      m.el.style.bottom = `${bottomPad + pos[m.id].bottom - shift}px`;
+      const flash = m.v && m.v.at > m.at ? 0.55 + 0.45 * prog(t, m.v.at, 0.25) : 1;
+      set(m.el, { o: clamp(p * 2.2) * flash, s: lerp(0.6, 1, easeOutBack(p)), y: lerp(24, 0, easeOutCubic(p)) });
+    }
+
+    // Web panel pages
+    const pages = EV.filter((e) => (e.type === 'phone' && e.mode === 'web') || e.type === 'page');
+    const pg = pages.filter((e) => e.t <= t).at(-1) ?? pages[0];
+    const pgPrev = pages[pages.indexOf(pg) - 1];
+    const fade = pgPrev && pgPrev.page ? prog(t, pg.t, 0.3) : 1;
+    const scrollOf = (name) => {
+      const ws = EV.filter((e) => e.type === 'wscroll' && e.t <= t && pageAt(e.t) === name).at(-1);
+      return ws ? ws.to * easeInOut(prog(t, ws.t, ws.end - ws.t)) : 0;
+    };
+    function pageAt(time) { return pages.filter((e) => e.t <= time).at(-1)?.page; }
+    const showPage = (el, name, o) => {
+      const src = img(name);
+      if (el.dataset.src !== src) { el.src = src; el.dataset.src = src; }
+      el.style.opacity = o;
+      el.style.transform = `translateY(${-scrollOf(name) * S}px)`;
+    };
+    showPage($('pgA'), pg.page, 1);
+    if (pgPrev && pgPrev.page && fade < 1) showPage($('pgB'), pgPrev.page, 1 - fade); else $('pgB').style.opacity = 0;
+    const navSrc = img(`nav-${pg.nav}`);
+    if ($('nav').dataset.src !== navSrc) { $('nav').src = navSrc; $('nav').dataset.src = navSrc; }
+    $('pgA').style.zIndex = 1; $('pgB').style.zIndex = 2;
+    const sh = lastOf('sheet', t);
+    const shPrev = sh && prevOf('sheet', sh);
+    const shP = sh ? prog(t, sh.t, 0.3) : 0;
+    const sheetName = sh?.page ?? shPrev?.page;
+    if (sheetName) {
+      const src = img(sheetName);
+      if ($('sheet').dataset.src !== src) { $('sheet').src = src; $('sheet').dataset.src = src; }
+      const o = sh.page ? shP : 1 - shP;
+      $('sheet').style.opacity = o;
+      $('sheet').style.transform = `translateY(${(1 - easeOutCubic(sh.page ? shP : 1)) * 30}px)`;
+    } else $('sheet').style.opacity = 0;
+
+    // Taps and highlights
+    const fx = $('fx');
+    fx.innerHTML = '';
+    for (const e of ofType('tap')) {
+      if (t < e.t - 0.35 || t > e.t + 0.55) continue;
+      const r = rectOf(e.target);
+      if (!r) continue;
+      const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+      const a = prog(t, e.t - 0.35, 0.2) * (1 - prog(t, e.t + 0.25, 0.25));
+      const press = 1 - 0.18 * Math.sin(Math.PI * prog(t, e.t - 0.05, 0.25));
+      fx.insertAdjacentHTML('beforeend', `<div class="finger" style="left:${cx}px;top:${cy}px;opacity:${a};transform:scale(${press})"></div>`);
+      const rp = prog(t, e.t, 0.5);
+      if (rp > 0 && rp < 1) {
+        const d = lerp(40, 170, easeOutCubic(rp));
+        fx.insertAdjacentHTML('beforeend', `<div class="ripple" style="left:${cx - d / 2}px;top:${cy - d / 2}px;width:${d}px;height:${d}px;opacity:${1 - rp}"></div>`);
+      }
+    }
+    for (const e of ofType('hl')) {
+      if (t < e.t || t > e.end) continue;
+      const r = rectOf(e.target);
+      if (!r) continue;
+      const a = prog(t, e.t, 0.2) * (1 - prog(t, e.end - 0.2, 0.2));
+      const pulse = 1 + 0.04 * Math.sin((t - e.t) * 9);
+      const pad = 8;
+      fx.insertAdjacentHTML('beforeend', `<div class="hl" style="left:${r.x - pad}px;top:${r.y - pad}px;width:${r.w + pad * 2}px;height:${r.h + pad * 2}px;opacity:${a};transform:scale(${pulse})"></div>`);
+    }
+
+    // Tips (52–57.2)
+    const tipE = ofType('tips')[0].t, outE = ofType('outro')[0].t;
+    const tipOut = 1 - easeInCubic(prog(t, outE - 0.4, 0.4));
+    $('tips').style.opacity = t >= tipE ? tipOut : 0;
+    const tt = prog(t, tipE, 0.5);
+    set('t-title', { o: tt, y: lerp(40, 0, easeOutBack(tt)) });
+    [1, 2, 3].forEach((i) => { const p = prog(t, tipE + 0.4 + (i - 1) * 0.55, 0.55); set(`tip${i}`, { o: p, x: lerp(i % 2 ? -140 : 140, 0, easeOutExpo(p)), s: lerp(0.9, 1, easeOutBack(p)) }); });
+
+    // Outro (57.2–60)
+    $('outro').style.opacity = t >= outE ? 1 : 0;
+    const om = prog(t, outE, 0.6);
+    set('o-mark', { o: om, s: easeOutBack(om), r: lerp(25, 0, easeOutBack(om)) });
+    const ot = prog(t, outE + 0.3, 0.5), op = prog(t, outE + 0.6, 0.5);
+    set('o-title', { o: ot, y: lerp(50, 0, easeOutBack(ot)), blur: lerp(10, 0, ot) });
+    set('o-pill', { o: op, y: lerp(50, 0, easeOutBack(op)), s: t > outE + 1.3 ? 1 + 0.03 * Math.sin((t - outE - 1.3) * 6) : 1 });
+    $('shine').style.left = lerp(-300, 1100, easeInOut(prog(t, outE + 1.2, 0.9))) + 'px';
+  };
+  window.DURATION = DURATION;
+  window.render(0);
+</script>
+</body>
+</html>
