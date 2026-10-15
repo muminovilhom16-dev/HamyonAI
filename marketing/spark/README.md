@@ -13,6 +13,16 @@ node marketing/spark/render.mjs --stills 2.6,9.4   # tez tekshirish uchun PNG ka
 
 Bayroqlar `promo` bilan bir xil: `--bot`, `--fps 60`, `--out`, `--no-sfx`.
 
+## Narrator (o'zbekcha ovoz)
+
+Matn va vaqtlar `narration.py` dagi `LINES` ro'yxatida (promo'dagi mexanizm qayta ishlatiladi).
+
+```bash
+pip install edge-tts
+python3 marketing/spark/narration.py   # → marketing/spark/narration.wav
+node marketing/spark/render.mjs        # narration.wav bo'lsa, avtomatik qo'shiladi
+```
+
 ## Vositalar
 
 | Vosita | Nima uchun |
