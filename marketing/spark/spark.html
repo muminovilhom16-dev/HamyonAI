@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<title>Hamyon AI — spark style</title>
+<!--
+  "Spark" uslubi (reference: green/lime kinetic-typography explainer).
+  Har bir kadr window.render(t) orqali chiziladi: GSAP timeline pauzada turadi va
+  tl.seek(t) bilan aniq vaqtga o'tkaziladi, shuning uchun render deterministik.
+-->
+<style>
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+  }
+  @font-face {
+    font-family: 'Jakarta';
+    src: url('../../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-ext-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+    unicode-range: U+0100-024F, U+02BB-02BC, U+2018-2019;
+  }
+  :root {
+    --deep: #04241b; --forest: #08402f; --emerald: #12a36a; --mint: #3fe0a0;
+    --lime: #dcff3a; --lime-2: #f2ff8a; --cream: #f1f7dc; --paper: #f2fbe6; --ribbon: #0c5b3b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--deep); }
+  body { font-family: 'Jakarta', sans-serif; color: var(--cream); -webkit-font-smoothing: antialiased; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .layer { position: absolute; inset: 0; }
+  .abs { position: absolute; }
+
+  /* ── Fon: to'q yashil gradient + xira, sekin suzuvchi blob'lar ── */
+  #dark { background: radial-gradient(130% 90% at 50% 100%, #0d6b49 0%, #073a2b 45%, var(--deep) 100%); }
+  .blob { position: absolute; border-radius: 50%; filter: blur(110px); }
+  .arc { position: absolute; border-radius: 50%; border: 70px solid var(--lime); filter: blur(28px); opacity: .55; }
+  #light { background: radial-gradient(120% 80% at 80% 90%, #fbffd0 0%, #e7f9d6 45%, var(--paper) 100%); }
+
+  /* ── Tipografiya ── */
+  .line { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+  .w { display: inline-block; will-change: transform, filter, opacity; }
+  .t-reg { font-size: 92px; font-weight: 400; letter-spacing: -0.01em; }
+  .t-bold { font-weight: 800; color: var(--lime); }
+  .t-hero { font-size: 150px; font-weight: 300; letter-spacing: -0.03em; }
+  .t-mega { font-size: 210px; font-weight: 800; letter-spacing: -0.04em; color: var(--lime); text-shadow: 0 0 60px rgba(220,255,58,.25); }
+  .ghost { color: transparent; -webkit-text-stroke: 2px rgba(12, 91, 59, .14); }
+  .stack { position: absolute; left: 96px; font-size: 128px; line-height: 1.12; font-weight: 300; letter-spacing: -0.03em; }
+  .stack .t-bold { letter-spacing: -0.045em; }
+
+  /* Kalit so'z "pill" — shisha tugma, ichida gul-uchqun */
+  .pill {
+    display: inline-flex; align-items: center; gap: 22px; height: 124px; padding: 0 28px 0 48px; border-radius: 64px;
+    background: linear-gradient(100deg, rgba(18,163,106,.55), rgba(220,255,58,.85));
+    box-shadow: 0 0 0 2px rgba(242,255,138,.35) inset, 0 18px 60px rgba(220,255,58,.25);
+    color: var(--cream); font-size: 76px; font-weight: 500; vertical-align: middle;
+  }
+  .flower { width: 80px; height: 80px; filter: drop-shadow(0 0 14px rgba(255,236,90,.95)) drop-shadow(0 0 40px rgba(255,200,40,.6)); }
+  .glow-dot { position: absolute; width: 22px; height: 12px; border-radius: 8px; background: #fff6b0; box-shadow: 0 0 18px 6px rgba(255,210,60,.8); }
+
+  /* Ingichka halqalar (Idea sahnasi) */
+  .ring { position: absolute; border-radius: 50%; border: 2px solid rgba(242,255,138,.28); }
+
+  /* Ilova kartasi (light sahna) */
+  .card {
+    position: absolute; left: 150px; top: 640px; width: 780px; height: 860px; border-radius: 56px; overflow: hidden;
+    background: linear-gradient(160deg, #0b4a35, #06261c); box-shadow: 0 50px 120px rgba(6,38,28,.35);
+    padding: 56px; color: var(--cream);
+  }
+  .card h4 { font-size: 40px; font-weight: 500; opacity: .75; }
+  .card .sum { font-size: 92px; font-weight: 800; color: var(--lime); letter-spacing: -0.04em; margin-top: 8px; }
+  .bar { position: relative; height: 70px; border-radius: 22px; margin-top: 30px; background: rgba(255,255,255,.07); overflow: hidden; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 22px; background: linear-gradient(90deg, var(--emerald), var(--lime)); }
+  .bar span { position: absolute; left: 28px; top: 0; line-height: 70px; font-size: 32px; font-weight: 600; color: var(--deep); mix-blend-mode: normal; }
+  .bar b { position: absolute; right: 26px; top: 0; line-height: 70px; font-size: 32px; font-weight: 600; color: var(--cream); }
+
+  .handle { font-size: 54px; font-weight: 500; color: var(--ribbon); }
+  #flash { background: #fbffd8; opacity: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- ── DARK DUNYO ── -->
+  <div id="dark" class="layer">
+    <div class="blob" id="b1" style="width:900px;height:900px;background:#11a36b;opacity:.45"></div>
+    <div class="blob" id="b2" style="width:760px;height:760px;background:#0a2f24;opacity:.9"></div>
+    <div class="blob" id="b3" style="width:700px;height:700px;background:var(--lime);opacity:.28"></div>
+    <div class="arc" id="arc" style="width:1100px;height:1100px;left:-10px;top:1480px"></div>
+
+    <!-- S1: Hammasi bitta [Xabar ✿] dan boshlanadi -->
+    <div id="s1" class="layer">
+      <div class="line t-reg" style="top:760px">
+        <span class="w t-bold">Hammasi</span> <span class="w">bitta</span>
+      </div>
+      <div class="line t-reg" style="top:880px">
+        <span class="w pill" id="pill">Xabar <svg class="flower" viewBox="-50 -50 100 100"><use href="#petals" fill="#fff9c8"/></svg></span>
+        <span class="w">dan</span>
+      </div>
+      <div class="line t-reg" style="top:1030px"><span class="w">boshlanadi</span></div>
+      <svg class="abs" id="cursor" width="70" height="70" viewBox="0 0 24 24" style="left:800px;top:1300px">
+        <path d="M3 2 L21 11 L12 13 L9 22 Z" fill="var(--lime-2)" />
+      </svg>
+      <div class="glow-dot" id="d1" style="left:880px;top:820px"></div>
+      <div class="glow-dot" id="d2" style="left:760px;top:1150px"></div>
+    </div>
+
+    <!-- S2: halqalar + bitta so'z -->
+    <div id="s2" class="layer">
+      <div class="ring" id="r1" style="width:1100px;height:1100px;left:-600px;top:410px"></div>
+      <div class="ring" id="r2" style="width:1100px;height:1100px;left:580px;top:410px"></div>
+      <div class="ring" id="r3" style="width:1100px;height:1100px;left:-10px;top:-520px"></div>
+      <div class="ring" id="r4" style="width:1100px;height:1100px;left:-10px;top:1340px"></div>
+      <div class="line t-hero" id="w-a" style="top:860px">Xarajat</div>
+      <div class="line t-hero t-bold" id="w-b" style="top:860px;font-weight:800">Nazorat</div>
+      <svg class="abs flower" id="f2" viewBox="-50 -50 100 100" style="left:700px;top:700px;width:56px;height:56px"><use href="#petals" fill="var(--lime)"/></svg>
+    </div>
+
+    <!-- S4: chapga tekislangan stack -->
+    <div id="s4" class="layer">
+      <svg class="abs" id="petal-lines" width="900" height="900" viewBox="-50 -50 100 100" style="left:420px;top:1150px">
+        <g fill="none" stroke="var(--lime)" stroke-width=".35" opacity=".7">
+          <path class="pl" d="M0 0 C -12 -18 -10 -42 0 -46 C 10 -42 12 -18 0 0" transform="rotate(-50)"/>
+          <path class="pl" d="M0 0 C -12 -18 -10 -42 0 -46 C 10 -42 12 -18 0 0" transform="rotate(-10)"/>
+          <path class="pl" d="M0 0 C -12 -18 -10 -42 0 -46 C 10 -42 12 -18 0 0" transform="rotate(30)"/>
+          <path class="pl" d="M0 0 C -12 -18 -10 -42 0 -46 C 10 -42 12 -18 0 0" transform="rotate(70)"/>
+        </g>
+      </svg>
+      <div class="stack" style="top:560px">
+        <div class="w">Chunki</div><br>
+        <div class="w">pul</div><br>
+        <div class="w">faqat</div><br>
+        <div class="w">topishda</div><br>
+        <div class="w">emas —</div><br>
+        <div class="w t-bold">nazoratda</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LIGHT DUNYO ── -->
+  <div id="light" class="layer" style="opacity:0">
+    <!-- S3: O'SISH + ghost stack -->
+    <div id="s3" class="layer">
+      <div class="line t-mega ghost" style="top:520px">O‘SISH</div>
+      <div class="line t-mega ghost" style="top:720px">O‘SISH</div>
+      <div class="line t-mega" id="mega" style="top:920px">O‘SISH</div>
+      <div class="line t-mega ghost" style="top:1120px">O‘SISH</div>
+      <div class="line t-mega ghost" style="top:1320px">O‘SISH</div>
+      <div class="abs" id="drop" style="left:610px;top:-200px;width:90px;height:130px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:var(--ribbon)"></div>
+    </div>
+
+    <!-- S5: ribbon + karta -->
+    <div id="s5" class="layer">
+      <div class="card" id="card">
+        <h4>Oktabr xarajatlari</h4>
+        <div class="sum" id="sum">0 so‘m</div>
+        <div class="bar"><i id="bar1"></i><span>Oziq-ovqat</span><b>42%</b></div>
+        <div class="bar"><i id="bar2"></i><span>Transport</span><b>21%</b></div>
+        <div class="bar"><i id="bar3"></i><span>Kommunal</span><b>18%</b></div>
+        <div class="bar"><i id="bar4"></i><span>Boshqa</span><b>19%</b></div>
+      </div>
+      <svg class="layer" viewBox="0 0 1080 1920">
+        <defs>
+          <linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#0c5b3b"/><stop offset=".55" stop-color="#7fd84a"/><stop offset="1" stop-color="#e9ff4a"/>
+          </linearGradient>
+        </defs>
+        <path id="ribbon" d="M90 -40 C 60 700, 20 1400, 260 1620 S 960 1720, 990 1260 S 1010 640, 760 560"
+              fill="none" stroke="url(#rg)" stroke-width="78" stroke-linecap="round"/>
+      </svg>
+      <div class="line" id="rib-txt" style="top:470px;font-size:56px;font-weight:600;color:var(--ribbon)">Ortiqcha emas. Faqat aniqlik.</div>
+    </div>
+
+    <!-- S6: CTA -->
+    <div id="s6" class="layer">
+      <svg class="abs flower" id="f6" viewBox="-50 -50 100 100" style="left:480px;top:700px;width:120px;height:120px;filter:none"><use href="#petals" fill="var(--ribbon)"/></svg>
+      <div class="line" style="top:880px;font-size:104px;font-weight:300;color:var(--ribbon);letter-spacing:-.03em">
+        <span class="w">Boshlaymizmi</span><span class="w">?</span>
+      </div>
+      <div class="line" style="top:1060px"><span class="w pill" id="cta" style="color:var(--deep);font-weight:700">Hamyon AI <svg class="flower" viewBox="-50 -50 100 100"><use href="#petals" fill="#fff9c8"/></svg></span></div>
+      <div class="line handle" style="top:1230px"><span class="w" id="bot">@hamyonchai_bot</span></div>
+    </div>
+  </div>
+
+  <div id="flash" class="layer"></div>
+</div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="petals">
+      <ellipse rx="11" ry="22" cy="-24"/><ellipse rx="11" ry="22" cy="-24" transform="rotate(45)"/>
+      <ellipse rx="11" ry="22" cy="-24" transform="rotate(90)"/><ellipse rx="11" ry="22" cy="-24" transform="rotate(135)"/>
+      <ellipse rx="11" ry="22" cy="-24" transform="rotate(180)"/><ellipse rx="11" ry="22" cy="-24" transform="rotate(225)"/>
+      <ellipse rx="11" ry="22" cy="-24" transform="rotate(270)"/><ellipse rx="11" ry="22" cy="-24" transform="rotate(315)"/>
+      <circle r="14"/>
+    </g>
+  </defs>
+</svg>
+
+<script src="../../node_modules/gsap/dist/gsap.min.js"></script>
+<script>
+  const bot = new URLSearchParams(location.search).get('bot');
+  if (bot) document.getElementById('bot').textContent = '@' + bot;
+
+  window.DURATION = 15;
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => [...document.querySelectorAll(s)];
+  const tl = gsap.timeline({ paused: true, defaults: { ease: 'expo.out' } });
+
+  // Uslubning asosiy "imzosi": so'z blur'dan, pastdan, biroz kattaroq holda chiqadi.
+  const wordIn = (els, at, stagger = 0.09) =>
+    tl.fromTo(els, { y: 50, opacity: 0, filter: 'blur(18px)', scale: 1.08 },
+      { y: 0, opacity: 1, filter: 'blur(0px)', scale: 1, duration: 0.7, stagger }, at);
+  const wordOut = (els, at) =>
+    tl.to(els, { y: -30, opacity: 0, filter: 'blur(14px)', duration: 0.4, ease: 'power2.in', stagger: 0.03 }, at);
+
+  gsap.set(['#s2', '#s4', '#s3', '#s5', '#s6'], { autoAlpha: 0 });
+
+  // ── S1 (0–3.3) ──
+  const s1w = $$('#s1 .w');
+  wordIn(s1w.slice(0, 2), 0.2);
+  tl.fromTo('#pill', { width: 0, opacity: 0, filter: 'blur(10px)' }, { width: 'auto', opacity: 1, filter: 'blur(0px)', duration: 0.8 }, 0.75);
+  tl.fromTo('#pill .flower', { rotate: -180, scale: 0 }, { rotate: 0, scale: 1, duration: 1, ease: 'back.out(2)' }, 0.95);
+  wordIn(s1w.slice(3), 1.1);
+  tl.fromTo('#cursor', { x: 160, y: 200, opacity: 0 }, { x: -60, y: -330, opacity: 1, duration: 1.1, ease: 'power3.inOut' }, 1.2);
+  tl.to('#pill', { scale: 0.92, duration: 0.1, ease: 'power2.in' }, 2.3).to('#pill', { scale: 1, duration: 0.5, ease: 'elastic.out(1,.4)' }, 2.4);
+  tl.fromTo(['#d1', '#d2'], { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, x: (i) => [120, -80][i], y: (i) => [-90, 70][i], duration: 0.9, stagger: 0.1 }, 2.35);
+  wordOut([...s1w, '#cursor', '#d1', '#d2'], 3.0);
+  tl.set('#s1', { autoAlpha: 0 }, 3.45);
+
+  // ── S2 (3.4–5.6): halqalar chiziladi, so'z almashadi ──
+  tl.set('#s2', { autoAlpha: 1 }, 3.35);
+  tl.fromTo('#s2 .ring', { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.4, stagger: 0.08 }, 3.35);
+  tl.fromTo('#w-a', { letterSpacing: '0.2em', opacity: 0, filter: 'blur(20px)' }, { letterSpacing: '-0.03em', opacity: 1, filter: 'blur(0px)', duration: 0.9 }, 3.5);
+  tl.to('#w-a', { opacity: 0, filter: 'blur(16px)', scale: 0.9, duration: 0.35, ease: 'power2.in' }, 4.45);
+  tl.fromTo('#w-b', { opacity: 0, scale: 1.25, filter: 'blur(20px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.7 }, 4.6);
+  tl.fromTo('#f2', { scale: 0, rotate: -90 }, { scale: 1, rotate: 0, duration: 0.8, ease: 'back.out(3)' }, 4.7);
+  tl.to('#s2 .ring', { scale: 1.6, opacity: 0, duration: 0.6, ease: 'power2.in' }, 5.25);
+
+  // ── Flash → LIGHT, S3 (5.6–7.4) ──
+  tl.to('#flash', { opacity: 1, duration: 0.18, ease: 'power1.in' }, 5.5);
+  tl.set('#s2', { autoAlpha: 0 }, 5.7).set('#light', { opacity: 1 }, 5.7).set('#s3', { autoAlpha: 1 }, 5.7);
+  tl.to('#flash', { opacity: 0, duration: 0.5, ease: 'power2.out' }, 5.7);
+  tl.fromTo('#mega', { y: 140, opacity: 0, filter: 'blur(20px)' }, { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.8 }, 5.75);
+  tl.fromTo('#s3 .ghost', { opacity: 0, y: (i) => (i < 2 ? 60 : -60) }, { opacity: 1, y: 0, duration: 1, stagger: 0.05 }, 5.95);
+  tl.to('#drop', { y: 1180, duration: 0.55, ease: 'power3.in' }, 6.2);
+  tl.to('#drop', { scaleY: 0.4, scaleX: 1.5, opacity: 0, duration: 0.25 }, 6.75);
+  tl.to('#mega', { scale: 1.06, duration: 0.15, ease: 'power2.out', yoyo: true, repeat: 1 }, 6.75);
+  tl.to('#s3', { autoAlpha: 0, y: -120, filter: 'blur(14px)', duration: 0.45, ease: 'power2.in' }, 7.15);
+
+  // ── S5 (7.5–10.3): ribbon chiziladi, karta ochiladi ──
+  const rib = $('#ribbon'); const L = rib.getTotalLength();
+  gsap.set(rib, { strokeDasharray: L, strokeDashoffset: L });
+  tl.set('#s5', { autoAlpha: 1 }, 7.5);
+  tl.fromTo('#card', { y: 160, opacity: 0, rotate: -4, scale: 0.92 }, { y: 0, opacity: 1, rotate: 0, scale: 1, duration: 1 }, 7.55);
+  tl.to(rib, { strokeDashoffset: 0, duration: 1.6, ease: 'power2.inOut' }, 7.6);
+  const sum = { v: 0 };
+  tl.to(sum, { v: 4870000, duration: 1.4, ease: 'power3.out', onUpdate: () => {
+    $('#sum').textContent = Math.round(sum.v).toLocaleString('ru-RU').replace(/ /g, ' ') + ' so‘m';
+  } }, 7.9);
+  tl.fromTo(['#bar1', '#bar2', '#bar3', '#bar4'], { width: '0%' }, { width: (i) => ['92%', '60%', '52%', '55%'][i], duration: 1, stagger: 0.12 }, 8.2);
+  wordIn('#rib-txt', 8.6);
+  tl.to('#s5', { autoAlpha: 0, scale: 1.08, filter: 'blur(16px)', duration: 0.45, ease: 'power2.in' }, 10.0);
+
+  // ── DARK, S4 (10.3–12.8): stack ──
+  tl.to('#light', { opacity: 0, duration: 0.4 }, 10.15);
+  tl.set('#s4', { autoAlpha: 1 }, 10.3);
+  wordIn('#s4 .w', 10.35, 0.16);
+  tl.fromTo('.pl', { strokeDasharray: 200, strokeDashoffset: 200 }, { strokeDashoffset: 0, duration: 1.6, stagger: 0.15, ease: 'power2.out' }, 10.6);
+  tl.fromTo('#s4 .t-bold', { scale: 0.9, transformOrigin: 'left center' }, { scale: 1, duration: 0.6, ease: 'back.out(3)' }, 11.25);
+  tl.to('#s4', { autoAlpha: 0, filter: 'blur(14px)', duration: 0.45, ease: 'power2.in' }, 12.6);
+
+  // ── LIGHT, S6 (13–15): CTA ──
+  tl.to('#light', { opacity: 1, duration: 0.45 }, 12.8);
+  tl.set('#s6', { autoAlpha: 1 }, 12.85);
+  tl.fromTo('#f6', { scale: 0, rotate: -120 }, { scale: 1, rotate: 0, duration: 0.9, ease: 'back.out(2.5)' }, 12.9);
+  wordIn('#s6 .w', 13.1, 0.12);
+  tl.fromTo('#cta', { width: 0, opacity: 0 }, { width: 'auto', opacity: 1, duration: 0.8 }, 13.35);
+  tl.to({}, { duration: 0.01 }, 15);
+
+  // Fon: blob'lar va yoy t bo'yicha sekin suzadi (timelinedan mustaqil, lekin deterministik).
+  const b1 = $('#b1'), b2 = $('#b2'), b3 = $('#b3'), arc = $('#arc');
+  function drift(t) {
+    b1.style.transform = `translate(${-200 + 160 * Math.sin(t * 0.5)}px, ${1100 + 120 * Math.cos(t * 0.4)}px)`;
+    b2.style.transform = `translate(${300 + 140 * Math.cos(t * 0.35)}px, ${200 + 160 * Math.sin(t * 0.45)}px)`;
+    b3.style.transform = `translate(${420 + 200 * Math.sin(t * 0.3 + 1)}px, ${1350 + 100 * Math.sin(t * 0.6)}px)`;
+    arc.style.transform = `translateY(${30 * Math.sin(t * 0.7)}px) rotate(${t * 6}deg)`;
+  }
+
+  window.render = (t) => { drift(t); tl.seek(t, false); };
+  window.render(0);
+</script>
+</body>
+</html>

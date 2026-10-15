@@ -7,3 +7,6 @@ dist/
 coverage/
 web-preview/
 .DS_Store
+marketing/**/*.mp4
+marketing/**/*.wav
+marketing/**/stills/
